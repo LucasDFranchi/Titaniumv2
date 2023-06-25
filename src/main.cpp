@@ -1,17 +1,17 @@
-#include <iostream>
+#include <CommandManager.h>
 
-class Foo {
-public:
-  Foo(int bar) { this->bar_ = bar; };
-  int getFoo(void) { return this->bar_; }
+CommandManager command_manager;
+auto command_blink = new CommandBlink(1000);
 
-private:
-  int bar_;
-};
+int main(void)
+{
+  while (1)
+  {
+    static bool ret = false;
 
-int main(void) {
-  Foo f(10);
-  std::cout << f.getFoo();
+    if (!ret)
+      ret = command_manager.ExecuteCommand(command_blink);
+  }
 
   return 0;
 }
