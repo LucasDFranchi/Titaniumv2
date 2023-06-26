@@ -9,14 +9,7 @@ int main(void)
   GraphicSystem g;
 
   g.Init();
-
-  while (1)
-  {
-    static bool ret = false;
-
-    if (!ret)
-      ret = command_manager.ExecuteCommand(command_blink);
-  }
+  
 
   return 0;
 }

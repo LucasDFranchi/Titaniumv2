@@ -6,6 +6,7 @@
 class GraphicSystem {
     public:
     void Init(void);
+    void Loop_(void);
     private:
     IGraphicDriver *driver;
 };
