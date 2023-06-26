@@ -18,8 +18,8 @@ void CommandBlink::Setup(void)
 bool CommandBlink::Loop(void)
 {
     bool ret = false;
-
-    gpio_set_level(GPIO_NUM_25, !gpio_get_level(GPIO_NUM_25));
+    int state = this->counter % 2 == 0;
+    gpio_set_level(GPIO_NUM_25, state);
     vTaskDelay(100);
     if (this->counter++ > 60){
         ret = true;
