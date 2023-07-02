@@ -1,13 +1,19 @@
 #include "IGraphicDriver.h"
 #include "driver/i2c.h"
+#include "driver/gpio.h"
 
 #ifndef SSD1306_GUARD
 #define SSD1306_GUARD
 
-class SSD1306 : public IGraphicDriver {
+/**
+ * SSD1306 is a class that represents a driver for the SSD1306 OLED display.
+ * It inherits from the IGraphicDriver interface.
+ */
+class SSD1306 : public IGraphicDriver
+{
 public:
-  esp_err_t Init(void);
-  void UpdatePage(void);
+  esp_err_t Initialize(void);
+  void Process(uint8_t *memory_area_data);
 
 private:
   i2c_config_t i2c_config;
@@ -16,12 +22,15 @@ private:
 private:
   esp_err_t SendInitializationCommands_(void);
   esp_err_t ClearDisplay_(void);
-  esp_err_t PrintPattern_(uint8_t pattern);
+  esp_err_t PrintPattern_(uint8_t *pattern);
+  esp_err_t SetupPage_(int page);
+  void SendResetCommand_(void);
 
   /* Private constants */
 private:
-  const uint8_t OLED_I2C_MASTER_SDA_IO = 0x15; // Pin 21
-  const uint8_t OLED_I2C_MASTER_SCL_IO = 0x16; // Pin 22
+  const gpio_num_t OLED_I2C_MASTER_SDA_IO = GPIO_NUM_4;
+  const gpio_num_t OLED_I2C_MASTER_SCL_IO = GPIO_NUM_15;
+  const gpio_num_t OLED_I2C_RESET_GPIO = GPIO_NUM_16;
   const int OLED_I2C_MASTER_FREQ_HZ = 400000;
 
   const uint8_t OLED_I2C_ADDRESS = 0x3C;
@@ -58,6 +67,9 @@ private:
   const uint8_t OLED_CMD_SET_DISPLAY_CLK_DIV = 0xD5;
   const uint8_t OLED_CMD_SET_PRECHARGE = 0xD9;
   const uint8_t OLED_CMD_SET_VCOMH_DESELCT = 0xDB;
+  const uint8_t OLED_CMD_DEACTIVE_SCROLL = 0x2E;
+  const uint8_t OLED_CMD_SET_PAGE_ADDR_MODE = 0x02;
+  const uint8_t OLED_CMD_SET_HORI_ADDR_MODE = 0x00;
 
   /* Charge Pump (pg.62) */
   const uint8_t OLED_CMD_SET_CHARGE_PUMP = 0x8D;

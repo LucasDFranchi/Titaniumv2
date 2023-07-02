@@ -5,8 +5,8 @@
 
 class IGraphicDriver {
     public:
-    virtual esp_err_t Init(void) = 0;
-    virtual void UpdatePage(void) = 0;
+    virtual esp_err_t Initialize(void) = 0;
+    virtual void Process(uint8_t *memory_area_data) = 0;
 };
 
 #endif /* GRAPHIC_DRIVER_INTERFACE_GUARD */
