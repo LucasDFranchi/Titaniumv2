@@ -50,9 +50,11 @@ esp_err_t NetworkManager::Initialize_(void){
     result += this->RegisterWiFiEvents_();
 
     wifi_config_t wifi_config;
-
-    memory_manager->Read(SSID_AREA, sizeof(wifi_config.sta.ssid), wifi_config.sta.ssid);
-    memory_manager->Read(PASSWORD_AREA, sizeof(wifi_config.sta.password), wifi_config.sta.password);
+    uint16_t size_ssid = 0;
+    uint16_t size_password = 0;
+    
+    memory_manager->Read(SSID_AREA, &size_ssid, wifi_config.sta.ssid);
+    memory_manager->Read(PASSWORD_AREA, &size_password, wifi_config.sta.password);
     wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_config.sta.pmf_cfg.capable = true;
     wifi_config.sta.pmf_cfg.required = false;

@@ -3,6 +3,8 @@
 
 #include "SerialProtocol.h"
 
+#include "driver/gpio.h"
+
 /**
  * Executes the SerialDriverManager.
  *
@@ -18,8 +20,8 @@ void SerialDriverManager::Execute(void)
     auto memory_manager = MemoryManager::GetInstance();
     auto serial_protocol = SerialProtocol();
 
-    uint8_t ACK_OK[7] = {0x41, 0x43, 0x4B, 0x4F, 0x4B, 0x00, 0x00};
-    uint8_t ACK_NOK[8] = {0x41, 0x43, 0x4B, 0x4E, 0x4F, 0x4B, 0x00, 0x00};
+    uint8_t ACK_OK[5] = {0x41, 0x43, 0x4B, 0x4F, 0x4B};
+    uint8_t ACK_NOK[6] = {0x41, 0x43, 0x4B, 0x4E, 0x4F, 0x4B};
 
     if (this->Initialize_() != ESP_OK){
         vTaskDelete(this->process_handler);
@@ -28,33 +30,51 @@ void SerialDriverManager::Execute(void)
     while(1){
         auto len = uart_read_bytes(UART_NUM_0, this->input_buffer_, this->buffer_size_, pdMS_TO_TICKS(200));
 
-        if (len == 0){
-            continue;
-        }
-        auto result = serial_protocol.ProcessIncomingMessage(this->input_buffer_, len);
-        
-        if (result == ESP_OK){
-            auto message = serial_protocol.GetMessage();
+        if (len > 0){
+            auto result = serial_protocol.ProcessIncomingMessage(this->input_buffer_, len);
 
-            result = memory_manager->Write(
-                static_cast<area_index_e>(message.memory_area),
-                message.data_length,
-                message.data_pointer
-            );
+            if (result == ESP_OK){
+                auto message_incoming = serial_protocol.GetMessageIncoming();
 
-            
-            //workaround
-            ACK_OK[5] = (result & 0xFF) + 0x30;
-            ACK_OK[6] = ((result >> 8) & 0xFF) + 0x30;
+                switch(message_incoming.command){
+                    case WRITE_OPERATION:
+                    {
+                        result = memory_manager->Write(
+                                    static_cast<area_index_e>(message_incoming.memory_area),
+                                    message_incoming.data_length,
+                                    message_incoming.data_pointer
+                                );
+                    }
+                    break;
+                    case READ_OPERATION:
+                    {
+                        uint16_t data_size = 0;
 
-            uart_write_bytes(UART_NUM_0, ACK_OK , sizeof(ACK_OK));
-        }
-        else
-        {
-            //workaround
-            ACK_NOK[6] = (result & 0xFF) + 0x30;
-            ACK_NOK[7] = ((result >> 8) & 0xFF) + 0x30;
-            uart_write_bytes(UART_NUM_0, ACK_NOK , sizeof(ACK_NOK));
+                        result = memory_manager->Read(
+                            static_cast<area_index_e>(message_incoming.memory_area),
+                            &data_size,
+                            message_incoming.data_pointer
+                        );
+
+                        uint16_t response_message_size = serial_protocol.GenerateResponseMessage(message_incoming.data_pointer, data_size, message_incoming.memory_area);
+                        auto message_sending = serial_protocol.GetMessageSending();
+
+                        uart_write_bytes(UART_NUM_0, &message_sending.start_byte, response_message_size);
+                        }
+                    break;
+                    default:
+                    // Should never be hit
+                }
+            }
+
+            if (result == ESP_OK){
+                uart_write_bytes(UART_NUM_0, ACK_OK , sizeof(ACK_OK));
+            }
+            else
+            {
+                uart_write_bytes(UART_NUM_0, ACK_NOK , sizeof(ACK_NOK));
+            }
+
         }
 
         vTaskDelay(pdMS_TO_TICKS(50));
@@ -74,12 +94,15 @@ esp_err_t SerialDriverManager::Initialize_(void){
     this->uart_config.parity = UART_PARITY_DISABLE;
     this->uart_config.stop_bits = UART_STOP_BITS_1;
     this->uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
+    this->uart_config.rx_flow_ctrl_thresh = 0;
     this->uart_config.source_clk = UART_SCLK_APB;
 
 
-    result += uart_param_config(UART_NUM_0, &uart_config);
+    result += uart_param_config(UART_NUM_0, &this->uart_config);
     result += uart_set_pin(UART_NUM_0, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     result += uart_driver_install(UART_NUM_0, this->buffer_size_ * 2, 0, 0, NULL, 0);
+
+    uart_flush(UART_NUM_0);
 
     return result;
 }

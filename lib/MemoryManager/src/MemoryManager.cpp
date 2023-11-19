@@ -51,12 +51,12 @@ esp_err_t MemoryManager::Write(area_index_e area_index, uint32_t size, uint8_t *
             result = ESP_ERR_INVALID_STATE;
             break;
         }
-        if (this->memory_area_array[area_index]->GetSize() != size){
+        if (this->memory_area_array[area_index]->GetSize() < size){
             result = ESP_ERR_INVALID_SIZE;
             break;
         }
 
-        result = this->memory_area_array[area_index]->Write(pIn);
+        result = this->memory_area_array[area_index]->Write(pIn, size);
 
     }while (0);
 
@@ -67,12 +67,12 @@ esp_err_t MemoryManager::Write(area_index_e area_index, uint32_t size, uint8_t *
  * Reads data from a specific memory area.
  *
  * @param[in] area_index The index of the memory area to read from.
- * @param[in] size The size of the data to read.
+ * @param[out] size_pointer Amount of bytes read by the memory manager.
  * @param[in] pOut Pointer to the buffer where the read data will be stored.
  *
  * @returns ESP_OK if the read operation is successful, otherwise an error code.
  */
-esp_err_t MemoryManager::Read(area_index_e area_index, uint32_t size, uint8_t *pOut){
+esp_err_t MemoryManager::Read(area_index_e area_index, uint16_t *size_pointer, uint8_t *pOut){
     esp_err_t result = ESP_FAIL;
     
     do 
@@ -89,10 +89,8 @@ esp_err_t MemoryManager::Read(area_index_e area_index, uint32_t size, uint8_t *p
             result = ESP_ERR_INVALID_STATE;
             break;
         }
-        if (this->memory_area_array[area_index]->GetSize() != size){
-            result = ESP_ERR_INVALID_SIZE;
-            break;
-        }
+
+        *size_pointer = this->memory_area_array[area_index]->GetSize();
         result = this->memory_area_array[area_index]->Read(pOut);
 
     }while (0);

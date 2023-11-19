@@ -27,7 +27,7 @@ int main(void)
   memory_manager->Initialize();
 
   graphic_manager->InitializeProcess();
-  network_manager->InitializeProcess();
+  // network_manager->InitializeProcess();
   serial_manager->InitializeProcess();
   
 

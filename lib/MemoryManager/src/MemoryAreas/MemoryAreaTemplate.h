@@ -57,14 +57,14 @@ class MemoryAreaTemplate {
      *
      * @returns ESP_OK if the write operation is successful, otherwise an error code.
      */
-    esp_err_t Write(uint8_t *pIn){
+    esp_err_t Write(uint8_t *pIn, size_t size){
         auto result = ESP_FAIL;
 
         if( this->mutex_ != NULL )
         {
             if(xSemaphoreTake( this->mutex_, portMAX_DELAY ))
             {
-                result = memcpy_s(this->data, pIn, this->size);
+                result = memcpy_s(this->data, pIn, size);
                 xSemaphoreGive( this->mutex_ );
             }
         }
@@ -84,7 +84,7 @@ class MemoryAreaTemplate {
         if( this->mutex_ != NULL )
         {
             if(xSemaphoreTake( this->mutex_, portMAX_DELAY ))
-            {
+            {   
                 result = memcpy_s(pOut, this->data, this->size);
                 xSemaphoreGive( this->mutex_ );
             }

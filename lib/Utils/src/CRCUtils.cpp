@@ -66,7 +66,8 @@ uint32_t CalculatedCRC32(uint8_t *initial_byte_address, uint32_t size){
         return 0;
 
     for (uint32_t i = 0; i < size; i++) {
-        if (&initial_byte_address[i] == nullptr)
+        auto address = &initial_byte_address[i];
+        if (address == nullptr)
             break;
 
         crc32val = CRCTable((crc32val ^ initial_byte_address[i]) & 0xFF) ^

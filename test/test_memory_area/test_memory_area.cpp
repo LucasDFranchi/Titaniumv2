@@ -32,7 +32,7 @@ void test_MemoryAreaDisplay() {
         expected_array[i] = (uint8_t)(i % 256);
     }
 
-    TEST_ASSERT_EQUAL(memory_area_display->Write(expected_array), ESP_OK);
+    TEST_ASSERT_EQUAL(memory_area_display->Write(expected_array, 1024), ESP_OK);
     TEST_ASSERT_EQUAL(memory_area_display->Read(expected_array_read), ESP_OK);
 
     for (int i = 0; i < memory_area_display->GetSize(); i++) {

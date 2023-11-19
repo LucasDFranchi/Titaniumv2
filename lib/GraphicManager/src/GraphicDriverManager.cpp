@@ -24,7 +24,8 @@ void GraphicDriverManager::Execute(void)
     }
 
     while(1){
-        memory_manager->Read(DISPLAY_AREA, 1024, memory_area_data);
+        uint16_t size = 0;
+        memory_manager->Read(DISPLAY_AREA, &size, memory_area_data);
         driver->Process(memory_area_data);
         vTaskDelay(pdMS_TO_TICKS(150));
     }
