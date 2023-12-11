@@ -3,6 +3,8 @@
 #include "./MemoryAreas/src/MemoryAreaSSID.h"
 #include "./MemoryAreas/src/MemoryAreaPassword.h"
 #include "./MemoryAreas/src/MemoryAreaConnection.h"
+#include "./MemoryAreas/src/MemoryAreaLoRaWrite.h"
+#include "./MemoryAreas/src/MemoryAreaLoRaRead.h"
 #include "string.h"
 #include <cstdio>
 
@@ -16,6 +18,8 @@ esp_err_t MemoryManager::Initialize(void){
     this->memory_area_array[1] = new MemoryAreaSSID;
     this->memory_area_array[2] = new MemoryAreaPassword;
     this->memory_area_array[3] = new MemoryAreaConnection;
+    this->memory_area_array[4] = new MemoryAreaLoRaWrite;
+    this->memory_area_array[5] = new MemoryAreaLoRaRead;
     for (int i = 0; i < AREAS_COUNT; i++){
         this->memory_area_array[i]->Initialize();
     }
@@ -96,6 +100,10 @@ esp_err_t MemoryManager::Read(area_index_e area_index, uint16_t *size_pointer, u
     }while (0);
 
     return result;
+}
+
+bool MemoryManager::IsAreaDataNew(area_index_e area_index){
+    return this->memory_area_array[area_index]->GetAreaHasUpdated();
 }
 
 /**

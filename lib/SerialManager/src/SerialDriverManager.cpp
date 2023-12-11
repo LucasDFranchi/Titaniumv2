@@ -3,7 +3,11 @@
 
 #include "SerialProtocol.h"
 
-#include "driver/gpio.h"
+#include "GPIOManager.h"
+
+#include "esp_log.h"
+
+static const char *TAG = "Serial Task";
 
 /**
  * Executes the SerialDriverManager.
@@ -18,11 +22,14 @@
 void SerialDriverManager::Execute(void)
 {
     auto memory_manager = MemoryManager::GetInstance();
+    auto gpio_manager = GPIOManager::GetInstance();
     auto serial_protocol = SerialProtocol();
+
 
     uint8_t ACK_OK[5] = {0x41, 0x43, 0x4B, 0x4F, 0x4B};
     uint8_t ACK_NOK[6] = {0x41, 0x43, 0x4B, 0x4E, 0x4F, 0x4B};
 
+    // gpio_manager->WriteGPIO(LED_WHITE, HIGH);
     if (this->Initialize_() != ESP_OK){
         vTaskDelete(this->process_handler);
     }
@@ -30,12 +37,12 @@ void SerialDriverManager::Execute(void)
     while(1){
         auto len = uart_read_bytes(UART_NUM_0, this->input_buffer_, this->buffer_size_, pdMS_TO_TICKS(200));
 
+
         if (len > 0){
             auto result = serial_protocol.ProcessIncomingMessage(this->input_buffer_, len);
 
             if (result == ESP_OK){
                 auto message_incoming = serial_protocol.GetMessageIncoming();
-
                 switch(message_incoming.command){
                     case WRITE_OPERATION:
                     {
@@ -48,6 +55,7 @@ void SerialDriverManager::Execute(void)
                     break;
                     case READ_OPERATION:
                     {
+                        result = ESP_FAIL;
                         uint16_t data_size = 0;
 
                         result = memory_manager->Read(
@@ -56,12 +64,14 @@ void SerialDriverManager::Execute(void)
                             message_incoming.data_pointer
                         );
 
-                        uint16_t response_message_size = serial_protocol.GenerateResponseMessage(message_incoming.data_pointer, data_size, message_incoming.memory_area);
-                        auto message_sending = serial_protocol.GetMessageSending();
+                        // uint16_t response_message_size = serial_protocol.GenerateResponseMessage(message_incoming.data_pointer, data_size, message_incoming.memory_area);
+                        // auto message_sending = serial_protocol.GetMessageSending();
 
-                        uart_write_bytes(UART_NUM_0, &message_sending.start_byte, response_message_size);
+                        uart_write_bytes(UART_NUM_0, message_incoming.data_pointer, data_size);
                         }
                     break;
+                    default:
+                        gpio_manager->WriteGPIO(LED_WHITE, HIGH);
                 }
             }
 

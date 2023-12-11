@@ -18,12 +18,12 @@ void test_gpio_read_write() {
     auto gpio_manager = GPIOManager::GetInstance();
     gpio_manager->Initialize();
 
-    TEST_ASSERT_EQUAL(gpio_manager->WriteGPIO(GPIO_NUM_25, HIGH), ESP_OK);
+    TEST_ASSERT_EQUAL(gpio_manager->WriteGPIO(LED_WHITE, HIGH), ESP_OK);
     TEST_ASSERT_EQUAL(gpio_get_level(GPIO_NUM_25), 1);
-    TEST_ASSERT_EQUAL(gpio_manager->ReadGPIO(GPIO_NUM_25), 1);
-    TEST_ASSERT_EQUAL(gpio_manager->WriteGPIO(GPIO_NUM_25, LOW), ESP_OK);
+    TEST_ASSERT_EQUAL(gpio_manager->ReadGPIO(LED_WHITE), 1);
+    TEST_ASSERT_EQUAL(gpio_manager->WriteGPIO(LED_WHITE, LOW), ESP_OK);
     TEST_ASSERT_EQUAL(gpio_get_level(GPIO_NUM_25), 0);
-    TEST_ASSERT_EQUAL(gpio_manager->ReadGPIO(GPIO_NUM_25), 0);
+    TEST_ASSERT_EQUAL(gpio_manager->ReadGPIO(LED_WHITE), 0);
 }
 
 void main_test(void) {

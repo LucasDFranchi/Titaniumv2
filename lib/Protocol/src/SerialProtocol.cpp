@@ -1,6 +1,7 @@
 #include "SerialProtocol.h"
 #include "ByteConverterUtils.h"
 #include "CRCUtils.h"
+#include "MemoryUtils.h"
 
 constexpr uint8_t START_BYTE_POSITION  = 0x00;
 constexpr uint8_t DATA_LENGTH_POSITION = 0x01;

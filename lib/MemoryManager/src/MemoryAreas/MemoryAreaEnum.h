@@ -25,6 +25,8 @@ enum area_index_e{
     SSID_AREA       = 1,
     PASSWORD_AREA   = 2,
     CONNECTION_AREA = 3,
+    LORA_WRITE_AREA = 4,
+    LORA_READ_AREA  = 5,
     AREAS_COUNT,
 };
 

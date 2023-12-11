@@ -51,6 +51,15 @@ class MemoryAreaTemplate {
     }
 
     /**
+     * Retrieves if an area was read.
+     *
+     * @returns Returns if the the area has been read already.
+     */
+    bool GetAreaHasUpdated(void){
+        return this->has_update;
+    }
+
+    /**
      * Writes data to the memory area display.
      *
      * @param pIn Pointer to the input data.
@@ -65,6 +74,8 @@ class MemoryAreaTemplate {
             if(xSemaphoreTake( this->mutex_, portMAX_DELAY ))
             {
                 result = memcpy_s(this->data, pIn, size);
+                this->has_update = true;
+
                 xSemaphoreGive( this->mutex_ );
             }
         }
@@ -86,6 +97,7 @@ class MemoryAreaTemplate {
             if(xSemaphoreTake( this->mutex_, portMAX_DELAY ))
             {   
                 result = memcpy_s(pOut, this->data, this->size);
+                this->has_update = false;
                 xSemaphoreGive( this->mutex_ );
             }
         }
