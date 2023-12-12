@@ -62,8 +62,6 @@ void SerialDriverManager::Execute(void)
                         uart_write_bytes(UART_NUM_0, &message_sending.start_byte, response_message_size);
                         }
                     break;
-                    default:
-                    // Should never be hit
                 }
             }
 

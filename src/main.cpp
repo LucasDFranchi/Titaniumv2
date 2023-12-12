@@ -1,12 +1,14 @@
 #include "nvs_flash.h"
 
-#include <CommandManager.h>
 #include <MemoryManager.h>
+#include "GPIOManager.h"
+#include <CommandManager.h>
 #include <GraphicDriverManager.h>
 #include <SerialDriverManager.h>
 #include <NetworkManager.h>
 
-MemoryManager* MemoryManager::singleton_pointer_ = nullptr;;
+MemoryManager* MemoryManager::singleton_pointer_ = nullptr;
+GPIOManager*   GPIOManager::singleton_pointer_ = nullptr;
 
 esp_err_t initialize_nvs(void)
 {
@@ -19,12 +21,15 @@ int main(void)
 {
   initialize_nvs();
 
+  auto memory_manager = MemoryManager::GetInstance();
+  auto gpio_manager = GPIOManager::GetInstance();
+
   auto graphic_manager = new GraphicDriverManager;
   auto network_manager = new NetworkManager;
-  auto memory_manager = MemoryManager::GetInstance();
   auto serial_manager = new SerialDriverManager;
   
   memory_manager->Initialize();
+  gpio_manager->Initialize();
 
   graphic_manager->InitializeProcess();
   // network_manager->InitializeProcess();
