@@ -52,4 +52,8 @@ This project is licensed under the [Creative Commons Attribution 4.0 Internation
 For questions or support, feel free to reach out to us:
 - Email: LucasD.Franchi@gmail.com
 
+## Module Diagram
+
+![Titanium Module Diagram](./lib/doc/TitainumDiag.png)
+
 ---
