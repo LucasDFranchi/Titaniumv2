@@ -31,7 +31,7 @@ class MemoryArea {
      * @returns ESP_OK if the memory area is successfully cleared.
      */
     esp_err_t Clear(void){
-        return memset_s(this->data, 0, this->size);
+        return memset_s(reinterpret_cast<uint8_t*>(&this->data->raw_data), 0, this->size);
     }
     /**
      * Retrieves the size of the memory area.
@@ -67,6 +67,15 @@ class MemoryArea {
      */
     bool GetAreaHasUpdated(void){
         return this->has_update;
+    }
+
+    /**
+     * Retrieves the area data pointer.
+     *
+     * @returns Returns the data area pointer.
+     */
+    IArea* GetData(void) const{
+        return this->data;
     }
 
     /**
