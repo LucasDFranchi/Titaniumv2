@@ -26,7 +26,7 @@ void SerialDriverManager::Execute(void)
     uint8_t ACK_NOK[6] = {0x41, 0x43, 0x4B, 0x4E, 0x4F, 0x4B};
 
     if (this->Initialize_() != ESP_OK){
-        vTaskDelete(this->process_handler);
+        vTaskDelete(this->process_handler_);
     }
 
     while(1){
@@ -50,12 +50,8 @@ void SerialDriverManager::Execute(void)
                     break;
                     case READ_OPERATION:
                     {
-                        result = ESP_FAIL;
-                        uint16_t data_size = 0;
-
-                        result = memory_manager->Read(
+                        uint16_t data_size = memory_manager->Read(
                             static_cast<area_index_e>(message_incoming.memory_area),
-                            &data_size,
                             message_incoming.data_pointer
                         );
 
@@ -63,7 +59,7 @@ void SerialDriverManager::Execute(void)
                         // auto message_sending = serial_protocol.GetMessageSending();
 
                         uart_write_bytes(UART_NUM_0, message_incoming.data_pointer, data_size);
-                        }
+                    }
                     break;
                     default:
                         gpio_manager->WriteGPIO(LED_WHITE, HIGH);

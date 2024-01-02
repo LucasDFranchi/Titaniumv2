@@ -34,18 +34,19 @@ esp_err_t LoRaManager::Initialize_(void){
  */
 void LoRaManager::Execute(void){
 
-    this->Initialize_();
+    if (this->Initialize_() != ESP_OK){
+        vTaskDelete(this->process_handler_);
+    }
 
     while(1){
         if (memory_manager->IsAreaDataNew(LORA_WRITE_AREA)){
-            uint16_t area_size = 0;
-            memory_manager->Read(LORA_WRITE_AREA, &area_size, this->tx_buffer_);
-            this->lora_driver->SendPacket(this->tx_buffer_, area_size);
+            uint16_t area_size = memory_manager->Read(LORA_WRITE_AREA, this->lora_read_area_);
+            this->lora_driver->SendPacket(this->lora_write_area_.raw_data.tx_buffer, area_size);
         }
         this->lora_driver->SetReceiverMode();
         if (this->lora_driver->isDataInReceiver()){
-            uint8_t recieved_bytes = this->lora_driver->ReceivePacket(this->rx_buffer_, sizeof(this->rx_buffer_));
-            this->memory_manager->Write(LORA_READ_AREA, recieved_bytes, this->rx_buffer_);
+            uint8_t recieved_bytes = this->lora_driver->ReceivePacket(this->lora_read_area_.raw_data.rx_buffer, sizeof(this->lora_read_area_.raw_data.rx_buffer));
+            this->memory_manager->Write(LORA_READ_AREA, recieved_bytes, this->lora_read_area_);
         }
 
         vTaskDelay(pdMS_TO_TICKS(100));

@@ -1,5 +1,8 @@
 #include "ProcessTemplate.h"
+#include "memory/MemoryManager.h"
 #include "./Drivers/IGraphicDriver.h"
+
+#include "memory/AreaDefinitions/DisplayArea.h"
 
 #ifndef GRAPHIC_DRIVER_MANAGER_GUARD
 #define GRAPHIC_DRIVER_MANAGER_GUARD
@@ -9,10 +12,17 @@
  */
 class GraphicDriverManager : public ProcessTemplate{
     public:
-    GraphicDriverManager() : ProcessTemplate(this, "Graphic Proccess", 10240, 1, &this->process_handler) { };
+    GraphicDriverManager(const char* name, uint32_t memory, UBaseType_t  priority) : ProcessTemplate(this, name, memory, priority, &this->process_handler_) { };
     void Execute(void);
+    
     private:
-    TaskHandle_t process_handler = NULL;
+    esp_err_t Initialize_(void);
+    
+    private:
+    MemoryManager*  memory_manager = nullptr;
+    IGraphicDriver* graphic_driver = nullptr;
+    Display         display_buffer_;
+    TaskHandle_t    process_handler_ = NULL;
 };
 
 #endif /* GRAPHIC_DRIVER_MANAGER_GUARD */
