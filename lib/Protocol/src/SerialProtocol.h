@@ -11,7 +11,7 @@ typedef struct __attribute__((packed)) ProtocolData_s{
     uint16_t data_length;
     uint8_t command;
     uint8_t memory_area;
-    uint8_t *data_pointer;
+    uint8_t *pointer_data;
     uint32_t crc32;
     uint8_t end_byte;
 } ProtocolData_st;

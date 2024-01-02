@@ -11,7 +11,7 @@
  */
 class SerialDriverManager : public ProcessTemplate{
     public:
-    SerialDriverManager() : ProcessTemplate(this, "Serial Proccess", 10240, 1, &this->process_handler) { };
+    SerialDriverManager(const char* name, uint32_t memory, UBaseType_t  priority) : ProcessTemplate(this, name, memory, priority, &this->process_handler_) { };
     void Execute(void);
 
     private:
@@ -23,7 +23,7 @@ class SerialDriverManager : public ProcessTemplate{
     // const uint32_t baud_rate_ = 230400;
     const uint32_t buffer_size_ = 2048;
     uint8_t input_buffer_[2048] = {0};
-    TaskHandle_t process_handler = NULL;
+    TaskHandle_t process_handler_ = NULL;
 };
 
 #endif /* SERIAL_DRIVER_MANAGER_GUARD */

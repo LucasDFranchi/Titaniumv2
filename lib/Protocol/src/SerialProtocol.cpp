@@ -42,7 +42,7 @@ esp_err_t SerialProtocol::ProcessIncomingMessage(uint8_t *bytes, size_t size){
     result = this->ValidateIncomingMessage(this->bytes);
 
     if (result == ESP_OK){
-        this->incoming_message_.data_pointer = &this->bytes[HEADER_SIZE];
+        this->incoming_message_.pointer_data = &this->bytes[HEADER_SIZE];
     }
 
     return result;
@@ -98,7 +98,7 @@ uint16_t SerialProtocol::GenerateResponseMessage(uint8_t *response_data, uint16_
     this->sending_message_.data_length = ConvertBytesToUInt16((uint8_t*)&size);
     this->sending_message_.command = this->bytes[START_COMMAND_POSITION];
     this->sending_message_.memory_area = this->bytes[START_MEMORY_AREA_POSITION];
-    this->sending_message_.data_pointer = response_data;
+    this->sending_message_.pointer_data = response_data;
     this->sending_message_.crc32 = CalculatedCRC32(&this->sending_message_.start_byte, this->sending_message_.data_length + HEADER_SIZE);
     this->sending_message_.end_byte = END_BYTE;
 

@@ -1,12 +1,14 @@
 #ifndef LORA_MANAGER_GUARD
 #define LORA_MANAGER_GUARD
 
+#include "ProcessTemplate.h"
+#include "Driver/LoRaDriver.h"
+#include "memory/MemoryManager.hpp"
+#include "memory/AreaDefinitions/LoRaReadArea.h"
+#include "memory/AreaDefinitions/LoRaWriteArea.h"
+
 #include "stdint.h"
 #include "esp_err.h"
-
-#include "ProcessTemplate.h"
-#include "memory/MemoryManager.h"
-#include "Driver/LoRaDriver.h"
 
 namespace Regions {
     constexpr uint32_t EUROPE    = 868e6;
@@ -25,18 +27,18 @@ namespace Regions {
  */
 class LoRaManager : public ProcessTemplate{
     public:
-    LoRaManager() : ProcessTemplate(this, "LoRa Proccess", 1024*3, 1, &this->process_handler) { };
+    LoRaManager(const char* name, uint32_t memory, UBaseType_t  priority) : ProcessTemplate(this, name, memory, priority, &this->process_handler_) { };
     void Execute(void);
 
     private:
     esp_err_t Initialize_(void);
 
     private:
-    TaskHandle_t   process_handler = NULL;
+    TaskHandle_t   process_handler_ = nullptr;
     MemoryManager* memory_manager = nullptr;
     LoRaDriver*    lora_driver = nullptr;
-    uint8_t tx_buffer_[64] = {0};
-    uint8_t rx_buffer_[64] = {0};
+    lora_read_st lora_read_area_;
+    lora_write_st lora_write_area_;
 };
 
 #endif /* LORA_MANAGER_GUARD */

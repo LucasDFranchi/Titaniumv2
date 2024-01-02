@@ -1,6 +1,16 @@
 #include "GraphicDriverManager.h"
-#include "memory/MemoryManager.h"
 #include "./Drivers/SSD1306.h"
+#include "MemoryUtils.h"
+
+esp_err_t GraphicDriverManager::Initialize_(void){
+    auto result = ESP_FAIL;
+
+    this->graphic_driver = new SSD1306;
+    this->memory_manager = MemoryManager::GetInstance();
+    result = this->graphic_driver->Initialize();
+
+    return result;
+}
 
 /**
  * @brief Executes the GraphicDriverManager process.
@@ -13,22 +23,14 @@
  */
 void GraphicDriverManager::Execute(void)
 {
-    auto driver = new SSD1306;
-    auto memory_manager = MemoryManager::GetInstance();
-    uint8_t memory_area_data[1024] = {0};
 
-    if (driver->Initialize() != ESP_OK)
-    {
-        // gpio_reset_pin(GPIO_NUM_25);
-        // gpio_set_direction(GPIO_NUM_25, GPIO_MODE_OUTPUT);
-        // gpio_set_level(GPIO_NUM_25, 1);
-        return;
+    if (this->Initialize_() != ESP_OK){
+        vTaskDelete(this->process_handler_);
     }
 
     while(1){
-        uint16_t size = 0;
-        memory_manager->Read(DISPLAY_AREA, &size, memory_area_data);
-        driver->Process(memory_area_data);
+        memory_manager->Read(DISPLAY_AREA, &this->display_buffer_);
+        this->graphic_driver->Process(this->display_buffer_.pixels);
         vTaskDelay(pdMS_TO_TICKS(150));
     }
 }

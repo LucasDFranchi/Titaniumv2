@@ -1,7 +1,7 @@
 #include "NetworkManager.h"
-#include "memory/MemoryManager.h"
-#include "esp_system.h"
+#include "memory/MemoryManager.hpp"
 
+#include "esp_system.h"
 #include "esp_event.h"
 #include "esp_log.h"
 
@@ -42,6 +42,8 @@ esp_err_t NetworkManager::Initialize_(void){
     esp_err_t result = ESP_OK;
     auto memory_manager = MemoryManager::GetInstance();
 
+    memory_manager->Read(CREDENTIALS_AREA, &this->cred_area_);
+
     result += esp_netif_init();
     result += esp_event_loop_create_default();
     this->esp_netif_pointer_ = esp_netif_create_default_wifi_sta();
@@ -49,15 +51,13 @@ esp_err_t NetworkManager::Initialize_(void){
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     result += esp_wifi_init(&cfg);
 
-    printf("Wifi Status %d Result End\n", result);
     result += this->RegisterWiFiEvents_();
 
     wifi_config_t wifi_config;
-    uint16_t size_ssid = 0;
-    uint16_t size_password = 0;
-    
-    memory_manager->Read(SSID_AREA, &size_ssid, wifi_config.sta.ssid);
-    memory_manager->Read(PASSWORD_AREA, &size_password, wifi_config.sta.password);
+
+    memcpy_s(wifi_config.sta.ssid, this->cred_area_.sta_ssid, sizeof(wifi_config.sta.ssid));  
+    memcpy_s(wifi_config.sta.password, this->cred_area_.sta_password, sizeof(wifi_config.sta.password));  
+
     wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_config.sta.pmf_cfg.capable = true;
     wifi_config.sta.pmf_cfg.required = false;
@@ -77,10 +77,12 @@ esp_err_t NetworkManager::Initialize_(void){
 void NetworkManager::Execute(void){
     auto memory_manager = MemoryManager::GetInstance();
 
-    this->Initialize_();
+    if (this->Initialize_() != ESP_OK){
+        vTaskDelete(this->process_handler_);
+    }
 
     while(1){
-        memory_manager->Write(CONNECTION_AREA, sizeof(this->connected_), &this->connected_);
+        memory_manager->Write(CONNECTION_AREA, sizeof(this->connection_area_), &this->connection_area_);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -120,5 +122,5 @@ esp_err_t NetworkManager::RegisterWiFiEvents_(void){
  * @param status A boolean value that represents the desired connection status of the WiFi network.
  */
 void NetworkManager::SetWiFiConnection_(uint8_t status){
-    this->connected_ = status;
+    this->connection_area_.connection_status = status;
 }
