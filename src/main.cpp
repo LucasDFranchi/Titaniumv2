@@ -34,12 +34,12 @@ int main(void)
   spi_manager->Initialize();
 
   auto serial_manager = new SerialDriverManager("Serial Proccess", 10240, 5);
-  // auto network_manager = new NetworkManager("Network Proccess", 10240, 4);
+  auto network_manager = new NetworkManager("Network Proccess", 10240, 4);
   auto graphic_manager = new GraphicDriverManager("Graphic Process", 2048*2, 2);
   auto lora_manager = new LoRaManager("Lora Process", 3072, 1);
   
   serial_manager->InitializeProcess();
-  // // network_manager->InitializeProcess();
+  network_manager->InitializeProcess();
   graphic_manager->InitializeProcess();
   lora_manager->InitializeProcess();
 
