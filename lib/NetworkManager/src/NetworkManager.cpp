@@ -12,6 +12,8 @@
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
+#include "mdns.h"
+
 #include "memory/MemoryManager.hpp"
 
 static const char* TAG = "NetworkManager";
@@ -119,13 +121,17 @@ esp_err_t NetworkManager::Initialize(void) {
     this->_esp_netif_sta = esp_netif_create_default_wifi_sta();
     this->_esp_netif_ap = esp_netif_create_default_wifi_ap();
 
-    esp_netif_set_hostname(esp_netif_get_handle_from_ifkey("WIFI_STA_DEF"), "mydevicehostname");
-
     result += esp_wifi_set_mode(WIFI_MODE_APSTA);
     result += this->SetAccessPointMode(&this->_ap_config);
 
     result += esp_wifi_start();
-    return result;
+    
+    // mdns_init();
+    // mdns_hostname_set("titanium-point");
+    // mdns_instance_name_set("ESP32 mDNS Service");
+    // mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
+    
+    return result; 
 }
 
 /**
@@ -231,6 +237,8 @@ esp_err_t NetworkManager::SetAccessPointMode(wifi_config_t* ap_config) {
     result += esp_wifi_set_config(WIFI_IF_AP, ap_config);
     result += esp_wifi_set_bandwidth(WIFI_IF_AP, AP::bw);
     result += esp_wifi_set_ps(AP::power_save);
+
+    
 
     return result;
 }
