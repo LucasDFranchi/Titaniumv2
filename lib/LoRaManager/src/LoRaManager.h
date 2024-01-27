@@ -37,8 +37,8 @@ class LoRaManager : public ProcessTemplate{
     TaskHandle_t   process_handler_ = nullptr;
     MemoryManager* memory_manager = nullptr;
     LoRaDriver*    lora_driver = nullptr;
-    lora_read_st lora_read_area_;
-    lora_write_st lora_write_area_;
+    lora_read_st   lora_read_area_;
+    lora_write_st  lora_write_area_;
 };
 
 #endif /* LORA_MANAGER_GUARD */
