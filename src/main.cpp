@@ -1,50 +1,26 @@
-#include "nvs_flash.h"
+#include "Kernel/Kernel.h"
 
-#include <memory/MemoryManager.hpp>
-#include <gpio/GPIOManager.h>
-#include <spi/SPIManager.h>
+#include "CustomProcess/WaterLevelProcess/inc/WaterLevelProcess.h"
 
-#include <CommandManager.h>
-#include <GraphicDriverManager.h>
-#include <SerialDriverManager.h>
-#include <LoRaManager.h>
-#include <NetworkManager.h>
+int main(void) {
+    Kernel kernel;
 
-MemoryManager* MemoryManager::singleton_pointer_ = nullptr;
-GPIOManager*   GPIOManager::singleton_pointer_ = nullptr;
-SPIManager*    SPIManager::singleton_pointer_ = nullptr;
+    kernel.EnableNetworkProcess(10240, 4);
+    kernel.EnableHTTPServerProcess(20480, 2);
+    kernel.EnableUartProcess(10240, 5);
+    kernel.EnableLoraProcess(10240, 5);
+    kernel.EnableMQTTClientProcess(10240, 5);
 
-esp_err_t initialize_nvs(void)
-{
-    nvs_flash_erase();
-    esp_err_t ret = nvs_flash_init();
-    return ret;
+    auto water_level_process = new WaterLevelProcess("Water Level Process", 10240, 2);
+    water_level_process->InitializeProcess();
+    
+    kernel.SignUpSharedArea(ProtobufIndex::WATER_LEVEL, WaterLevelProtobuf::GetStaticMaxSize(), READ_WRITE);
+
+    kernel.InjectDebugCredentials("ssid", "password");
+
+    return 0;   
 }
 
-int main(void)
-{
-  initialize_nvs();
-
-  auto memory_manager = MemoryManager::GetInstance();
-  auto gpio_manager = GPIOManager::GetInstance();
-  auto spi_manager = SPIManager::GetInstance();
-
-  memory_manager->Initialize();
-  gpio_manager->Initialize();
-  spi_manager->Initialize();
-
-  auto serial_manager = new SerialDriverManager("Serial Proccess", 10240, 5);
-  auto network_manager = new NetworkManager("Network Proccess", 10240, 4);
-  auto graphic_manager = new GraphicDriverManager("Graphic Process", 2048*2, 2);
-  auto lora_manager = new LoRaManager("Lora Process", 3072, 1);
-  
-  serial_manager->InitializeProcess();
-  network_manager->InitializeProcess();
-  graphic_manager->InitializeProcess();
-  lora_manager->InitializeProcess();
-
-  
-  return 0;
+extern "C" void app_main(void) {
+    main();
 }
-
-extern "C" void app_main(void) { main(); }
