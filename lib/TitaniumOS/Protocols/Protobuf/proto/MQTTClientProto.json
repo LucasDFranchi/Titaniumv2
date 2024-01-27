@@ -1,0 +1,12 @@
+{
+    "syntax": "titanium1",
+    "package": "MQTTClient",
+    "fields": [
+      {
+        "type": "string",
+        "name": "broker_uri",
+        "maximum_size": 128
+      }
+    ]
+  }
+  

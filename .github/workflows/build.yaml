@@ -1,0 +1,25 @@
+name: Embedded Project CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build project
+        run: |
+          cd container
+          chmod +x environment_helper.sh
+          ./environment_helper.sh
+          docker run -t -v $(pwd)/../:/app titanium_env bash -c "cd /app && pio run"
+          docker run -t -v $(pwd)/../:/app titanium_env bash -c "cd /app && python3 container/execute_test_qemu.py --env heltec_wifi_lora_32_V2"
