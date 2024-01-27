@@ -1,4 +1,5 @@
 #include "MemoryManager.hpp"
+
 #include "memory/AreaDefinitions/ConnectionArea.h"
 #include "memory/AreaDefinitions/CredentialsArea.h"
 #include "memory/AreaDefinitions/DisplayArea.h"
@@ -18,28 +19,25 @@ constexpr AreaDef memory_area_def[AREAS_COUNT]{
  *
  * @returns ESP_OK if initialization is successful, otherwise an error code.
  */
-esp_err_t MemoryManager::Initialize(void){
-
-    for (int i = 0; i < AREAS_COUNT; i++){
+esp_err_t MemoryManager::Initialize(void) {
+    for (int i = 0; i < AREAS_COUNT; i++) {
         this->memory_area_array[i] = new MemoryArea(memory_area_def[i]);
     }
 
     return ESP_OK;
 }
 
-bool MemoryManager::IsAreaDataNew(area_index_e area_index){
+bool MemoryManager::IsAreaDataNew(area_index_e area_index) {
     return this->memory_area_array[area_index]->GetAreaHasUpdated();
 }
 
 /**
  * @brief Returns the singleton instance
- * 
- * @return MemoryManager* 
+ *
+ * @return MemoryManager*
  */
-MemoryManager* MemoryManager::GetInstance(void)
-{
-    if (singleton_pointer_ == nullptr)
-    {
+MemoryManager* MemoryManager::GetInstance(void) {
+    if (singleton_pointer_ == nullptr) {
         singleton_pointer_ = new MemoryManager();
     }
 

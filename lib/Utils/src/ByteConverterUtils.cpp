@@ -10,14 +10,15 @@
  * @return The 16-bit unsigned integer value.
  * @note If `initial_byte_address` is nullptr, the function returns 0.
  */
-uint16_t ConvertBytesToUInt16(uint8_t *initial_byte_address){  
+uint16_t ConvertBytesToUInt16(uint8_t *initial_byte_address) {
     uint16_t result = 0;
     for (uint8_t i = 0; i < sizeof(uint16_t); i++) {
         auto address = &initial_byte_address[i];
         if (address == nullptr) {
             return -1;
         }
-        result |= static_cast<uint16_t>(initial_byte_address[i]) << (8 * (sizeof(uint16_t) - 1 - i));
+        result |= static_cast<uint16_t>(initial_byte_address[i])
+                  << (8 * (sizeof(uint16_t) - 1 - i));
     }
 
     return result;
@@ -30,7 +31,8 @@ uint32_t ConvertBytesToUInt32(uint8_t *initial_byte_address) {
         if (address == nullptr) {
             return -1;
         }
-        result |= static_cast<uint32_t>(initial_byte_address[i]) << (8 * (sizeof(uint32_t) - 1 - i));
+        result |= static_cast<uint32_t>(initial_byte_address[i])
+                  << (8 * (sizeof(uint32_t) - 1 - i));
     }
 
     return result;

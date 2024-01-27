@@ -5,12 +5,12 @@
 /**
  * @brief Initializes the SPIManager and configures the SPI bus and device.
  *
- * This function initializes the SPIManager by configuring the SPI bus and device parameters.
+ * This function initializes the SPIManager by configuring the SPI bus and
+ * device parameters.
  *
  * @return ESP_OK if initialization is successful, otherwise an error code.
  */
-esp_err_t SPIManager::Initialize(void){
-
+esp_err_t SPIManager::Initialize(void) {
     auto result = ESP_OK;
     this->gpio_manager = GPIOManager::GetInstance();
 
@@ -21,7 +21,7 @@ esp_err_t SPIManager::Initialize(void){
     this->_bus.quadhd_io_num = -1;
     this->_bus.max_transfer_sz = 1024;
 
-    result = spi_bus_initialize(SPI2_HOST , &this->_bus, 0);
+    result = spi_bus_initialize(SPI2_HOST, &this->_bus, 0);
     ESP_ERROR_CHECK(result);
 
     this->_dev.mode = 0;
@@ -30,7 +30,7 @@ esp_err_t SPIManager::Initialize(void){
     this->_dev.flags = 0;
     this->_dev.queue_size = 1;
     this->_dev.pre_cb = nullptr;
-    result += spi_bus_add_device(SPI2_HOST , &this->_dev, &this->_spi_device);
+    result += spi_bus_add_device(SPI2_HOST, &this->_dev, &this->_spi_device);
     ESP_ERROR_CHECK(result);
 
     return result;
@@ -39,16 +39,18 @@ esp_err_t SPIManager::Initialize(void){
 /**
  * @brief Performs a SPI transaction to transmit and receive data.
  *
- * This function performs a SPI transaction to transmit data and receive the response.
+ * This function performs a SPI transaction to transmit data and receive the
+ * response.
  *
  * @param[in] transmission_packet Pointer to the data to be transmitted.
  * @param[out] receive_packet Pointer to the buffer for received data.
  * @param[in] size Size of the data to be transmitted and received.
  * @return ESP_OK if the transaction is successful, otherwise an error code.
  */
-esp_err_t SPIManager::DeviceTransmit(uint8_t* transmission_packet, uint8_t* receive_packet, uint8_t size){
+esp_err_t SPIManager::DeviceTransmit(uint8_t* transmission_packet,
+                                     uint8_t* receive_packet, uint8_t size) {
     auto result = ESP_FAIL;
-    
+
     spi_transaction_t transaction_command{};
     transaction_command.flags = 0;
     transaction_command.length = 8 * size,
@@ -67,10 +69,8 @@ esp_err_t SPIManager::DeviceTransmit(uint8_t* transmission_packet, uint8_t* rece
  *
  * @return A pointer to the singleton instance of SPIManager.
  */
-SPIManager *SPIManager::GetInstance(void)
-{
-    if (singleton_pointer_ == nullptr)
-    {
+SPIManager* SPIManager::GetInstance(void) {
+    if (singleton_pointer_ == nullptr) {
         singleton_pointer_ = new SPIManager();
     }
 
