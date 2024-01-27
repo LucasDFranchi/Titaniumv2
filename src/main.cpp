@@ -1,4 +1,5 @@
 #include "nvs_flash.h"
+#include "mdns.h"
 
 #include <memory/MemoryManager.hpp>
 #include <gpio/GPIOManager.h>

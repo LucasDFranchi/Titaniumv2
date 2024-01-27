@@ -31,9 +31,10 @@ class NetworkManager : public ProcessTemplate{
     esp_err_t SetAccessPointMode(wifi_config_t* ap_config);
     void      SetCredentials(wifi_config_t* wifi_config);
 
+    public:
+    esp_netif_t*   _esp_netif_ap = nullptr;
     private:
     MemoryManager* _memory_manager = nullptr;
-    esp_netif_t*   _esp_netif_ap = nullptr;
     esp_netif_t*   _esp_netif_sta = nullptr;
     TaskHandle_t   _process_handler = nullptr;
     wifi_config_t  _ap_config;
