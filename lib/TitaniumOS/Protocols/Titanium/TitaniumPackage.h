@@ -24,10 +24,10 @@ class TitaniumPackage {
      * Constructs a TitaniumPackage object with the specified size, command type, memory area,
      * and data. The data provided is copied into an internal buffer.
      *
-     * @param size The size of the package data.
-     * @param command The command type associated with the package.
-     * @param memory_area The memory area identifier associated with the package.
-     * @param data A pointer to the data to be copied into the package.
+     * @param[in] size The size of the package data.
+     * @param[in] command The command type associated with the package.
+     * @param[in] memory_area The memory area identifier associated with the package.
+     * @param[in] data A pointer to the data to be copied into the package.
      */
     TitaniumPackage(uint16_t size, command_e command, uint8_t memory_area, uint8_t* data)
         : _size(size), _command(command), _memory_area(memory_area), _data(std::make_unique<uint8_t[]>(size)) {
@@ -39,7 +39,7 @@ class TitaniumPackage {
      *
      * Copies the package data into the provided buffer.
      *
-     * @param data A pointer to the buffer where the package data will be copied.
+     * @param[in] data A pointer to the buffer where the package data will be copied.
      * @return The size of the package data copied, or 0 if an error occurs.
      */
     uint16_t Consume(uint8_t* data) {

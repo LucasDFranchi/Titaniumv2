@@ -5,7 +5,7 @@
  *
  * This lookup table is used for CRC32 calculation.
  *
- * @param index The index used to retrieve the corresponding CRC32 value.
+ * @param[in] index The index used to retrieve the corresponding CRC32 value.
  * @return The CRC32 value for the given index.
  */
 static uint32_t CRCTable(uint32_t index) {
@@ -71,8 +71,8 @@ static uint32_t CRCTable(uint32_t index) {
  *
  * This function calculates the CRC32 checksum for the given array of bytes.
  *
- * @param initial_byte_address A pointer to the initial byte of the array.
- * @param size The size of the array in bytes.
+ * @param[in] initial_byte_address A pointer to the initial byte of the array.
+ * @param[in] size The size of the array in bytes.
  * @return The calculated CRC32 checksum.
  */
 uint32_t CalculatedCRC32(uint8_t *initial_byte_address, uint32_t size) {

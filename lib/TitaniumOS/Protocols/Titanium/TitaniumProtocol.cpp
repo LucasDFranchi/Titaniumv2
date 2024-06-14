@@ -4,19 +4,19 @@
 #include "HAL/memory/MemoryHandlers.h"
 
 namespace Protocol {
-    constexpr uint8_t START_BYTE                = 2; /**< Start byte of the message. */
-    constexpr uint8_t START_BYTE_OFFSET         = 0;
-    constexpr uint8_t PAYLOAD_LENGTH_LSB_OFFSET = 1; /**< Offset of the least significant byte of payload length. */
-    constexpr uint8_t PAYLOAD_LENGTH_MSB_OFFSET = 2; /**< Offset of the most significant byte of payload length. */
-    constexpr uint8_t COMMAND_OFFSET            = 3; /**< Offset of the command in the message. */
-    constexpr uint8_t MEMORY_AREA_OFFSET        = 4; /**< Offset of the memory area in the message. */
-    constexpr uint8_t HEADER_OFFSET             = 5; /**< Offset of the message header. */
-    constexpr uint8_t END_BYTE                  = 3; /**< End byte of the message. */
-    constexpr uint8_t STATIC_MESSAGE_SIZE       = 9; /**< Size of the static part of the message. */
-    constexpr uint8_t CRC_FIRST_BYTE            = 0;
-    constexpr uint8_t CRC_SECOND_BYTE           = 1;
-    constexpr uint8_t CRC_THIRD_BYTE            = 2;
-    constexpr uint8_t CRC_FOURTH_BYTE           = 3;
+    constexpr uint8_t START_BYTE                = 2;    /**< Start byte of the message. */
+    constexpr uint8_t START_BYTE_OFFSET         = 0;    /**< Offset position of the start byte. */
+    constexpr uint8_t PAYLOAD_LENGTH_LSB_OFFSET = 1;    /**< Offset of the least significant byte of payload length. */
+    constexpr uint8_t PAYLOAD_LENGTH_MSB_OFFSET = 2;    /**< Offset of the most significant byte of payload length. */
+    constexpr uint8_t COMMAND_OFFSET            = 3;    /**< Offset of the command byte in the message. */
+    constexpr uint8_t MEMORY_AREA_OFFSET        = 4;    /**< Offset of the memory area byte in the message. */
+    constexpr uint8_t HEADER_OFFSET             = 5;    /**< Offset of the message header. */
+    constexpr uint8_t END_BYTE                  = 3;    /**< End byte of the message. */
+    constexpr uint8_t STATIC_MESSAGE_SIZE       = 9;    /**< Size of the static part of the message. */
+    constexpr uint8_t CRC_FIRST_BYTE            = 0;    /**< First byte of the CRC. */
+    constexpr uint8_t CRC_SECOND_BYTE           = 1;    /**< Second byte of the CRC. */
+    constexpr uint8_t CRC_THIRD_BYTE            = 2;    /**< Third byte of the CRC. */
+    constexpr uint8_t CRC_FOURTH_BYTE           = 3;    /**< Fourth byte of the CRC. */
     constexpr uint16_t MAXIMUM_MESSAGE_SIZE     = 1024; /**< Maximum size of a message. */
 }  // namespace Protocol
 
@@ -190,6 +190,13 @@ std::pair<uint32_t, esp_err_t> TitaniumProtocol::GetCRC(uint8_t* buffer,
     return result;
 }
 
+/**
+ * @brief Retrieve the end byte from the buffer.
+ *
+ * @param[in] buffer Pointer to the buffer containing the message.
+ * @param[in] payload_size Size of the payload in the message.
+ * @return std::pair<uint8_t, esp_err_t> Pair containing the end byte and an error code indicating the result of the operation.
+ */
 std::pair<uint8_t, esp_err_t> TitaniumProtocol::GetEndByte(
     uint8_t* buffer, uint16_t payload_size) {
     std::pair<uint32_t, esp_err_t> result =
@@ -245,15 +252,35 @@ esp_err_t TitaniumProtocol::ValidateCommand(command_e command) {
     return result;
 }
 
+/**
+ * @brief Validate if the memory area is valid.
+ *
+ * @param[in] memory_area Memory area to be validated.
+ * @return esp_err_t Error code indicating the result of the validation.
+ */
 esp_err_t TitaniumProtocol::ValidateMemoryArea(uint8_t memory_area) {
     return ESP_OK;
 }
 
+/**
+ * @brief Validate the payload pointer.
+ *
+ * @param[in] payload Pointer to the payload.
+ * @return esp_err_t Error code indicating the result of the validation.
+ */
 esp_err_t TitaniumProtocol::ValidatePayload(uint8_t* payload) {
     return payload != nullptr ? ESP_OK
                               : ProtocolErrors::INVALID_PAYLOAD_POINTER;
 }
 
+/**
+ * @brief Validate the CRC of the message.
+ *
+ * @param[in] crc CRC to be validated.
+ * @param[in] buffer Pointer to the buffer containing the message.
+ * @param[in] size Size of the buffer.
+ * @return esp_err_t Error code indicating the result of the validation.
+ */
 esp_err_t TitaniumProtocol::ValidateCRC(uint32_t crc, uint8_t* buffer,
                                         uint16_t size) {
     auto calculated_crc = CalculatedCRC32(buffer, size);
@@ -272,12 +299,24 @@ esp_err_t TitaniumProtocol::ValidateEndByte(uint8_t end_byte) {
                                           : ProtocolErrors::INVALID_END_BYTE;
 }
 
+/**
+ * @brief Encode the payload length into the buffer.
+ *
+ * @param[in] buffer Pointer to the buffer.
+ * @param[in] payload_length Length of the payload.
+ */
 void TitaniumProtocol::EncodePayloadLength(uint8_t* buffer,
                                            uint16_t payload_length) {
     buffer[Protocol::PAYLOAD_LENGTH_LSB_OFFSET] = payload_length & 0xFF;
     buffer[Protocol::PAYLOAD_LENGTH_MSB_OFFSET] = (payload_length >> 8) & 0xFF;
 }
 
+/**
+ * @brief Encode the CRC into the buffer.
+ *
+ * @param[in] buffer Pointer to the buffer.
+ * @param[in] crc CRC value to be encoded.
+ */
 void TitaniumProtocol::EncodeCRC(uint8_t* buffer, uint32_t crc) {
     buffer[Protocol::CRC_FIRST_BYTE]  = crc & 0xFF;
     buffer[Protocol::CRC_SECOND_BYTE] = (crc >> 8) & 0xFF;
@@ -288,9 +327,9 @@ void TitaniumProtocol::EncodeCRC(uint8_t* buffer, uint32_t crc) {
 /**
  * @brief Decode the received message and validate its components.
  *
- * @param[in] bytes Pointer to the received message.
+ * @param[in] buffer Pointer to the received message.
  * @param[in] size Size of the received message.
- * @param[out] packet_payload Decoded packet payload.
+ * @param[out] package Decoded packet payload.
  * @return esp_err_t Error code indicating the result of the operation.
  */
 esp_err_t TitaniumProtocol::Decode(uint8_t* buffer, size_t size,
@@ -375,6 +414,14 @@ esp_err_t TitaniumProtocol::Decode(uint8_t* buffer, size_t size,
     return result;
 }
 
+/**
+ * @brief Encode the given TitaniumPackage into the buffer.
+ *
+ * @param[in] package Unique pointer to the TitaniumPackage to encode.
+ * @param[out] buffer Pointer to the buffer where the encoded package will be stored.
+ * @param[in] size Size of the buffer.
+ * @return esp_err_t Error code indicating the result of the operation.
+ */
 esp_err_t TitaniumProtocol::Encode(std::unique_ptr<TitaniumPackage>& package,
                                    uint8_t* buffer, uint16_t size) {
     esp_err_t result    = ESP_FAIL;

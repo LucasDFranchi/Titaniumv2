@@ -52,6 +52,13 @@ void test_ValidateStartByte() {
     for (int i = 0; i < package.get()->size(); i++) {
         TEST_ASSERT_EQUAL(test_bytes_pass[5 + i], buffer[i]);
     }
+
+    auto buffer_unique = std::make_unique<uint8_t[]>(package.get()->size());
+    package.get()->Consume(buffer.get());
+
+    for (int i = 0; i < package.get()->size(); i++) {
+        TEST_ASSERT_EQUAL(test_bytes_pass[5 + i], buffer_unique[i]);
+    }
 }
 
 void test_ValidateDataLength() {
