@@ -6,7 +6,7 @@
 
 void test_package_creation() {
     uint8_t buffer[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    command_e command = WRITE_OPERATION;
+    command_e command = WRITE_COMMAND;
     uint16_t size = sizeof(buffer);
     uint8_t memory_area = 1;
 
@@ -27,7 +27,7 @@ void test_package_creation() {
 void test_package_decoupling() {
     uint8_t buffer[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     uint8_t buffer_backup[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    command_e command = WRITE_OPERATION;
+    command_e command = WRITE_COMMAND;
     uint16_t size = sizeof(buffer);
     uint8_t memory_area = 1;
 

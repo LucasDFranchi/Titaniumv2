@@ -54,7 +54,7 @@ void test_ValidateStartByte() {
     }
 
     auto buffer_unique = std::make_unique<uint8_t[]>(package.get()->size());
-    package.get()->Consume(buffer.get());
+    package.get()->Consume(buffer_unique.get());
 
     for (int i = 0; i < package.get()->size(); i++) {
         TEST_ASSERT_EQUAL(test_bytes_pass[5 + i], buffer_unique[i]);
@@ -100,9 +100,9 @@ void test_EncodeHappyPath() {
     uint8_t payload[5]                       = {'L', 'U', 'C', 'A', 'S'};
     uint8_t test_expected_buffer[]           = {0x02, 0x00, 0x05, 'R', 0x01, 'L', 'U', 'C', 'A', 'S', 0xD8, 0x85, 0x9A, 0x5F, 0x03};
     uint8_t test_message_buffer[15]          = {0};
-    std::unique_ptr<TitaniumPackage> package = std::make_unique<TitaniumPackage>(0x05, READ_OPERATION, 0x01, payload);
+    std::unique_ptr<TitaniumPackage> package = std::make_unique<TitaniumPackage>(0x05, READ_COMMAND, 0x01, payload);
 
-    TEST_ASSERT_EQUAL(ESP_OK, protocol.Encode(package, test_message_buffer, sizeof(test_message_buffer)));
+    TEST_ASSERT_EQUAL(sizeof(test_expected_buffer), protocol.Encode(package, test_message_buffer, sizeof(test_message_buffer)));
 
     for (int i = 0; i < sizeof(test_message_buffer[15]); i++) {
         TEST_ASSERT_EQUAL(test_expected_buffer[i], test_message_buffer[i]);
@@ -112,18 +112,18 @@ void test_EncodeHappyPath() {
 void test_EncodeEmptyBuffer() {
     TitaniumProtocol protocol;
     uint8_t payload[5]                       = {'L', 'U', 'C', 'A', 'S'};
-    std::unique_ptr<TitaniumPackage> package = std::make_unique<TitaniumPackage>(0x05, READ_OPERATION, 0x01, payload);
+    std::unique_ptr<TitaniumPackage> package = std::make_unique<TitaniumPackage>(0x05, READ_COMMAND, 0x01, payload);
 
-    TEST_ASSERT_EQUAL(ESP_FAIL, protocol.Encode(package, nullptr, 0));
+    TEST_ASSERT_EQUAL(0, protocol.Encode(package, nullptr, 0));
 }
 
 void test_EncodeShortBuffer() {
     TitaniumProtocol protocol;
     uint8_t payload[5]                       = {'L', 'U', 'C', 'A', 'S'};
     uint8_t test_message_buffer[14]          = {0};
-    std::unique_ptr<TitaniumPackage> package = std::make_unique<TitaniumPackage>(0x05, READ_OPERATION, 0x01, payload);
+    std::unique_ptr<TitaniumPackage> package = std::make_unique<TitaniumPackage>(0x05, READ_COMMAND, 0x01, payload);
 
-    TEST_ASSERT_EQUAL(ESP_FAIL, protocol.Encode(package, test_message_buffer, sizeof(test_message_buffer)));
+    TEST_ASSERT_EQUAL(0, protocol.Encode(package, test_message_buffer, sizeof(test_message_buffer)));
 
 }
 

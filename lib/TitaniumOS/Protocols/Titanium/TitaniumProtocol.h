@@ -5,6 +5,11 @@
 
 #include "TitaniumPackage.h"
 
+namespace ProtocolConstants {
+    constexpr uint8_t ACK[] = {0x02, 0x00, 0x03, 0x41, 0x00, 0x41, 0x43, 0x4B, 0xB4, 0x43, 0xBA, 0x3B, 0x03};  // "ACK"
+    constexpr uint8_t NAK[] = {0x02, 0x00, 0x03, 0x41, 0x00, 0x4E, 0x41, 0x4B, 0x8D, 0x29, 0x9F, 0x84, 0x03};  // "NAK"
+}  // namespace ProtocolConstants
+
 namespace ProtocolErrors {
     constexpr esp_err_t INVALID_START_BYTE      = -1; /**< Error code indicating invalid Start Byte. */
     constexpr esp_err_t INVALID_PAYLOAD_SIZE    = -2; /**< Error code indicating invalid payload size. */
@@ -28,7 +33,7 @@ class TitaniumProtocol {
 
    public:
     esp_err_t Decode(uint8_t* buffer, size_t size, std::unique_ptr<TitaniumPackage>& package);
-    esp_err_t Encode(std::unique_ptr<TitaniumPackage>& package, uint8_t* buffer, uint16_t size);
+    uint16_t Encode(std::unique_ptr<TitaniumPackage>& package, uint8_t* buffer, uint16_t size);
 
    private:
     std::pair<int16_t, esp_err_t> GetStarByteOffset(uint8_t* buffer, uint16_t buffer_size);

@@ -42,14 +42,14 @@
 //     }
 
 //     while (1) {
-//         if (memory_manager->IsAreaDataNew(LORA_WRITE_AREA)) {
-//             uint16_t area_size =
-//                 memory_manager->Read(LORA_WRITE_AREA, &this->lora_write_area_);
-//             if (area_size > 0) {
-//                 this->lora_driver->SendPacket(this->lora_write_area_.tx_buffer,
-//                                               area_size);
-//             }
-//         }
+//         // if (memory_manager->IsAreaDataNew(LORA_WRITE_AREA)) {
+//         //     uint16_t area_size =
+//         //         memory_manager->Read(LORA_WRITE_AREA, &this->lora_write_area_);
+//         //     if (area_size > 0) {
+//         //         this->lora_driver->SendPacket(this->lora_write_area_.tx_buffer,
+//         //                                       area_size);
+//         //     }
+//         // }
 //         this->lora_driver->SetReceiverMode();
 //         if (this->lora_driver->isDataInReceiver()) {
 //             uint8_t received_bytes = this->lora_driver->ReceivePacket(

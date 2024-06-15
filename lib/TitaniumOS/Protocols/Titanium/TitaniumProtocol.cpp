@@ -239,11 +239,11 @@ esp_err_t TitaniumProtocol::ValidateCommand(command_e command) {
     esp_err_t result = ProtocolErrors::INVALID_COMMAND;
 
     do {
-        if (command == READ_OPERATION) {
+        if (command == READ_COMMAND) {
             result = ESP_OK;
             break;
         }
-        if (command == WRITE_OPERATION) {
+        if (command == WRITE_COMMAND) {
             result = ESP_OK;
             break;
         }
@@ -420,17 +420,19 @@ esp_err_t TitaniumProtocol::Decode(uint8_t* buffer, size_t size,
  * @param[in] package Unique pointer to the TitaniumPackage to encode.
  * @param[out] buffer Pointer to the buffer where the encoded package will be stored.
  * @param[in] size Size of the buffer.
- * @return esp_err_t Error code indicating the result of the operation.
+ * @return uint16_t Amount of bytes written in the buffer.
  */
-esp_err_t TitaniumProtocol::Encode(std::unique_ptr<TitaniumPackage>& package,
-                                   uint8_t* buffer, uint16_t size) {
-    esp_err_t result    = ESP_FAIL;
+uint16_t TitaniumProtocol::Encode(std::unique_ptr<TitaniumPackage>& package,
+                                  uint8_t* buffer, uint16_t size) {
+    uint16_t result     = 0;
     uint16_t crc_offset = Protocol::HEADER_OFFSET + package.get()->size();
 
     do {
         if (buffer == nullptr) {
             break;
         }
+
+        uint16_t expected_size = (package.get()->size() + Protocol::STATIC_MESSAGE_SIZE + 1);
 
         if (size < (package.get()->size() + Protocol::STATIC_MESSAGE_SIZE + 1)) {
             break;
@@ -444,11 +446,10 @@ esp_err_t TitaniumProtocol::Encode(std::unique_ptr<TitaniumPackage>& package,
 
         package.get()->Consume(&buffer[Protocol::HEADER_OFFSET]);
 
-        this->EncodePayloadLength(&buffer[Protocol::PAYLOAD_LENGTH_LSB_OFFSET],
-                                  package.get()->size());
+        this->EncodePayloadLength(buffer, package.get()->size());
         this->EncodeCRC(&buffer[crc_offset], CalculatedCRC32(buffer, crc_offset));
 
-        result = ESP_OK;
+        result = expected_size;
     } while (0);
 
     return result;

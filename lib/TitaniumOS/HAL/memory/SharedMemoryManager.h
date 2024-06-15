@@ -12,16 +12,17 @@
  * @brief Manages shared memory used for services to exchange data.
  */
 class SharedMemoryManager {
-    public:
+   public:
     SharedMemoryManager(const SharedMemoryManager& obj) = delete;
     static SharedMemoryManager* GetInstance(void);
 
-    public:
+   public:
     esp_err_t Initialize(void);
     esp_err_t SignUpSharedArea(uint8_t index, uint16_t size_in_bytes, AccessType access_type);
-    bool      IsAreaDataUpdated(uint8_t area_index);
+    bool IsAreaDataUpdated(uint8_t area_index);
+    uint16_t GetAreaSize(uint8_t area_index);
 
-    private:
+   private:
     SharedMemoryManager(){};
     static SharedMemoryManager* singleton_pointer_;
 
@@ -29,7 +30,6 @@ class SharedMemoryManager {
     static constexpr uint16_t _maximum_shared_memory = 32;
     // std::unique_ptr<std::unique_ptr<SharedMemory>[]> _shared_memory_array;
     std::unique_ptr<SharedMemory> _shared_memory_array[SharedMemoryManager::_maximum_shared_memory];
-
 
    public:
     /**

@@ -2,7 +2,7 @@
 #define LORA_MANAGER_GUARD
 
 // #include "ProcessTemplate.h"
-// #include "Driver/LoRaDriver.h"
+// #include "Drivers/LoRaDriver.h"
 // #include "memory/MemoryManager.hpp"
 // #include "memory/AreaDefinitions/LoRaReadArea.h"
 // #include "memory/AreaDefinitions/LoRaWriteArea.h"

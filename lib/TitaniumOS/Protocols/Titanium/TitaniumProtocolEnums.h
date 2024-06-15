@@ -8,9 +8,10 @@
  * @brief Enum for defining command types in the Titanium protocol.
  */
 enum command_e : uint8_t {
-    INVALID_OPERATION = 0,   /**< Invalid operation command. */
-    READ_OPERATION    = 'R', /**< Read operation command. */
-    WRITE_OPERATION   = 'W', /**< Write operation command. */
+    INVALID_OPERATION = 0,   /**< Invalid command. */
+    READ_COMMAND      = 'R', /**< Read command. */
+    WRITE_COMMAND     = 'W', /**< Write command. */
+    RESPONSE_COMMAND  = 'E', /**< Response command. */
 };
 
 #endif /* TITANIUM_PROTOCOL_ENUMS_GUARD */
