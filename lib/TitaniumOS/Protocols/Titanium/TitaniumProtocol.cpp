@@ -72,7 +72,7 @@ std::pair<int16_t, esp_err_t> TitaniumProtocol::GetPayloadLength(
         uint8_t payload_length_msb =
             buffer[Protocol::PAYLOAD_LENGTH_MSB_OFFSET];
         uint16_t payload_length =
-            (payload_length_lsb << 8) | payload_length_msb;
+            (payload_length_msb << 8) | payload_length_lsb;
 
         result = std::make_pair(payload_length, ESP_OK);
 
@@ -178,10 +178,10 @@ std::pair<uint32_t, esp_err_t> TitaniumProtocol::GetCRC(uint8_t* buffer,
 
         uint8_t* start_crc = buffer + Protocol::HEADER_OFFSET + payload_size;
 
-        crc32 = start_crc[Protocol::CRC_FIRST_BYTE] << 24 |
-                (start_crc[Protocol::CRC_SECOND_BYTE] << 16) |
-                (start_crc[Protocol::CRC_THIRD_BYTE] << 8) |
-                (start_crc[Protocol::CRC_FOURTH_BYTE]);
+        crc32 = start_crc[Protocol::CRC_FIRST_BYTE] |
+                (start_crc[Protocol::CRC_SECOND_BYTE] << 8) |
+                (start_crc[Protocol::CRC_THIRD_BYTE] << 16) |
+                (start_crc[Protocol::CRC_FOURTH_BYTE] << 24);
 
         result = std::make_pair(crc32, ESP_OK);
 

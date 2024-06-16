@@ -4,20 +4,18 @@
 #include "HAL/memory/SharedMemoryManager.h"
 
 esp_err_t SerialCommunicationManager::StorePackage(std::unique_ptr<TitaniumPackage>& package) {
-    auto shared_memory_manager = SharedMemoryManager::GetInstance();
-    auto payload               = std::make_unique<uint8_t[]>(package.get()->size());
+    auto payload = std::make_unique<uint8_t[]>(package.get()->size());
 
     package.get()->Consume(payload.get());
 
-    return shared_memory_manager->Write(package.get()->memory_area(), package.get()->size(), payload.get());
+    return this->_shared_memory_manager.get()->Write(package.get()->memory_area(), package.get()->size(), payload.get());
 }
 
 std::unique_ptr<TitaniumPackage> SerialCommunicationManager::GenerateResponsePackage(uint8_t memory_area) {
-    auto shared_memory_manager = SharedMemoryManager::GetInstance();
-    auto response_size         = shared_memory_manager->GetAreaSize(memory_area);
-    auto response_payload      = std::make_unique<uint8_t[]>(response_size);
+    auto response_size    = this->_shared_memory_manager.get()->GetAreaSize(memory_area);
+    auto response_payload = std::make_unique<uint8_t[]>(response_size);
 
-    shared_memory_manager->Read<uint8_t>(memory_area, response_payload.get());
+    this->_shared_memory_manager.get()->Read<uint8_t>(memory_area, response_payload.get());
 
     return std::make_unique<TitaniumPackage>(response_size, RESPONSE_COMMAND, memory_area, response_payload.get());
 }
@@ -43,18 +41,18 @@ void SerialCommunicationManager::Execute(void) {
             continue;
         }
 
-        auto received_bytes = this->_driver.get()->Read(this->buffer.get());
+        auto received_bytes = this->_driver.get()->Read(this->_buffer.get());
         if (received_bytes > 0) {
             std::unique_ptr<TitaniumPackage> package = nullptr;
 
-            auto result = protocol.Decode(this->buffer.get(), received_bytes, package);
+            auto result = protocol.Decode(this->_buffer.get(), received_bytes, package);
 
             if (result == ESP_OK) {
                 if (package.get()->command() == READ_COMMAND) {
                     auto response_package     = this->GenerateResponsePackage(package.get()->memory_area());
-                    auto response_buffer_size = protocol.Encode(response_package, this->buffer.get(), this->_driver.get()->buffer_size());
+                    auto response_buffer_size = protocol.Encode(response_package, this->_buffer.get(), this->_driver.get()->buffer_size());
 
-                    result = this->_driver.get()->Write(this->buffer.get(), response_buffer_size);
+                    result = this->_driver.get()->Write(this->_buffer.get(), response_buffer_size);
 
                 } else if (package.get()->command() == WRITE_COMMAND) {
                     result = StorePackage(package);
@@ -63,14 +61,22 @@ void SerialCommunicationManager::Execute(void) {
 
             this->Acknowledge(result);
 
-            vTaskDelay(pdMS_TO_TICKS(100));
+        } else if (this->_shared_memory_manager.get()->IsAreaDataUpdated(this->_memory_area)) {
+            auto result               = ESP_FAIL;
+            auto response_package     = this->GenerateResponsePackage(this->_memory_area);
+            auto response_buffer_size = protocol.Encode(response_package, this->_buffer.get(), this->_driver.get()->buffer_size());
+
+            result = this->_driver.get()->Write(this->_buffer.get(), response_buffer_size);
+            this->Acknowledge(result);
         }
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
-void SerialCommunicationManager::InstallDriver(IDriverInterface* driver_interface) {
+void SerialCommunicationManager::InstallDriver(IDriverInterface* driver_interface, uint8_t memory_area) {
     this->_driver.reset(driver_interface);
-    this->buffer = std::make_unique<uint8_t[]>(driver_interface->buffer_size());
+    this->_buffer = std::make_unique<uint8_t[]>(driver_interface->buffer_size());
+    this->_memory_area = memory_area;
 }
 
 /**
@@ -79,5 +85,6 @@ void SerialCommunicationManager::InstallDriver(IDriverInterface* driver_interfac
  * @returns The result of the initialization process.
  */
 esp_err_t SerialCommunicationManager::Initialize(void) {
-    return ESP_OK;  // Maybe remove this
+    this->_shared_memory_manager.reset(SharedMemoryManager::GetInstance());
+    return ESP_OK;
 }

@@ -25,18 +25,21 @@ esp_err_t SharedMemoryManager::SignUpSharedArea(uint8_t index, uint16_t size_in_
                                                 AccessType access_type) {
     esp_err_t result = ESP_FAIL;
 
-    if (index < this->_maximum_shared_memory) {
-        if (this->_shared_memory_array[index] == nullptr) {
-            this->_shared_memory_array[index] =
-                std::make_unique<SharedMemory>(index, size_in_bytes,
-                                               access_type);
-            result = ESP_OK;
-        } else {
-            result = ESP_ERR_INVALID_STATE;
+    do {
+        if (index >= this->_maximum_shared_memory) {
+            result = ESP_ERR_INVALID_ARG;
+            break;
         }
-    } else {
-        result = ESP_ERR_INVALID_ARG;
-    }
+
+        if (this->_shared_memory_array[index] != nullptr) {
+            result = ESP_ERR_INVALID_STATE;
+            break;
+        }
+
+        this->_shared_memory_array[index] = std::make_unique<SharedMemory>(index, size_in_bytes, access_type);
+        result                            = ESP_OK;
+
+    } while (0);
 
     return result;
 }
@@ -50,7 +53,6 @@ esp_err_t SharedMemoryManager::SignUpSharedArea(uint8_t index, uint16_t size_in_
 bool SharedMemoryManager::IsAreaDataUpdated(uint8_t area_index) {
     return this->_shared_memory_array[area_index]->GetAreaHasUpdated();
 }
-
 
 /**
  * @brief Retrieves the size of the specified memory area.
