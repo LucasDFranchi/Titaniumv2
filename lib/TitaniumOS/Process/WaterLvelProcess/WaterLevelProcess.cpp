@@ -1,33 +1,88 @@
 #include "WaterLevelProcess.h"
-
 #include "Managers/ManagersAreaIndex.h"
 
-const char* arr[] = {
-    "2.91M", "3.14M", "0.12M", "1.76M", "0.98M",
-    "3.82M", "2.45M", "0.55M", "1.23M", "3.67M",
-    "0.89M", "2.34M", "1.45M", "3.01M", "0.76M",
-    "3.22M", "0.43M", "2.87M", "1.67M", "0.21M",
-    "2.09M", "1.98M", "0.34M", "3.55M", "0.65M",
-    "2.76M", "1.12M", "0.99M", "3.44M", "1.89M"};
+#include "esp_timer.h"
+#include "stdlib.h"
 
 void WaterLevelProcess::Execute(void) {
     if (this->Initialize() != ESP_OK) {
         vTaskDelete(this->_process_handler);
     }
 
-    uint8_t cont = 0;
+    this->_gpio_manager = GPIOManager::GetInstance();
 
     while (1) {
-        this->_shared_memory_manager.get()->Write(ManagersAreaIndex::UART, sizeof(water_level_st), const_cast<char*>(arr[cont]));
+        //this->_shared_memory_manager.get()->Write(ManagersAreaIndex::UART, sizeof(water_level_st), const_cast<char*>(arr[cont]));
+        this->UpdateWaterLevel(this->GetWaterLevel());
 
-        if (cont > sizeof(arr)) {
-            cont = 0;
-        } else {
-            cont++;
-        }
+        //to Debug only
+        //printf("distance %s\n", (char*)this->_water_level);
 
-        vTaskDelay(pdMS_TO_TICKS(10000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
+}
+
+/**
+ * Updates the internal WaterLevel variable 
+ *
+ * .
+ */
+void WaterLevelProcess::UpdateWaterLevel(uint32_t distance)
+{
+    utoa(distance, (char*)this->_water_level, 10);
+    this->_water_level[3] = '/0';
+}
+
+/**
+ * Runs the whole process to get the water level from sensor (jsn-sr04t), mode 0.
+ *
+ * @returns The distance in uint32_t .
+ */
+uint32_t WaterLevelProcess::GetWaterLevel()
+{   
+    //printf("init reading distance\n");
+    this->_gpio_manager->WriteGPIO(SENSOR_TRIG, state_gpio_et::HIGH);
+    vTaskDelay(pdMS_TO_TICKS(10));
+    this->_gpio_manager->WriteGPIO(SENSOR_TRIG, state_gpio_et::LOW);
+
+    uint32_t timeout_count = 0;
+
+    auto echoLevel = this->_gpio_manager->ReadGPIO(SENSOR_ECHO);
+    while (echoLevel == 0)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1));
+        echoLevel = this->_gpio_manager->ReadGPIO(SENSOR_ECHO);
+        timeout_count++;
+        if(timeout_count > 100000)
+        {
+            timeout_count = 0; 
+            //printf("Error, sending trigger again\n");
+            return 0;
+        }
+    } ;
+
+    int64_t start_time = esp_timer_get_time();
+    do
+    {
+      echoLevel = this->_gpio_manager->ReadGPIO(SENSOR_ECHO);
+    } while (echoLevel);
+
+    int64_t end_time = esp_timer_get_time();
+
+    int64_t elapsed_time = end_time - start_time;
+    
+    return this->CalculateDistance(elapsed_time);
+    //printf("Distance: %ld, count %lld \n", this->_distance, elapsed_time);
+}
+
+/**
+ * Calculates the distance as per the sensor echo reading.
+ *
+ * @returns The distance in uint32_t .
+ */
+uint32_t WaterLevelProcess::CalculateDistance(uint32_t timer_count)
+{
+    return timer_count/58;
 }
 
 /**
