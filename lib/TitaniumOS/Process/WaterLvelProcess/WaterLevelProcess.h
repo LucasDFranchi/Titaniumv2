@@ -3,10 +3,11 @@
 
 #include "HAL/memory/SharedMemoryManager.h"
 #include "Process/Template/ProcessTemplate.h"
+#include "HAL/gpio/GPIOManager.h"
 
 typedef struct water_level_st {
     uint8_t water_level[6];
-} __attribute__((packed)) water_level_st;
+} _attribute_((packed)) water_level_st;
 
 class WaterLevelProcess : public ProcessTemplate {
    public:
@@ -16,6 +17,9 @@ class WaterLevelProcess : public ProcessTemplate {
 
    private:
     esp_err_t Initialize(void);
+    uint32_t GetWaterLevel(void);
+    uint32_t CalculateDistance(uint32_t timer_count);
+    void UpdateWaterLevel(uint32_t distance);
 
    private:
     TaskHandle_t _process_handler                               = NULL;
@@ -23,6 +27,12 @@ class WaterLevelProcess : public ProcessTemplate {
 
    private:
    uint8_t _water_level[5] = {0};
+   uint32_t _distance;
+   GPIOManager* _gpio_manager;
+
+   
 };
+
+
 
 #endif /* WATER_LEVEL_PROCESS */
