@@ -45,34 +45,58 @@ uint32_t WaterLevelProcess::GetWaterLevel()
     vTaskDelay(pdMS_TO_TICKS(10));
     this->_gpio_manager->WriteGPIO(SENSOR_TRIG, state_gpio_et::LOW);
 
-    uint32_t timeout_count = 0;
-
-    auto echoLevel = this->_gpio_manager->ReadGPIO(SENSOR_ECHO);
-    while (echoLevel == 0)
+    auto echo_level = this->_gpio_manager->ReadGPIO(SENSOR_ECHO);
+    while (echo_level == 0)
     {
         vTaskDelay(pdMS_TO_TICKS(1));
-        echoLevel = this->_gpio_manager->ReadGPIO(SENSOR_ECHO);
-        timeout_count++;
-        if(timeout_count > 100000)
+        echo_level = this->_gpio_manager->ReadGPIO(SENSOR_ECHO);
+        if(this->IncrementAndCheckTimeout())
         {
-            timeout_count = 0; 
+            this->ResetTimeout();
             //printf("Error, sending trigger again\n");
             return 0;
         }
     } ;
 
+    this->ResetTimeout();
+
     int64_t start_time = esp_timer_get_time();
     do
     {
-      echoLevel = this->_gpio_manager->ReadGPIO(SENSOR_ECHO);
-    } while (echoLevel);
+      echo_level = this->_gpio_manager->ReadGPIO(SENSOR_ECHO);
+      if(this->IncrementAndCheckTimeout())
+      {
+          this->ResetTimeout();
+          //printf("Error, sending trigger again\n");
+          return 0;
+      }
+    } while (echo_level);
 
-    int64_t end_time = esp_timer_get_time();
-
-    int64_t elapsed_time = end_time - start_time;
+    int64_t elapsed_time = esp_timer_get_time() - start_time;
     
     return this->CalculateDistance(elapsed_time);
     //printf("Distance: %ld, count %lld \n", this->_distance, elapsed_time);
+}
+/**
+ * Reset internal timeout for the water level
+ *
+ * 
+ */
+void WaterLevelProcess::ResetTimeout()
+{
+    this->_timeout_count = 0;
+}
+
+/**
+ * Increment timer and check if timeout has beeing reached, 
+ *
+ * @return if timeout has reached WATER_LEVEL_TIMEOUT
+ */
+uint8_t WaterLevelProcess::IncrementAndCheckTimeout()
+{
+    this->_timeout_count++;
+    
+    return this->_timeout_count > WATER_LEVEL_TIMEOUT;
 }
 
 /**

@@ -7,6 +7,8 @@ GPIOInternal gpio_internal_list[] = {
     GPIOInternal(LED_WHITE, GPIO_MODE_OUTPUT),
     GPIOInternal(SPI_CS, GPIO_MODE_OUTPUT),
     GPIOInternal(LORA_RST, GPIO_MODE_OUTPUT),
+    GPIOInternal(SENSOR_ECHO, GPIO_MODE_INPUT),
+    GPIOInternal(SENSOR_TRIG, GPIO_MODE_OUTPUT)
 };
 
 /**

@@ -9,7 +9,9 @@
 typedef enum gpio_id_e{
     LED_WHITE = GPIO_NUM_25, /**< GPIO ID for white LED. */
     SPI_CS    = GPIO_NUM_18, /**< GPIO ID for SPI chip select. */
-    LORA_RST  = GPIO_NUM_14  /**< GPIO ID for LoRa reset. */
+    LORA_RST  = GPIO_NUM_14,  /**< GPIO ID for LoRa reset. */
+    SENSOR_ECHO = GPIO_NUM_27, /**< GPIO ID for Water level sensor feedback. */
+    SENSOR_TRIG = GPIO_NUM_25 /**< GPIO ID Water level sensor trigger. */
 } gpio_id_et;
 
 /**
