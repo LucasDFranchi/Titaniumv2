@@ -41,9 +41,9 @@ class HTTPServerManager : public ProcessTemplate {
    private:
     httpd_uri_t _http_requests_list[maximum_requests_list_size];
     httpd_config_t _config;
-    httpd_handle_t _server                      = NULL;
-    TaskHandle_t _process_handler               = NULL;
-    SharedMemoryManager* _shared_memory_manager = NULL;
+    httpd_handle_t _server                      = nullptr;
+    TaskHandle_t _process_handler               = nullptr;
+    SharedMemoryManager* _shared_memory_manager = nullptr;
     connection_st _connection_status{};
     connection_st _last_connection_status{};
     uint8_t _server_status = NetworkStatus::NOT_CONNECTED;

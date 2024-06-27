@@ -1,5 +1,6 @@
 #include "GPIOManager.h"
 
+// TODO: Find a better place for this struct, should be in a config file.
 /**
  * @brief Internal structure to store GPIO configuration.
  */
@@ -18,7 +19,7 @@ GPIOInternal gpio_internal_list[] = {
  * @return ESP_OK if initialization is successful, otherwise an error code.
  */
 esp_err_t GPIOManager::Initialize(void) {
-    auto result = ESP_FAIL;
+    auto result = ESP_OK;
 
     this->_gpio_array_list_size =
         sizeof(gpio_internal_list) / sizeof(gpio_internal_list[0]);

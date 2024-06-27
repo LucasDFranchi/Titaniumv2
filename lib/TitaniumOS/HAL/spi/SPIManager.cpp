@@ -8,13 +8,13 @@
  *
  * @return ESP_OK if initialization is successful, otherwise an error code.
  */
-esp_err_t SPIManager::Initialize(void) {
+esp_err_t SPIManager::Initialize(gpio_num_t mosi, gpio_num_t miso, gpio_num_t sclk) {
     auto result = ESP_OK;
     this->_gpio_manager = GPIOManager::GetInstance();
 
-    this->_bus.mosi_io_num = GPIO_NUM_27;
-    this->_bus.miso_io_num = GPIO_NUM_19;
-    this->_bus.sclk_io_num = GPIO_NUM_5;
+    this->_bus.mosi_io_num = mosi;
+    this->_bus.miso_io_num = miso;
+    this->_bus.sclk_io_num = sclk;
     this->_bus.quadwp_io_num = -1;
     this->_bus.quadhd_io_num = -1;
     this->_bus.max_transfer_sz = 1024;

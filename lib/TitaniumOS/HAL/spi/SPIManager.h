@@ -17,7 +17,7 @@ class SPIManager{
     static SPIManager* GetInstance(void);
 
     public:
-    esp_err_t Initialize(void);
+    esp_err_t Initialize(gpio_num_t mosi, gpio_num_t miso, gpio_num_t sclk);
     esp_err_t DeviceTransmit(uint8_t* transmission_packet, uint8_t* receive_packet, uint8_t size);
     
     private:
