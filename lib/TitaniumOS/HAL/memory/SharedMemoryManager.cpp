@@ -1,9 +1,9 @@
 #include "SharedMemoryManager.h"
 
 /**
- * Initializes the MemoryManager.
+ * @brief Initializes the MemoryManager.
  *
- * @returns ESP_OK if initialization is successful, otherwise an error code.
+ * @return esp_err_t ESP_OK if initialization is successful, otherwise an error code.
  */
 esp_err_t SharedMemoryManager::Initialize(void) {
     for (uint16_t i = 0; i < this->_maximum_shared_memory; i++) {
@@ -69,9 +69,23 @@ uint16_t SharedMemoryManager::GetAreaSize(uint8_t area_index) {
 }
 
 /**
- * @brief Returns the singleton instance
+ * @brief Retrieves the size of the specified memory area.
  *
- * @return SharedMemoryManager*
+ * This function returns the amount of bytes written in that memory area at the given index within
+ * the shared memory array.
+ *
+ * @param[in] area_index The index of the memory area whose size is to be retrieved.
+ *                   The index must be within the valid range of the shared memory array.
+ * @return uint16_t The amount of written bytes.
+ */
+uint16_t SharedMemoryManager::GetWrittenBytes(uint8_t area_index) {
+    return this->_shared_memory_array[area_index]->GetWrittenBytes();
+}
+
+/**
+ * @brief Returns the singleton instance of SharedMemoryManager.
+ *
+ * @return SharedMemoryManager* Pointer to the singleton instance of SharedMemoryManager.
  */
 SharedMemoryManager* SharedMemoryManager::GetInstance(void) {
     if (singleton_pointer_ == nullptr) {

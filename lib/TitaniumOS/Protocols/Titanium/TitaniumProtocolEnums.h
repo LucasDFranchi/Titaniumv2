@@ -1,5 +1,5 @@
-#ifndef TITANIUM_PROTOCOL_ENUMS_GUARD
-#define TITANIUM_PROTOCOL_ENUMS_GUARD
+#ifndef TITANIUM_PROTOCOL_ENUMS_H
+#define TITANIUM_PROTOCOL_ENUMS_H
 
 #include "stdint.h"
 
@@ -16,4 +16,4 @@ enum command_e : uint8_t {
     TRANSMISSION_COMMAND = 'T', /**< Transmission command. */
 };
 
-#endif /* TITANIUM_PROTOCOL_ENUMS_GUARD */
+#endif /* TITANIUM_PROTOCOL_ENUMS_H */

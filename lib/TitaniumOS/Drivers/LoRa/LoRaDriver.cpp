@@ -62,6 +62,17 @@ namespace Driver {
     constexpr uint8_t WRITE_COMMAND = 0x80;
 }  // namespace Driver
 
+/**
+ * @brief Writes a buffer of raw bytes to the LoRa transceiver.
+ *
+ * This function sends a packet containing raw bytes to the LoRa transceiver.
+ * It first checks if the input buffer pointer is valid, then calls SendPacket
+ * to initiate the transmission. If successful, it sets the result to ESP_OK.
+ *
+ * @param[in] raw_bytes Pointer to the buffer containing data to transmit.
+ * @param[in] size Size of the data buffer in bytes.
+ * @return ESP_OK if the transmission is successful, otherwise an error code.
+ */
 esp_err_t LoRaDriver::Write(uint8_t *raw_bytes, uint16_t size) {
     auto result = ESP_FAIL;
 
@@ -78,6 +89,18 @@ esp_err_t LoRaDriver::Write(uint8_t *raw_bytes, uint16_t size) {
     return result;
 }
 
+/**
+ * @brief Reads a packet of raw bytes from the LoRa transceiver.
+ *
+ * This function attempts to receive a packet of raw bytes from the LoRa
+ * transceiver. It first checks if the input buffer pointer is valid and then
+ * sets the transceiver to receiver mode. If there is data available in the
+ * receiver buffer, it reads the packet into the provided buffer up to the
+ * size specified by _buffer_size.
+ *
+ * @param[out] raw_bytes Pointer to the buffer where received data will be stored.
+ * @return The number of bytes received, or 0 if no data is received or on error.
+ */
 uint16_t LoRaDriver::Read(uint8_t *raw_bytes) {
     auto received_bytes = 0;
 

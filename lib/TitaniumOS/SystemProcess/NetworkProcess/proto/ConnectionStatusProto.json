@@ -1,0 +1,15 @@
+{
+    "syntax": "titanium1",
+    "package": "ConnectionStatus",
+    "fields": [
+      {
+        "type": "uint8_t",
+        "name": "ap_status"
+      },
+      {
+        "type": "uint8_t",
+        "name": "sta_status"
+      }
+    ]
+  }
+  

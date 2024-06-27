@@ -4,7 +4,9 @@
 #include "string.h"
 
 /**
- * Initializes the SSD1306 display.
+ * @brief Initializes the SSD1306 display.
+ *
+ * This function sets up the I2C configuration and sends the initialization commands to the SSD1306 display.
  *
  * @returns ESP_OK if initialization is successful, otherwise an error code.
  */
@@ -32,22 +34,20 @@ esp_err_t SSD1306::Initialize(void) {
 }
 
 /**
- * Processes the given memory area data and prints the pattern on the SSD1306
- * display.
+ * @brief Processes the given memory area data and prints the pattern on the SSD1306 display.
  *
  * @param memory_area_data The data representing the memory area.
- *
- * @returns None
  */
 void SSD1306::Process(uint8_t* memory_area_data) {
     this->PrintPattern_(memory_area_data);
 }
 
 /**
- * Sends the initialization commands to the SSD1306 OLED display.
+ * @brief Sends the initialization commands to the SSD1306 OLED display.
  *
- * @returns ESP_OK if the initialization commands were sent successfully,
- * otherwise an error code.
+ * This function sends a series of commands to the SSD1306 to initialize the display.
+ *
+ * @returns ESP_OK if the initialization commands were sent successfully, otherwise an error code.
  */
 esp_err_t SSD1306::SendInitializationCommands_(void) {
     esp_err_t ret = ESP_OK;
@@ -62,10 +62,8 @@ esp_err_t SSD1306::SendInitializationCommands_(void) {
     ret += i2c_master_write_byte(cmd, this->OLED_CMD_SET_CHARGE_PUMP, true);
     ret += i2c_master_write_byte(cmd, 0x14, true);
 
-    ret += i2c_master_write_byte(cmd, this->OLED_CMD_SET_SEGMENT_REMAP,
-                                 true);  // reverse left-right mapping
-    ret += i2c_master_write_byte(cmd, this->OLED_CMD_SET_COM_SCAN_MODE,
-                                 true);  // reverse up-bottom mapping
+    ret += i2c_master_write_byte(cmd, this->OLED_CMD_SET_SEGMENT_REMAP, true); // reverse left-right mapping
+    ret += i2c_master_write_byte(cmd, this->OLED_CMD_SET_COM_SCAN_MODE, true); // reverse up-bottom mapping
 
     ret += i2c_master_write_byte(cmd, this->OLED_CMD_DISPLAY_ON, true);
     ret += i2c_master_stop(cmd);
@@ -78,14 +76,12 @@ esp_err_t SSD1306::SendInitializationCommands_(void) {
 }
 
 /**
- * Prints a pattern on the SSD1306 OLED display.
+ * @brief Prints a pattern on the SSD1306 OLED display.
+ *
+ * This function sends a pattern of data to the SSD1306 display to be rendered.
  *
  * @param pattern A pointer to the pattern data.
- *
- * @returns An esp_err_t value indicating the success or failure of the
- * operation.
- *          - ESP_OK: The pattern was printed successfully.
- *          - ESP_FAIL: The pattern pointer is null.
+ * @returns ESP_OK if the pattern was printed successfully, ESP_FAIL if the pattern pointer is null.
  */
 esp_err_t SSD1306::PrintPattern_(uint8_t* pattern) {
     i2c_cmd_handle_t cmd;
@@ -113,20 +109,20 @@ esp_err_t SSD1306::PrintPattern_(uint8_t* pattern) {
 }
 
 /**
- * Clears the display of the SSD1306 OLED module.
+ * @brief Clears the display of the SSD1306 OLED module.
  *
- * @returns An esp_err_t value indicating the success or failure of the
- * operation.
+ * This function clears the display by printing a pattern of zeros.
+ *
+ * @returns ESP_OK if the display was cleared successfully, otherwise an error code.
  */
-esp_err_t SSD1306::ClearDisplay_(void) { return this->PrintPattern_(0); }
+esp_err_t SSD1306::ClearDisplay_(void) {
+    return this->PrintPattern_(0);
+}
 
 /**
- * Sends a reset command to the SSD1306 display.
+ * @brief Sends a reset command to the SSD1306 display.
  *
- * This function resets the display by setting the OLED_I2C_RESET_GPIO pin to
- * low for a brief period of time, and then setting it back to high.
- *
- * @returns None
+ * This function resets the display by setting the OLED_I2C_RESET_GPIO pin to low for a brief period of time, and then setting it back to high.
  */
 void SSD1306::SendResetCommand_(void) {
     gpio_reset_pin(this->OLED_I2C_RESET_GPIO);
@@ -137,10 +133,11 @@ void SSD1306::SendResetCommand_(void) {
 }
 
 /**
- * Sets up the SSD1306 display for a specific page.
+ * @brief Sets up the SSD1306 display for a specific page.
  *
- * @param page The page number to set up.
+ * This function configures the display to start writing data at a specific page.
  *
+ * @param page The page number to set up (must be between 0 and 7).
  * @returns ESP_OK if the setup is successful, otherwise an error code.
  */
 esp_err_t SSD1306::SetupPage_(int page) {
@@ -155,8 +152,7 @@ esp_err_t SSD1306::SetupPage_(int page) {
         ret += i2c_master_write_byte(
             cmd, (this->OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);
 
-        ret += i2c_master_write_byte(cmd, this->OLED_CONTROL_BYTE_CMD_STREAM,
-                                     true);
+        ret += i2c_master_write_byte(cmd, this->OLED_CONTROL_BYTE_CMD_STREAM, true);
         ret += i2c_master_write_byte(cmd, (0x00), true);
         ret += i2c_master_write_byte(cmd, (0x10), true);
         ret += i2c_master_write_byte(cmd, 0xB0 | page, true);

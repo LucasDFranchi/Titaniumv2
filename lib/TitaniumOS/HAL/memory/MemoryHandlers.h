@@ -1,23 +1,23 @@
-#ifndef __MEMORY_HANDLER_GUARD__
-#define __MEMORY_HANDLER_GUARD__
+#ifndef MEMORY_HANDLER_H
+#define MEMORY_HANDLER_H
 
 #include "esp_err.h"
 
 /**
- * The function 'memcpy_s' copies a specified number of bytes from one memory
- * location to another, while performing checks for invalid sizes and memory
- * availability.
+ * @brief Copies a specified number of bytes from one memory location to another.
  *
- * @param pOut[out] A pointer to the destination buffer where the copied data
- * will be stored.
- * @param pIn[in] A pointer to the source memory location from where the data
- * will be copied.
- * @param size[in] The size parameter represents the number of bytes to be
- * copied from the source (pIn) to the destination (pOut).
+ * This function copies size_in_bytes bytes of data from the source memory
+ * location pIn to the destination memory location pOut, while performing checks
+ * for invalid sizes and memory availability.
  *
- * @return an 'esp_err_t' value, which is a type defined in the ESP-IDF
- * framework. The possible return values are 'ESP_OK', 'ESP_ERR_INVALID_SIZE',
- * and 'ESP_ERR_NO_MEM'.
+ * @tparam T Type of the elements in the memory buffer.
+ * @param[out] pOut Pointer to the destination memory buffer.
+ * @param[in] pIn Pointer to the source memory buffer.
+ * @param[in] size_in_bytes Size of the memory buffers in bytes.
+ * @return esp_err_t Error code indicating the result of the operation.
+ *         - ESP_OK if the memory copy operation is successful.
+ *         - ESP_ERR_INVALID_SIZE if size_in_bytes is 0.
+ *         - ESP_ERR_NO_MEM if either pOut or pIn is nullptr.
  */
 template <typename T>
 esp_err_t memcpy_s(T* pOut, T* pIn, uint32_t size_in_bytes) {
@@ -28,31 +28,29 @@ esp_err_t memcpy_s(T* pOut, T* pIn, uint32_t size_in_bytes) {
             result = ESP_ERR_INVALID_SIZE;
             break;
         }
-        if (pOut == nullptr) {
-            result = ESP_ERR_NO_MEM;
-            break;
-        }
-        if (pIn == nullptr) {
+        if (pOut == nullptr || pIn == nullptr) {
             result = ESP_ERR_NO_MEM;
             break;
         }
 
-        uint8_t* internal_input_pointer = reinterpret_cast<uint8_t*>(pIn);
+        uint8_t* internal_input_pointer  = reinterpret_cast<uint8_t*>(pIn);
         uint8_t* internal_output_pointer = reinterpret_cast<uint8_t*>(pOut);
 
-        for (int i = 0; i < size_in_bytes; i++) {
+        for (uint32_t i = 0; i < size_in_bytes; i++) {
             internal_output_pointer[i] = internal_input_pointer[i];
         }
     } while (0);
 
     return result;
 }
+
 /**
  * @brief Compares two memory buffers for equality.
  *
  * This function compares two memory buffers, pOut and pIn, of size
  * size_in_bytes for equality.
  *
+ * @tparam T Type of the elements in the memory buffer.
  * @param[out] pOut Pointer to the destination memory buffer.
  * @param[in] pIn Pointer to the source memory buffer.
  * @param[in] size_in_bytes Size of the memory buffers in bytes.
@@ -71,19 +69,15 @@ esp_err_t memcmp_s(T* pOut, T* pIn, uint32_t size_in_bytes) {
             result = ESP_ERR_INVALID_SIZE;
             break;
         }
-        if (pOut == nullptr) {
-            result = ESP_ERR_NO_MEM;
-            break;
-        }
-        if (pIn == nullptr) {
+        if (pOut == nullptr || pIn == nullptr) {
             result = ESP_ERR_NO_MEM;
             break;
         }
 
-        uint8_t* internal_input_pointer = reinterpret_cast<uint8_t*>(pIn);
+        uint8_t* internal_input_pointer  = reinterpret_cast<uint8_t*>(pIn);
         uint8_t* internal_output_pointer = reinterpret_cast<uint8_t*>(pOut);
 
-        for (int i = 0; i < size_in_bytes; i++) {
+        for (uint32_t i = 0; i < size_in_bytes; i++) {
             if (internal_output_pointer[i] != internal_input_pointer[i]) {
                 result = ESP_FAIL;
                 break;
@@ -95,15 +89,21 @@ esp_err_t memcmp_s(T* pOut, T* pIn, uint32_t size_in_bytes) {
 }
 
 /**
- * The function 'memset_s' sets a specified value to a block of memory.
+ * @brief Sets a specified value to a block of memory.
  *
- * @param pOut[out] A pointer to the memory location where the memset operation
+ * This function sets size_in_bytes bytes of the memory block pointed to by pOut
+ * to the specified value, while performing checks for invalid sizes and memory
+ * availability.
+ *
+ * @tparam T Type of the elements in the memory buffer.
+ * @param[out] pOut Pointer to the memory location where the memset operation
  * will be performed.
- * @param value[in] The value to be set in each byte of the memory block.
- * @param size_in_bytes[in] The size parameter represents the number of bytes to
- * be set in the memory block pointed to by pOut.
- *
- * @return an 'esp_err_t' value.
+ * @param[in] value The value to be set in each byte of the memory block.
+ * @param[in] size_in_bytes Size of the memory block in bytes.
+ * @return esp_err_t Error code indicating the result of the operation.
+ *         - ESP_OK if the memset operation is successful.
+ *         - ESP_ERR_INVALID_SIZE if size_in_bytes is 0.
+ *         - ESP_ERR_NO_MEM if pOut is nullptr.
  */
 template <typename T>
 esp_err_t memset_s(T* pOut, uint8_t value, uint32_t size_in_bytes) {
@@ -121,7 +121,7 @@ esp_err_t memset_s(T* pOut, uint8_t value, uint32_t size_in_bytes) {
 
         uint8_t* internal_output_pointer = reinterpret_cast<uint8_t*>(pOut);
 
-        for (int i = 0; i < size_in_bytes; i++) {
+        for (uint32_t i = 0; i < size_in_bytes; i++) {
             internal_output_pointer[i] = value;
         }
 
@@ -130,4 +130,4 @@ esp_err_t memset_s(T* pOut, uint8_t value, uint32_t size_in_bytes) {
     return result;
 }
 
-#endif /* __MEMORY_HANDLER_GUARD__ */
+#endif /* MEMORY_HANDLER_H */
