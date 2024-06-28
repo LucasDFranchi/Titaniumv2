@@ -8,10 +8,10 @@
 #include <HAL/gpio/GPIOManager.h>
 #include <HAL/memory/SharedMemoryManager.h>
 #include <HAL/spi/SPIManager.h>
-#include <Managers/HTTPServerManager/inc/HTTPServerManager.h>
-#include <Managers/ManagersAreaIndex.h>
-#include <Managers/NetworkManager/inc/NetworkManager.h>
-#include <Managers/SerialCommunicationManager/inc/SerialCommunicationManager.h>
+#include <SystemProcess/HTTPServerProcess/inc/HTTPServerProcess.h>
+#include <SystemProcess/ProcessAreasIndex.h>
+#include <SystemProcess/NetworkProcess/inc/NetworkProcess.h>
+#include <SystemProcess/CommunicationProcess/inc/CommunicationProcess.h>
 
 class Kernel {
    public:
@@ -25,10 +25,10 @@ class Kernel {
 
         this->InitializeHAL();
     };
-    esp_err_t InitializeNetwork(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
-    esp_err_t InitializeHTTPServer(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
-    esp_err_t InitializeLora(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
-    esp_err_t InitializeUart(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
+    esp_err_t EnableNetworkProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
+    esp_err_t EnableHTTPServerProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
+    esp_err_t EnableLoraProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
+    esp_err_t EnableUartProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
     esp_err_t SignUpSharedArea(uint8_t index, uint16_t size_in_bytes,
                                AccessType access_type, bool can_fail = false);
 
@@ -43,11 +43,11 @@ class Kernel {
     SharedMemoryManager* _shared_memory_manager;  ///< Pointer to SharedMemoryManager instance.
     GPIOManager* _gpio_manager;                   ///< Pointer to GPIOManager instance.
     SPIManager* _spi_manager;                     ///< Pointer to SPIManager instance.
-    NetworkManager* _network_manager;             ///< Pointer to NetworkManager instance.
-    HTTPServerManager* _http_server_manager;      ///< Pointer to HTTPServerManager instance.
+    NetworkProcess* _network_process;             ///< Pointer to NetworkManager instance.
+    HTTPServerProcess* _http_server_process;      ///< Pointer to HTTPServerManager instance.
     // TODO: Change SerialCommunciation Manager to CommunicationManager
-    SerialCommunicationManager* _uart_communication_manager = nullptr; ///< Pointer to UART Communication Manager instance.
-    SerialCommunicationManager* _lora_communication_manager = nullptr; ///< Pointer to LoRa Communication Manager instance.
+    CommunicationProcess* _uart_communication_process = nullptr; ///< Pointer to UART Communication Manager instance.
+    CommunicationProcess* _lora_communication_process = nullptr; ///< Pointer to LoRa Communication Manager instance.
 };
 
 #endif /* KERNEL_H */

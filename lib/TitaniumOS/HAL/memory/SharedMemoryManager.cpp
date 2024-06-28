@@ -1,9 +1,9 @@
 #include "SharedMemoryManager.h"
 
 /**
- * Initializes the MemoryManager.
+ * @brief Initializes the MemoryManager.
  *
- * @returns ESP_OK if initialization is successful, otherwise an error code.
+ * @return esp_err_t ESP_OK if initialization is successful, otherwise an error code.
  */
 esp_err_t SharedMemoryManager::Initialize(void) {
     for (uint16_t i = 0; i < this->_maximum_shared_memory; i++) {
@@ -69,9 +69,9 @@ uint16_t SharedMemoryManager::GetAreaSize(uint8_t area_index) {
 }
 
 /**
- * @brief Returns the singleton instance
+ * @brief Returns the singleton instance of SharedMemoryManager.
  *
- * @return SharedMemoryManager*
+ * @return SharedMemoryManager* Pointer to the singleton instance of SharedMemoryManager.
  */
 SharedMemoryManager* SharedMemoryManager::GetInstance(void) {
     if (singleton_pointer_ == nullptr) {

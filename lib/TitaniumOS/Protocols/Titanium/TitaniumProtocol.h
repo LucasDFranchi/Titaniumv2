@@ -1,5 +1,5 @@
-#ifndef TITANIUM_PROTOCOL_GUARD
-#define TITANIUM_PROTOCOL_GUARD
+#ifndef TITANIUM_PROTOCOL_H
+#define TITANIUM_PROTOCOL_H
 
 #include "esp_err.h"
 
@@ -53,4 +53,4 @@ class TitaniumProtocol {
     void EncodeCRC(uint8_t* buffer, uint32_t crc);
 };
 
-#endif /* TITANIUM_PROTOCOL_GUARD */
+#endif /* TITANIUM_PROTOCOL_H */

@@ -3,41 +3,42 @@
  * @brief A simple singly linked list implementation in C++ with FreeRTOS compatibility.
  */
 
-#ifndef LINKED_LIST
-#define LINKED_LIST
+#ifndef KERNEL_H
+#define KERNEL_H
 
+#include "freertos/semphr.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include "freertos/semphr.h"
 
 /**
  * @brief A simple singly linked list template.
- * 
+ *
  * @tparam T The type of data stored in the list.
  */
-template<typename T>
+template <typename T>
 class LinkedList {
-private:
+   private:
     /**
      * @brief Node structure for the linked list.
      */
     struct Node {
-        T data; ///< Data stored in the node.
-        Node* next; ///< Pointer to the next node in the list.
+        T data;      ///< Data stored in the node.
+        Node* next;  ///< Pointer to the next node in the list.
     };
 
-    Node* head; ///< Pointer to the head (first node) of the list.
-    Node* tail; ///< Pointer to the tail (last node) of the list.
-    size_t listSize; ///< Number of elements in the list.
-    SemaphoreHandle_t mutex; ///< Mutex to ensure thread safety for list operations.
+    Node* head;               ///< Pointer to the head (first node) of the list.
+    Node* tail;               ///< Pointer to the tail (last node) of the list.
+    size_t listSize;          ///< Number of elements in the list.
+    SemaphoreHandle_t mutex;  ///< Mutex to ensure thread safety for list operations.
 
-public:
+   public:
     /**
      * @brief Constructor.
      */
-    LinkedList() : head(nullptr), tail(nullptr), listSize(0) {
+    LinkedList()
+        : head(nullptr), tail(nullptr), listSize(0) {
         mutex = xSemaphoreCreateMutex();
-        configASSERT(mutex != NULL); // Check if mutex creation fails
+        configASSERT(mutex != NULL);  // Check if mutex creation fails
     }
 
     /**
@@ -50,7 +51,7 @@ public:
 
     /**
      * @brief Adds a new element to the end of the list.
-     * 
+     *
      * @param[in] value The value to be added.
      */
     void push_back(const T& value) {
@@ -62,7 +63,7 @@ public:
             head = tail = newNode;
         } else {
             tail->next = newNode;
-            tail = newNode;
+            tail       = newNode;
         }
 
         listSize++;
@@ -78,15 +79,15 @@ public:
 
         if (head == nullptr) {
             xSemaphoreGive(mutex);
-            return; // List is empty
+            return;  // List is empty
         }
 
         Node* temp = head;
-        head = head->next;
+        head       = head->next;
         delete temp;
 
         if (head == nullptr) {
-            tail = nullptr; // List is now empty
+            tail = nullptr;  // List is now empty
         }
 
         listSize--;
@@ -96,7 +97,7 @@ public:
 
     /**
      * @brief Returns the number of elements in the list.
-     * 
+     *
      * @return The number of elements in the list.
      */
     size_t size() const {
@@ -105,7 +106,7 @@ public:
 
     /**
      * @brief Checks if the list is empty.
-     * 
+     *
      * @return True if the list is empty, false otherwise.
      */
     bool empty() const {
@@ -120,15 +121,15 @@ public:
 
         while (head != nullptr) {
             Node* temp = head;
-            head = head->next;
+            head       = head->next;
             delete temp;
         }
 
-        tail = nullptr;
+        tail     = nullptr;
         listSize = 0;
 
         xSemaphoreGive(mutex);
     }
 };
 
-#endif // LINKED_LIST
+#endif /* KERNEL_H */

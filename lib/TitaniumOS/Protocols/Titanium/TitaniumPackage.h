@@ -1,5 +1,5 @@
-#ifndef TITANIUM_PACKAGE_GUARD
-#define TITANIUM_PACKAGE_GUARD
+#ifndef TITANIUM_PACKAGE_H
+#define TITANIUM_PACKAGE_H
 
 #include <memory>
 
@@ -32,8 +32,8 @@ class TitaniumPackage {
     TitaniumPackage(uint16_t size, command_e command, uint8_t memory_area, uint8_t* data)
         : _command(command), _memory_area(memory_area) {
         uint16_t real_size = this->TrimTrailingZeros(data, size);
-        this->_size              = real_size;
-        this->_data              = std::make_unique<uint8_t[]>(real_size);
+        this->_size        = real_size;
+        this->_data        = std::make_unique<uint8_t[]>(real_size);
         memcpy_s<uint8_t>(this->_data.get(), data, real_size);
     }
     /**
@@ -114,4 +114,4 @@ class TitaniumPackage {
     std::unique_ptr<uint8_t[]> _data;          ///< The buffer storing the package data.
 };
 
-#endif /* TITANIUM_PROTOCOL_GUARD */
+#endif /* TITANIUM_PACKAGE_H */

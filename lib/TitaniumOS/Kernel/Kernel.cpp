@@ -28,7 +28,7 @@ void Kernel::InitializeHAL(void) {
         this->_spi_initialized = true;
     }
 
-    ESP_ERROR_CHECK(this->_shared_memory_manager->SignUpSharedArea(ManagersAreaIndex::SCRATCH, 128, READ_WRITE));
+    ESP_ERROR_CHECK(this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::SCRATCH, 128, READ_WRITE));
 }
 
 /**
@@ -38,16 +38,17 @@ void Kernel::InitializeHAL(void) {
  * @param[in] can_fail Flag indicating if initialization failure should be tolerated.
  * @return ESP_OK if initialization succeeds, otherwise an error code.
  */
-esp_err_t Kernel::InitializeNetwork(uint32_t process_stack, uint8_t process_priority, bool can_fail) {
+esp_err_t Kernel::EnableNetworkProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail) {
     auto result            = ESP_OK;
-    this->_network_manager = new NetworkManager("Network Proccess", process_stack, process_priority);  // 10240 4
-    this->_network_manager->InitializeProcess();
+    this->_network_process = new NetworkProcess("Network Proccess", process_stack, process_priority);  // 10240 4
 
-    result += this->_shared_memory_manager->SignUpSharedArea(ManagersAreaIndex::CREDENTIALS, sizeof(credentials_st), READ_WRITE);
-    result += this->_shared_memory_manager->SignUpSharedArea(ManagersAreaIndex::CONNECTION, sizeof(connection_st), READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::CREDENTIALS, sizeof(credentials_st), READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::CONNECTION, sizeof(connection_st), READ_WRITE);
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
     }
+    
+    this->_network_process->InitializeProcess();
 
     return result;
 }
@@ -59,10 +60,10 @@ esp_err_t Kernel::InitializeNetwork(uint32_t process_stack, uint8_t process_prio
  * @param[in] can_fail Flag indicating if initialization failure should be tolerated.
  * @return ESP_OK if initialization succeeds, otherwise an error code.
  */
-esp_err_t Kernel::InitializeHTTPServer(uint32_t process_stack, uint8_t process_priority, bool can_fail) {
+esp_err_t Kernel::EnableHTTPServerProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail) {
     auto result                = ESP_OK;
-    this->_http_server_manager = new HTTPServerManager("HTTP Server Process", process_stack, process_priority);
-    this->_http_server_manager->InitializeProcess();
+    this->_http_server_process = new HTTPServerProcess("HTTP Server Process", process_stack, process_priority);
+    this->_http_server_process->InitializeProcess();
 
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
@@ -78,18 +79,18 @@ esp_err_t Kernel::InitializeHTTPServer(uint32_t process_stack, uint8_t process_p
  * @param[in] can_fail Flag indicating if initialization failure should be tolerated.
  * @return ESP_OK if initialization succeeds, otherwise an error code.
  */
-esp_err_t Kernel::InitializeUart(uint32_t process_stack, uint8_t process_priority, bool can_fail) {
+esp_err_t Kernel::EnableUartProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail) {
     auto result                       = ESP_OK;
-    this->_uart_communication_manager = new SerialCommunicationManager("UART Communication Proccess", process_stack, process_priority);
-    this->_uart_communication_manager->InstallDriver(
+    this->_uart_communication_process = new CommunicationProcess("UART Communication Proccess", process_stack, process_priority);
+    this->_uart_communication_process->InstallDriver(
         new UARTDriver(UART_NUM_0, Baudrate::BaudRate115200, 1024),
-        ManagersAreaIndex::UART_RECEIVE,
-        ManagersAreaIndex::UART_TRANSMIT);
+        ProcessAreaIndex::UART_RECEIVE,
+        ProcessAreaIndex::UART_TRANSMIT);
 
-    result += this->_shared_memory_manager->SignUpSharedArea(ManagersAreaIndex::UART_RECEIVE, 256, READ_WRITE);
-    result += this->_shared_memory_manager->SignUpSharedArea(ManagersAreaIndex::UART_TRANSMIT, 256, READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::UART_RECEIVE, 256, READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::UART_TRANSMIT, 256, READ_WRITE);
 
-    this->_uart_communication_manager->InitializeProcess();
+    this->_uart_communication_process->InitializeProcess();
 
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
@@ -105,7 +106,7 @@ esp_err_t Kernel::InitializeUart(uint32_t process_stack, uint8_t process_priorit
  * @param[in] can_fail Flag indicating if initialization failure should be tolerated.
  * @return ESP_OK if initialization succeeds, otherwise an error code.
  */
-esp_err_t Kernel::InitializeLora(uint32_t process_stack, uint8_t process_priority, bool can_fail) {
+esp_err_t Kernel::EnableLoraProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail) {
     auto result = ESP_OK;
 
     do {
@@ -114,16 +115,16 @@ esp_err_t Kernel::InitializeLora(uint32_t process_stack, uint8_t process_priorit
             break;
         }
 
-        this->_lora_communication_manager = new SerialCommunicationManager("LoRa Communication Proccess", process_stack, process_priority);
-        this->_lora_communication_manager->InstallDriver(
+        this->_lora_communication_process = new CommunicationProcess("LoRa Communication Proccess", process_stack, process_priority);
+        this->_lora_communication_process->InstallDriver(
             new LoRaDriver(Regions::BRAZIL, CRCMode::DISABLE, 255),
-            ManagersAreaIndex::LORA_RECEIVE,
-            ManagersAreaIndex::LORA_TRANSMIT);
+            ProcessAreaIndex::LORA_RECEIVE,
+            ProcessAreaIndex::LORA_TRANSMIT);
 
-        result += this->_shared_memory_manager->SignUpSharedArea(ManagersAreaIndex::LORA_RECEIVE, 256, READ_WRITE);
-        result += this->_shared_memory_manager->SignUpSharedArea(ManagersAreaIndex::LORA_TRANSMIT, 256, READ_WRITE);
+        result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::LORA_RECEIVE, 256, READ_WRITE);
+        result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::LORA_TRANSMIT, 256, READ_WRITE);
 
-        this->_lora_communication_manager->InitializeProcess();
+        this->_lora_communication_process->InitializeProcess();
 
     } while (0);
 
@@ -162,5 +163,5 @@ void Kernel::InjectDebugCredentials(const char * ssid, const char* password) {
     memcpy_s<uint8_t>(credentials_debug.sta_ssid, (uint8_t*)ssid, sizeof(credentials_debug.sta_ssid));
     memcpy_s<uint8_t>(credentials_debug.sta_password, (uint8_t*)password, sizeof(credentials_debug.sta_password));
 
-    this->_shared_memory_manager->Write(ManagersAreaIndex::CREDENTIALS, sizeof(credentials_st), &credentials_debug);
+    this->_shared_memory_manager->Write(ProcessAreaIndex::CREDENTIALS, sizeof(credentials_st), &credentials_debug);
 }

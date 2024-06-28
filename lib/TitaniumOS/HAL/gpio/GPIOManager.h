@@ -1,35 +1,33 @@
-#ifndef GPIO_MANAGER_GUARD
-#define GPIO_MANAGER_GUARD
-
-#include "stdint.h"
-
-#include "esp_err.h"
-#include "driver/gpio.h"
+#ifndef GPIO_MANAGER_H
+#define GPIO_MANAGER_H
 
 #include "GPIOInternal.h"
-
+#include "driver/gpio.h"
+#include "esp_err.h"
+#include "stdint.h"
 
 /**
- * @brief Manages io interface.
+ * @brief Manages GPIO interfaces.
  */
-class GPIOManager{
-
-    public:
+class GPIOManager {
+   public:
     GPIOManager(const GPIOManager& obj) = delete;
     static GPIOManager* GetInstance(void);
-    
-    public:
+
+   public:
     esp_err_t Initialize(void);
     esp_err_t WriteGPIO(gpio_id_et id, state_gpio_et state);
-    uint8_t   ReadGPIO(gpio_id_et id);
+    uint8_t ReadGPIO(gpio_id_et id);
 
-    private:
-    GPIOManager(){};
+   private:
+    GPIOManager() {}
     static GPIOManager* singleton_pointer_;
-    
-    private:
-    GPIOInternal* _GetGPIO(gpio_id_et id);
+
+   private:
+    GPIOInternal* GetGPIO(gpio_id_et id);
+
+   private:
     uint8_t _gpio_array_list_size;
 };
 
-#endif /* GPIO_MANAGER_GUARD */
+#endif /* GPIO_MANAGER_H */

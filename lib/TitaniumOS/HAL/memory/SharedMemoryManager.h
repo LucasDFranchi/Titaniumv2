@@ -1,5 +1,5 @@
-#ifndef SHARED_MEMORY_MANAGER_GUARD
-#define SHARED_MEMORY_MANAGER_GUARD
+#ifndef SHARED_MEMORY_MANAGER_H
+#define SHARED_MEMORY_MANAGER_H
 
 #include <stdint.h>
 
@@ -107,4 +107,4 @@ class SharedMemoryManager {
     }
 };
 
-#endif /* SHARED_MEMORY_MANAGER_GUARD */
+#endif /* SHARED_MEMORY_MANAGER_H */

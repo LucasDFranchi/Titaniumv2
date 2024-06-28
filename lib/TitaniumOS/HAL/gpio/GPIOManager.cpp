@@ -32,13 +32,13 @@ esp_err_t GPIOManager::Initialize(void) {
  *
  * This function writes the specified state to the GPIO pin identified by `id`.
  *
- * @param id The ID of the GPIO pin.
- * @param state The state to be written (HIGH or LOW).
+ * @param[in] id The ID of the GPIO pin.
+ * @param[in] state The state to be written (HIGH or LOW).
  * @return ESP_OK if writing is successful, otherwise an error code.
  */
 esp_err_t GPIOManager::WriteGPIO(gpio_id_et id, state_gpio_et state) {
-    auto result = ESP_FAIL;
-    GPIOInternal *selected_gpio = this->_GetGPIO(id);
+    auto result                 = ESP_FAIL;
+    GPIOInternal *selected_gpio = this->GetGPIO(id);
 
     do {
         if (selected_gpio == nullptr) {
@@ -61,12 +61,12 @@ esp_err_t GPIOManager::WriteGPIO(gpio_id_et id, state_gpio_et state) {
  *
  * This function reads and returns the state of the GPIO pin identified by `id`.
  *
- * @param id The ID of the GPIO pin.
+ * @param[in] id The ID of the GPIO pin.
  * @return The state of the GPIO pin (HIGH or LOW), or -1 if an error occurs.
  */
 uint8_t GPIOManager::ReadGPIO(gpio_id_et id) {
-    auto result = -1;
-    auto selected_gpio = this->_GetGPIO(id);
+    auto result        = ESP_FAIL;
+    auto selected_gpio = this->GetGPIO(id);
 
     do {
         if (selected_gpio == nullptr) {
@@ -103,10 +103,10 @@ GPIOManager *GPIOManager::GetInstance(void) {
  * This function retrieves the internal GPIO structure for the specified GPIO
  * ID.
  *
- * @param id The ID of the GPIO pin.
+ * @param[in] id The ID of the GPIO pin.
  * @return A pointer to the internal GPIO structure, or nullptr if not found.
  */
-GPIOInternal* GPIOManager::_GetGPIO(gpio_id_et id) {
+GPIOInternal *GPIOManager::GetGPIO(gpio_id_et id) {
     for (uint8_t i = 0; i < this->_gpio_array_list_size; i++) {
         if (gpio_internal_list[i].id() == id) {
             return &gpio_internal_list[i];

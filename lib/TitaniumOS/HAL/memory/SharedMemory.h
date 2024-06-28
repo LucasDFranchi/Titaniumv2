@@ -1,6 +1,5 @@
-
-#ifndef SHARED_MEMORY_GUARD
-#define SHARED_MEMORY_GUARD
+#ifndef SHARED_MEMORY_H
+#define SHARED_MEMORY_H
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
@@ -23,12 +22,12 @@ class SharedMemory {
      * @param access_type Access type of the memory area.
      */
     SharedMemory(uint8_t index, uint16_t size, AccessType access_type) {
-        this->_index = index;
-        this->_data = new uint8_t[size];
-        this->_size = size;
+        this->_index       = index;
+        this->_data        = new uint8_t[size];
+        this->_size        = size;
         this->_access_type = access_type;
-        this->_has_update = false;
-        this->_mutex = xSemaphoreCreateMutex();
+        this->_has_update  = false;
+        this->_mutex       = xSemaphoreCreateMutex();
 
         this->Clear();
     }
@@ -37,34 +36,44 @@ class SharedMemory {
      *
      * @return esp_err_t Error code indicating the result of the operation.
      */
-    esp_err_t Clear(void) { return memset_s(this->_data, 0, this->_size); }
+    esp_err_t Clear(void) {
+        return memset_s(this->_data, 0, this->_size);
+    }
     /**
      * @brief Retrieves the size of the memory area.
      *
      * @return uint16_t The size of the memory area.
      */
-    uint16_t GetSize(void) { return this->_size; }
+    uint16_t GetSize(void) {
+        return this->_size;
+    }
 
     /**
      * @brief Retrieves the access type of the memory area.
      *
      * @return AccessType The access type of the memory area.
      */
-    AccessType GetAccess(void) { return this->_access_type; }
+    AccessType GetAccess(void) {
+        return this->_access_type;
+    }
 
     /**
      * @brief Retrieves the index of the memory area.
      *
      * @return uint8_t The index of the memory area.
      */
-    uint8_t GetAreaIndex(void) { return this->_index; }
+    uint8_t GetAreaIndex(void) {
+        return this->_index;
+    }
 
     /**
      * @brief Retrieves if an area was read.
      *
      * @return bool True if the area has been read already, false otherwise.
      */
-    bool GetAreaHasUpdated(void) { return this->_has_update; }
+    bool GetAreaHasUpdated(void) {
+        return this->_has_update;
+    }
 
     /**
      * @brief Writes data to the memory area.
@@ -82,7 +91,7 @@ class SharedMemory {
 
         if (this->_mutex != NULL) {
             if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
-                result = memcpy_s<uint8_t>(this->_data, data_pointer, size);
+                result            = memcpy_s<uint8_t>(this->_data, data_pointer, size);
                 this->_has_update = true;
 
                 xSemaphoreGive(this->_mutex);
@@ -107,7 +116,7 @@ class SharedMemory {
 
         if (this->_mutex != NULL) {
             if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
-                result = memcpy_s<uint8_t>(data_pointer, this->_data, this->_size);
+                result            = memcpy_s<uint8_t>(data_pointer, this->_data, this->_size);
                 this->_has_update = false;
                 xSemaphoreGive(this->_mutex);
             }
@@ -117,12 +126,12 @@ class SharedMemory {
     }
 
    protected:
-    uint8_t _index;
-    AccessType _access_type;
-    uint8_t* _data;
-    uint8_t _has_update;
-    uint16_t _size;
-    SemaphoreHandle_t _mutex = nullptr;
+    uint8_t _index;                     /**< Index of the memory area. */
+    AccessType _access_type;            /**< Access type of the memory area. */
+    uint8_t* _data;                     /**< Pointer to the data buffer. */
+    uint8_t _has_update;                /**< Flag indicating if the area has been updated. */
+    uint16_t _size;                     /**< Size of the memory area. */
+    SemaphoreHandle_t _mutex = nullptr; /**< Mutex semaphore for thread safety. */
 };
 
-#endif /* MEMORY_AREA_GUARD */
+#endif /* SHARED_MEMORY_H */

@@ -6,6 +6,9 @@
  * This function initializes the SPIManager by configuring the SPI bus and
  * device parameters.
  *
+ * @param[in] mosi GPIO number for MOSI line.
+ * @param[in] miso GPIO number for MISO line.
+ * @param[in] sclk GPIO number for SCLK line.
  * @return ESP_OK if initialization is successful, otherwise an error code.
  */
 esp_err_t SPIManager::Initialize(gpio_num_t mosi, gpio_num_t miso, gpio_num_t sclk) {

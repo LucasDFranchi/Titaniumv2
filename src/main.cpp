@@ -1,16 +1,12 @@
 #include "Kernel/Kernel.h"
 
 int main(void) {
-    Kernel Kernel;
+    Kernel kernel;
 
-    
-    Kernel.InitializeNetwork(10240, 4);
-    Kernel.InitializeHTTPServer(20480, 2);
-    Kernel.InitializeUart(10240, 5);
-    Kernel.InitializeLora(10240, 5);
-
-    Kernel.InjectDebugCredentials("NETPARQUE_PAOLA", "NPQ196253");
-
+    kernel.EnableNetworkProcess(10240, 4);
+    kernel.EnableHTTPServerProcess(20480, 2);
+    kernel.EnableUartProcess(10240, 5);
+    kernel.EnableLoraProcess(10240, 5);
 
     return 0;
 }
