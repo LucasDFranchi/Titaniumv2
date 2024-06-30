@@ -14,17 +14,17 @@
 static const char* TAG = "HTTPServerProcess"; /**< Logging tag for HTTPServerProcess class. */
 
 namespace BinaryData {
-    extern const uint8_t index_html_start[] asm("_binary_index_html_start"); /**< Start of index.html binary data. */
-    extern const uint8_t index_html_end[] asm("_binary_index_html_end");     /**< End of index.html binary data. */
-    extern const uint8_t styles_css_start[] asm("_binary_styles_css_start"); /**< Start of styles.css binary data. */
-    extern const uint8_t styles_css_end[] asm("_binary_styles_css_end");     /**< End of styles.css binary data. */
-    extern const uint8_t app_js_start[] asm("_binary_app_js_start");         /**< Start of app.js binary data. */
-    extern const uint8_t app_js_end[] asm("_binary_app_js_end");             /**< End of app.js binary data. */
+    extern const uint8_t index_html_start[] asm("_binary_index_html_start");          /**< Start of index.html binary data. */
+    extern const uint8_t index_html_end[] asm("_binary_index_html_end");              /**< End of index.html binary data. */
+    extern const uint8_t styles_css_start[] asm("_binary_styles_css_start");          /**< Start of styles.css binary data. */
+    extern const uint8_t styles_css_end[] asm("_binary_styles_css_end");              /**< End of styles.css binary data. */
+    extern const uint8_t app_js_start[] asm("_binary_app_js_start");                  /**< Start of app.js binary data. */
+    extern const uint8_t app_js_end[] asm("_binary_app_js_end");                      /**< End of app.js binary data. */
     extern const uint8_t jquery3_js_start[] asm("_binary_jquery_3_3_1_min_js_start"); /**< Start of jquery-3.3.1.min.js binary data. */
     extern const uint8_t jquery3_js_end[] asm("_binary_jquery_3_3_1_min_js_end");     /**< End of jquery-3.3.1.min.js binary data. */
-    extern const uint8_t favicon_ico_start[] asm("_binary_favicon_ico_start"); /**< Start of favicon.ico binary data. */
-    extern const uint8_t favicon_ico_end[] asm("_binary_favicon_ico_end");     /**< End of favicon.ico binary data. */
-}
+    extern const uint8_t favicon_ico_start[] asm("_binary_favicon_ico_start");        /**< Start of favicon.ico binary data. */
+    extern const uint8_t favicon_ico_end[] asm("_binary_favicon_ico_end");            /**< End of favicon.ico binary data. */
+}  // namespace BinaryData
 
 /**
  * @brief HTTP GET handler for serving index.html.
@@ -190,25 +190,11 @@ static esp_err_t get_area_handler(httpd_req_t* req) {
                     GetCredentialsArea(&http_server_manager->response_buffer[0],
                                        http_server_manager->memory_manager());
             } break;
-            case ProcessAreaIndex::UART_RECEIVE: {
-                response_size =
-                    GetUartReceiveArea(&http_server_manager->response_buffer[0],
-                                http_server_manager->memory_manager());
-            } break;
-            case ProcessAreaIndex::UART_TRANSMIT: {
-                response_size =
-                    GetUartTransmitArea(&http_server_manager->response_buffer[0],
-                                http_server_manager->memory_manager());
-            } break;
-            case ProcessAreaIndex::LORA_RECEIVE: {
-                response_size =
-                    GetLoraReceiveArea(&http_server_manager->response_buffer[0],
-                                http_server_manager->memory_manager());
-            } break;
+            case ProcessAreaIndex::UART_TRANSMIT:
             case ProcessAreaIndex::LORA_TRANSMIT: {
                 response_size =
-                    GetLoraTransmitArea(&http_server_manager->response_buffer[0],
-                                http_server_manager->memory_manager());
+                    GetCommunicationTransmitArea(&http_server_manager->response_buffer[0],
+                                                 http_server_manager->memory_manager());
             } break;
             default: {
                 httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
@@ -237,21 +223,11 @@ static esp_err_t get_area_handler(httpd_req_t* req) {
                 result = PostCredentialsArea(http_server_manager->read_buffer,
                                              http_server_manager->memory_manager());
             } break;
-            case ProcessAreaIndex::UART_RECEIVE: {
-                result = PostUartReceiveArea(http_server_manager->read_buffer,
-                                      http_server_manager->memory_manager());
-            } break;
-            case ProcessAreaIndex::UART_TRANSMIT: {
-                result = PostUartTransmitArea(http_server_manager->read_buffer,
-                                      http_server_manager->memory_manager());
-            } break;
-            case ProcessAreaIndex::LORA_RECEIVE: {
-                result = PostLoraReceiveArea(http_server_manager->read_buffer,
-                                      http_server_manager->memory_manager());
-            } break;
+            case ProcessAreaIndex::UART_TRANSMIT:
             case ProcessAreaIndex::LORA_TRANSMIT: {
-                result = PostLoraTransmitArea(http_server_manager->read_buffer,
-                                      http_server_manager->memory_manager());
+                result = PostCommunicationTransmitArea(http_server_manager->read_buffer,
+                                                       http_server_manager->memory_manager(),
+                                                       area_index);
             } break;
             default: {
                 httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,

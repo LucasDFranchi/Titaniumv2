@@ -91,6 +91,7 @@ class SharedMemory {
 
         if (this->_mutex != NULL) {
             if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
+                memset_s<uint8_t>(this->_data, 0, size);
                 result            = memcpy_s<uint8_t>(this->_data, data_pointer, size);
                 this->_has_update = true;
 

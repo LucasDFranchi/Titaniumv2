@@ -2,8 +2,9 @@
 
 #include "HAL/memory/MemoryHandlers.h"
 #include "Libraries/Json/inc/jsmn.h"
-#include "SystemProcess/ProcessAreasIndex.h"
+#include "SystemProcess/CommunicationProcess/inc/CommunicationProcessDataModel.h"
 #include "SystemProcess/NetworkProcess/inc/NetworkProcessDataModel.h"
+#include "SystemProcess/ProcessAreasIndex.h"
 
 #include "esp_log.h"
 
@@ -27,33 +28,14 @@ namespace CredentialsJson {
     const uint8_t NUM_TOKENS         = 5;
 }  // namespace CredentialsJson
 
-namespace UartReceiveJson {
-    const std::string JSON_STRING("{\n\t\"uart_buffer_rx\": %s\n}");
-    const std::string UART_BUFFER_TOKEN_VALUE("uart_buffer_rx");
-    const uint8_t UART_BUFFER_TOKEN = 1;
-    const uint8_t NUM_TOKENS        = 3;
-}  // namespace UartReceiveJson
-
-namespace UartTransmitJson {
-    const std::string JSON_STRING("{\n\t\"uart_buffer_tx\": %s\n}");
-    const std::string UART_BUFFER_TOKEN_VALUE("uart_buffer_tx");
-    const uint8_t UART_BUFFER_TOKEN = 1;
-    const uint8_t NUM_TOKENS        = 3;
-}  // namespace UartTransmitJson
-
-namespace LoraReceiveJson {
-    const std::string JSON_STRING("{\n\t\"lora_buffer_rx\": %s\n}");
-    const std::string LORA_BUFFER_TOKEN_VALUE("lora_buffer_rx");
-    const uint8_t LORA_BUFFER_TOKEN = 1;
-    const uint8_t NUM_TOKENS        = 3;
-}  // namespace LoraReceiveJson
-
-namespace LoraTransmitJson {
-    const std::string JSON_STRING("{\n\t\"lora_buffer_tx\": %s\n}");
-    const std::string LORA_BUFFER_TOKEN_VALUE("lora_buffer_tx");
-    const uint8_t LORA_BUFFER_TOKEN = 1;
-    const uint8_t NUM_TOKENS        = 3;
-}  // namespace LoraTransmitJson
+namespace CommunicationTransmitJson {
+    const std::string JSON_STRING("{\n\t\"memory_area\": %d,\n\t\"command\": %d\n}");
+    const std::string MEMORY_AREA_TOKEN_VALUE("memory_area");
+    const std::string COMMAND_TOKEN_VALUE("command");
+    const uint8_t MEMORY_AREA_TOKEN = 1;
+    const uint8_t COMMAND_TOKEN     = 3;
+    const uint8_t NUM_TOKENS        = 5;
+}  // namespace CommunicationTransmitJson
 
 /**
  * @brief Retrieves connection information from shared memory and formats it into a response buffer.
@@ -125,92 +107,20 @@ uint32_t GetCredentialsArea(char* buffer, SharedMemoryManager* shared_memory_man
     return response_length;
 }
 
-uint32_t GetUartReceiveArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
-    uint32_t response_length                   = 0;
-    auto uart_memory_area_size                 = shared_memory_manager->GetAreaSize(ProcessAreaIndex::UART_RECEIVE);
-    uint8_t uart_buffer[uart_memory_area_size] = {0};
+uint32_t GetCommunicationTransmitArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
+    uint32_t response_length = 0;
+    communication_request_st communication_request;
 
     do {
         if (buffer == nullptr) {
             break;
         }
 
-        shared_memory_manager->Read(ProcessAreaIndex::UART_RECEIVE, uart_buffer);
+        shared_memory_manager->Read(ProcessAreaIndex::UART_TRANSMIT, &communication_request);
         response_length = snprintf(buffer, Request::MAXIMUM_REQUEST_REPLY,
-                                   UartReceiveJson::JSON_STRING.c_str(),
-                                   uart_buffer);
-
-        if (response_length > Request::MAXIMUM_REQUEST_REPLY) {
-            response_length = 0;
-        }
-
-    } while (0);
-
-    return response_length;
-}
-
-uint32_t GetUartTransmitArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
-    uint32_t response_length                   = 0;
-    auto uart_memory_area_size                 = shared_memory_manager->GetAreaSize(ProcessAreaIndex::UART_TRANSMIT);
-    uint8_t uart_buffer[uart_memory_area_size] = {0};
-
-    do {
-        if (buffer == nullptr) {
-            break;
-        }
-
-        shared_memory_manager->Read(ProcessAreaIndex::UART_TRANSMIT, uart_buffer);
-        response_length = snprintf(buffer, Request::MAXIMUM_REQUEST_REPLY,
-                                   UartTransmitJson::JSON_STRING.c_str(),
-                                   uart_buffer);
-
-        if (response_length > Request::MAXIMUM_REQUEST_REPLY) {
-            response_length = 0;
-        }
-
-    } while (0);
-
-    return response_length;
-}
-
-uint32_t GetLoraReceiveArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
-    uint32_t response_length                   = 0;
-    auto lora_memory_area_size                 = shared_memory_manager->GetAreaSize(ProcessAreaIndex::LORA_RECEIVE);
-    uint8_t lora_buffer[lora_memory_area_size] = {0};
-
-    do {
-        if (buffer == nullptr) {
-            break;
-        }
-
-        shared_memory_manager->Read(ProcessAreaIndex::LORA_RECEIVE, lora_buffer);
-        response_length = snprintf(buffer, Request::MAXIMUM_REQUEST_REPLY,
-                                   LoraReceiveJson::JSON_STRING.c_str(),
-                                   lora_buffer);
-
-        if (response_length > Request::MAXIMUM_REQUEST_REPLY) {
-            response_length = 0;
-        }
-
-    } while (0);
-
-    return response_length;
-}
-
-uint32_t GetLoraTransmitArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
-    uint32_t response_length                   = 0;
-    auto lora_memory_area_size                 = shared_memory_manager->GetAreaSize(ProcessAreaIndex::LORA_TRANSMIT);
-    uint8_t lora_buffer[lora_memory_area_size] = {0};
-
-    do {
-        if (buffer == nullptr) {
-            break;
-        }
-
-        shared_memory_manager->Read(ProcessAreaIndex::LORA_TRANSMIT, lora_buffer);
-        response_length = snprintf(buffer, Request::MAXIMUM_REQUEST_REPLY,
-                                   LoraTransmitJson::JSON_STRING.c_str(),
-                                   lora_buffer);
+                                   CommunicationTransmitJson::JSON_STRING.c_str(),
+                                   communication_request.memory_area,
+                                   communication_request.command);
 
         if (response_length > Request::MAXIMUM_REQUEST_REPLY) {
             response_length = 0;
@@ -343,23 +253,11 @@ esp_err_t PostCredentialsArea(char* buffer, SharedMemoryManager* shared_memory_m
     return result;
 }
 
-/**
- * @brief Parses JSON data from an HTTP request buffer and writes UART receive data to shared memory.
- *
- * Parses JSON data from the provided request buffer and writes the parsed UART receive data
- * to the appropriate area in shared memory.
- *
- * @param[in] buffer Pointer to the buffer containing JSON-formatted UART receive data.
- * @param[in] shared_memory_manager Pointer to the SharedMemoryManager instance for writing to shared memory.
- *
- * @return ESP_OK if parsing and writing to shared memory are successful, otherwise ESP_FAIL.
- */
-esp_err_t PostUartReceiveArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
-    auto result                                = ESP_FAIL;
-    auto uart_memory_area_size                 = shared_memory_manager->GetAreaSize(ProcessAreaIndex::UART_RECEIVE);
-    uint8_t uart_buffer[uart_memory_area_size] = {0};
+esp_err_t PostCommunicationTransmitArea(char* buffer, SharedMemoryManager* shared_memory_manager, uint8_t memory_area) {
+    auto result = ESP_FAIL;
+    communication_request_st communication_request{};
     jsmn_parser parser;
-    jsmntok_t tokens[UartReceiveJson::NUM_TOKENS];
+    jsmntok_t tokens[CommunicationTransmitJson::NUM_TOKENS];
 
     jsmn_init(&parser);
 
@@ -368,188 +266,42 @@ esp_err_t PostUartReceiveArea(char* buffer, SharedMemoryManager* shared_memory_m
             break;
         }
 
-        auto num_tokens = jsmn_parse(&parser, buffer, strlen(buffer), tokens, UartReceiveJson::NUM_TOKENS);
+        auto num_tokens = jsmn_parse(&parser, buffer, strlen(buffer), tokens, CommunicationTransmitJson::NUM_TOKENS);
 
-        if (num_tokens != UartReceiveJson::NUM_TOKENS) {
+        if (num_tokens != CommunicationTransmitJson::NUM_TOKENS) {
             break;
         }
 
-        jsmntok_t key   = tokens[UartReceiveJson::UART_BUFFER_TOKEN];
-        jsmntok_t value = tokens[UartReceiveJson::UART_BUFFER_TOKEN + 1];
+        jsmntok_t key   = tokens[CommunicationTransmitJson::MEMORY_AREA_TOKEN];
+        jsmntok_t value = tokens[CommunicationTransmitJson::MEMORY_AREA_TOKEN + 1];
 
         if (strncmp(buffer + key.start,
-                    UartReceiveJson::UART_BUFFER_TOKEN_VALUE.c_str(),
+                    CommunicationTransmitJson::MEMORY_AREA_TOKEN_VALUE.c_str(),
                     key.end - key.start) != 0) {
             break;
         }
-        auto uart_buffer_len = value.end - value.start;
-        memcpy_s<uint8_t>(uart_buffer,
-                          reinterpret_cast<uint8_t*>(buffer + value.start),
-                          uart_buffer_len);
 
-        result = shared_memory_manager->Write(ProcessAreaIndex::UART_RECEIVE,
-                                              uart_memory_area_size,
-                                              uart_buffer);
+        communication_request.memory_area = atoi(buffer + value.start);
+
+        key   = tokens[CommunicationTransmitJson::COMMAND_TOKEN];
+        value = tokens[CommunicationTransmitJson::COMMAND_TOKEN + 1];
+
+        if (strncmp(buffer + key.start,
+                    CommunicationTransmitJson::COMMAND_TOKEN_VALUE.c_str(),
+                    key.end - key.start) != 0) {
+            break;
+        }
+
+        communication_request.command = static_cast<command_e>(atoi(buffer + value.start));
+
+        result = shared_memory_manager->Write(memory_area,
+                                              sizeof(communication_request_st),
+                                              &communication_request);
     } while (0);
 
     return result;
 }
 
-/**
- * @brief Parses JSON data from an HTTP request buffer and writes UART transmit data to shared memory.
- *
- * Parses JSON data from the provided request buffer and writes the parsed UART transmit data
- * to the appropriate area in shared memory.
- *
- * @param[in] buffer Pointer to the buffer containing JSON-formatted UART transmit data.
- * @param[in] shared_memory_manager Pointer to the SharedMemoryManager instance for writing to shared memory.
- *
- * @return ESP_OK if parsing and writing to shared memory are successful, otherwise ESP_FAIL.
- */
-esp_err_t PostUartTransmitArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
-    auto result                                = ESP_FAIL;
-    auto uart_memory_area_size                 = shared_memory_manager->GetAreaSize(ProcessAreaIndex::UART_TRANSMIT);
-    uint8_t uart_buffer[uart_memory_area_size] = {0};
-    jsmn_parser parser;
-    jsmntok_t tokens[UartTransmitJson::NUM_TOKENS];
-
-    jsmn_init(&parser);
-
-    do {
-        if (buffer == nullptr) {
-            break;
-        }
-
-        auto num_tokens = jsmn_parse(&parser, buffer, strlen(buffer), tokens, UartTransmitJson::NUM_TOKENS);
-
-        if (num_tokens != UartTransmitJson::NUM_TOKENS) {
-            break;
-        }
-
-        jsmntok_t key   = tokens[UartTransmitJson::UART_BUFFER_TOKEN];
-        jsmntok_t value = tokens[UartTransmitJson::UART_BUFFER_TOKEN + 1];
-
-        if (strncmp(buffer + key.start,
-                    UartTransmitJson::UART_BUFFER_TOKEN_VALUE.c_str(),
-                    key.end - key.start) != 0) {
-            break;
-        }
-        auto uart_buffer_len = value.end - value.start;
-        memcpy_s<uint8_t>(uart_buffer,
-                          reinterpret_cast<uint8_t*>(buffer + value.start),
-                          uart_buffer_len);
-
-        result = shared_memory_manager->Write(ProcessAreaIndex::UART_TRANSMIT,
-                                              uart_memory_area_size,
-                                              uart_buffer);
-    } while (0);
-
-    return result;
-}
-
-/**
- * @brief Parses JSON data from an HTTP request buffer and writes LoRa receive data to shared memory.
- *
- * Parses JSON data from the provided request buffer and writes the parsed LoRa receive data
- * to the appropriate area in shared memory.
- *
- * @param[in] buffer Pointer to the buffer containing JSON-formatted LoRa receive data.
- * @param[in] shared_memory_manager Pointer to the SharedMemoryManager instance for writing to shared memory.
- *
- * @return ESP_OK if parsing and writing to shared memory are successful, otherwise ESP_FAIL.
- */
-esp_err_t PostLoraReceiveArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
-    auto result                                = ESP_FAIL;
-    auto lora_memory_area_size                 = shared_memory_manager->GetAreaSize(ProcessAreaIndex::LORA_RECEIVE);
-    uint8_t lora_buffer[lora_memory_area_size] = {0};
-    jsmn_parser parser;
-    jsmntok_t tokens[LoraReceiveJson::NUM_TOKENS];
-
-    jsmn_init(&parser);
-
-    do {
-        if (buffer == nullptr) {
-            break;
-        }
-
-        auto num_tokens = jsmn_parse(&parser, buffer, strlen(buffer), tokens, LoraReceiveJson::NUM_TOKENS);
-
-        if (num_tokens != LoraReceiveJson::NUM_TOKENS) {
-            break;
-        }
-
-        jsmntok_t key   = tokens[LoraReceiveJson::LORA_BUFFER_TOKEN];
-        jsmntok_t value = tokens[LoraReceiveJson::LORA_BUFFER_TOKEN + 1];
-
-        if (strncmp(buffer + key.start,
-                    LoraReceiveJson::LORA_BUFFER_TOKEN_VALUE.c_str(),
-                    key.end - key.start) != 0) {
-            break;
-        }
-        auto lora_buffer_len = value.end - value.start;
-        memcpy_s<uint8_t>(lora_buffer,
-                          reinterpret_cast<uint8_t*>(buffer + value.start),
-                          lora_buffer_len);
-
-        result = shared_memory_manager->Write(ProcessAreaIndex::LORA_RECEIVE,
-                                              lora_memory_area_size,
-                                              lora_buffer);
-    } while (0);
-
-    return result;
-}
-
-/**
- * @brief Parses JSON data from an HTTP request buffer and writes LoRa transmit data to shared memory.
- *
- * Parses JSON data from the provided request buffer and writes the parsed LoRa transmit data
- * to the appropriate area in shared memory.
- *
- * @param[in] buffer Pointer to the buffer containing JSON-formatted LoRa transmit data.
- * @param[in] shared_memory_manager Pointer to the SharedMemoryManager instance for writing to shared memory.
- *
- * @return ESP_OK if parsing and writing to shared memory are successful, otherwise ESP_FAIL.
- */
-esp_err_t PostLoraTransmitArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
-    auto result                                = ESP_FAIL;
-    auto lora_memory_area_size                 = shared_memory_manager->GetAreaSize(ProcessAreaIndex::LORA_TRANSMIT);
-    uint8_t lora_buffer[lora_memory_area_size] = {0};
-    jsmn_parser parser;
-    jsmntok_t tokens[LoraTransmitJson::NUM_TOKENS];
-
-    jsmn_init(&parser);
-
-    do {
-        if (buffer == nullptr) {
-            break;
-        }
-
-        auto num_tokens = jsmn_parse(&parser, buffer, strlen(buffer), tokens, LoraTransmitJson::NUM_TOKENS);
-
-        if (num_tokens != LoraTransmitJson::NUM_TOKENS) {
-            break;
-        }
-
-        jsmntok_t key   = tokens[LoraTransmitJson::LORA_BUFFER_TOKEN];
-        jsmntok_t value = tokens[LoraTransmitJson::LORA_BUFFER_TOKEN + 1];
-
-        if (strncmp(buffer + key.start,
-                    LoraTransmitJson::LORA_BUFFER_TOKEN_VALUE.c_str(),
-                    key.end - key.start) != 0) {
-            break;
-        }
-        auto lora_buffer_len = value.end - value.start;
-        memcpy_s<uint8_t>(lora_buffer,
-                          reinterpret_cast<uint8_t*>(buffer + value.start),
-                          lora_buffer_len);
-
-        result = shared_memory_manager->Write(ProcessAreaIndex::LORA_TRANSMIT,
-                                              lora_memory_area_size,
-                                              lora_buffer);
-    } while (0);
-
-    return result;
-}
 
 /**
  * @brief Extracts a numeric key from the URI of an HTTP request.

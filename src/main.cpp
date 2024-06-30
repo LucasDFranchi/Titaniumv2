@@ -8,6 +8,8 @@ int main(void) {
     kernel.EnableUartProcess(10240, 5);
     kernel.EnableLoraProcess(10240, 5);
 
+    // kernel.InjectDebugCredentials("NETPARQUE_PAOLA", "NPQ196253");
+
     return 0;
 }
 

@@ -28,24 +28,14 @@ namespace ProcessAreaIndex {
     constexpr int8_t CONNECTION = 2;
 
     /**
-     * @brief Index for UART receive area.
-     */
-    constexpr int8_t UART_RECEIVE = 3;
-
-    /**
      * @brief Index for UART transmit area.
      */
-    constexpr int8_t UART_TRANSMIT = 4;
-
-    /**
-     * @brief Index for LoRa receive area.
-     */
-    constexpr int8_t LORA_RECEIVE = 5;
+    constexpr int8_t UART_TRANSMIT = 3;
 
     /**
      * @brief Index for LoRa transmit area.
      */
-    constexpr int8_t LORA_TRANSMIT = 6;
-}  // namespace ProcessAreasIndex
+    constexpr int8_t LORA_TRANSMIT = 4;
+}  // namespace ProcessAreaIndex
 
 #endif /* MANAGERS_AREA_INDEX_H */
