@@ -100,9 +100,9 @@ class TitaniumPackage {
 
         uint16_t real_size = maximum_size;
 
-        while (real_size > 0 && buffer[real_size - 1] == 0) {
-            real_size--;
-        }
+        // while (real_size > 0 && buffer[real_size - 1] == 0) {
+        //     real_size--;
+        // }
 
         return real_size;
     }

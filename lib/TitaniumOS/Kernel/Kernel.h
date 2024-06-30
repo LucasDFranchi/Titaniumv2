@@ -8,10 +8,10 @@
 #include <HAL/gpio/GPIOManager.h>
 #include <HAL/memory/SharedMemoryManager.h>
 #include <HAL/spi/SPIManager.h>
-#include <SystemProcess/HTTPServerProcess/inc/HTTPServerProcess.h>
-#include <SystemProcess/ProcessAreasIndex.h>
-#include <SystemProcess/NetworkProcess/inc/NetworkProcess.h>
 #include <SystemProcess/CommunicationProcess/inc/CommunicationProcess.h>
+#include <SystemProcess/HTTPServerProcess/inc/HTTPServerProcess.h>
+#include <SystemProcess/NetworkProcess/inc/NetworkProcess.h>
+#include <SystemProcess/ProcessAreasIndex.h>
 
 class Kernel {
    public:
@@ -32,22 +32,21 @@ class Kernel {
     esp_err_t SignUpSharedArea(uint8_t index, uint16_t size_in_bytes,
                                AccessType access_type, bool can_fail = false);
 
-    void InjectDebugCredentials(const char * ssid, const char* password);
+    void InjectDebugCredentials(const char* ssid, const char* password);
 
    private:
     void InitializeHAL(void);
 
    private:
-    bool _spi_initialized  = false;               ///< Flag indicating SPI initialization status.
-    bool _gpio_initialized = false;               ///< Flag indicating GPIO initialization status.
-    SharedMemoryManager* _shared_memory_manager;  ///< Pointer to SharedMemoryManager instance.
-    GPIOManager* _gpio_manager;                   ///< Pointer to GPIOManager instance.
-    SPIManager* _spi_manager;                     ///< Pointer to SPIManager instance.
-    NetworkProcess* _network_process;             ///< Pointer to NetworkManager instance.
-    HTTPServerProcess* _http_server_process;      ///< Pointer to HTTPServerManager instance.
-    // TODO: Change SerialCommunciation Manager to CommunicationManager
-    CommunicationProcess* _uart_communication_process = nullptr; ///< Pointer to UART Communication Manager instance.
-    CommunicationProcess* _lora_communication_process = nullptr; ///< Pointer to LoRa Communication Manager instance.
+    bool _spi_initialized  = false;                               ///< Flag indicating SPI initialization status.
+    bool _gpio_initialized = false;                               ///< Flag indicating GPIO initialization status.
+    SharedMemoryManager* _shared_memory_manager;                  ///< Pointer to SharedMemoryManager instance.
+    GPIOManager* _gpio_manager;                                   ///< Pointer to GPIOManager instance.
+    SPIManager* _spi_manager;                                     ///< Pointer to SPIManager instance.
+    NetworkProcess* _network_process;                             ///< Pointer to NetworkManager instance.
+    HTTPServerProcess* _http_server_process;                      ///< Pointer to HTTPServerManager instance.
+    CommunicationProcess* _uart_communication_process = nullptr;  ///< Pointer to UART Communication Manager instance.
+    CommunicationProcess* _lora_communication_process = nullptr;  ///< Pointer to LoRa Communication Manager instance.
 };
 
 #endif /* KERNEL_H */
