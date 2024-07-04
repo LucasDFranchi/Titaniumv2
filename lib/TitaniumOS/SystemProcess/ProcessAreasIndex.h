@@ -38,4 +38,15 @@ namespace ProcessAreaIndex {
     constexpr int8_t LORA_TRANSMIT = 4;
 }  // namespace ProcessAreaIndex
 
+/**
+ * @brief Namespace containing constants for different manager area indexes.
+ */
+namespace CustomProcessAreaIndex {
+    /**
+     * @brief Invalid index.
+     */
+    constexpr int8_t WATER_LEVEL = 5;
+}  // namespace CustomProcessAreaIndex
+
+
 #endif /* MANAGERS_AREA_INDEX_H */

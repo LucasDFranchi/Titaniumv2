@@ -5,7 +5,8 @@
 #include "SystemProcess/Template/ProcessTemplate.h"
 
 typedef struct water_level_st {
-    uint8_t water_level[6];
+    uint16_t value;
+    uint64_t timestamp;
 } __attribute__((packed)) water_level_st;
 
 class WaterLevelProcess : public ProcessTemplate {

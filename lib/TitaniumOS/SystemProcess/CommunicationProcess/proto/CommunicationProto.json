@@ -1,0 +1,15 @@
+{
+    "syntax": "titanium1",
+    "package": "Communication",
+    "fields": [
+      {
+        "type": "uint8_t",
+        "name": "memory_area"
+      },
+      {
+        "type": "uint8_t",
+        "name": "command"
+      }
+    ]
+  }
+  
