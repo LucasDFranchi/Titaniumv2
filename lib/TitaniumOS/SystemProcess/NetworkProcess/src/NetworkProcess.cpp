@@ -105,12 +105,12 @@ static void WiFiAppEventHandler(void* arg, esp_event_base_t event_base,
  * @return ESP_OK on success, or an error code on failure.
  */
 esp_err_t NetworkProcess::Initialize(void) {
-    esp_err_t result                             = ESP_OK;
-    this->_shared_memory_manager                 = SharedMemoryManager::GetInstance();
-    this->_need_update_network_data              = 0;
-    this->_connection_area.connection_ap_status  = NetworkStatus::NOT_CONNECTED;
-    this->_connection_area.connection_sta_status = NetworkStatus::NOT_CONNECTED;
-    auto wifi_mode                               = WIFI_MODE_APSTA;
+    esp_err_t result                = ESP_OK;
+    this->_shared_memory_manager    = SharedMemoryManager::GetInstance();
+    this->_need_update_network_data = 0;
+    auto wifi_mode                  = WIFI_MODE_APSTA;
+    this->_connection_proto.UpdateApStatus(NetworkStatus::NOT_CONNECTED);
+    this->_connection_proto.UpdateStaStatus(NetworkStatus::NOT_CONNECTED);
 
     result += this->RegisterWiFiEvents();
     result += esp_netif_init();
@@ -133,7 +133,6 @@ esp_err_t NetworkProcess::Initialize(void) {
     }
 
     result += esp_wifi_start();
-
 
     return result;
 }
@@ -158,9 +157,7 @@ void NetworkProcess::Execute(void) {
         }
 
         if (this->_need_update_network_data) {
-            shared_memory_manager->Write(ProcessAreaIndex::CONNECTION,
-                                         sizeof(this->_connection_area),
-                                         &this->_connection_area);
+            shared_memory_manager->Write(ProcessAreaIndex::CONNECTION, &this->_connection_proto);
             this->_need_update_network_data = 0;
         }
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -250,12 +247,10 @@ esp_err_t NetworkProcess::SetAccessPointMode(wifi_config_t* ap_config) {
  * @param[in] wifi_config Pointer to the Wi-Fi configuration structure.
  */
 void NetworkProcess::SetCredentials(wifi_config_t* wifi_config) {
-    this->_shared_memory_manager->Read(ProcessAreaIndex::CREDENTIALS, &this->_cred_area);
+    this->_shared_memory_manager->Read(ProcessAreaIndex::CREDENTIALS, &this->_cred_proto);
 
-    memcpy_s<uint8_t>(wifi_config->sta.ssid, this->_cred_area.sta_ssid,
-                      sizeof(wifi_config->sta.ssid));
-    memcpy_s<uint8_t>(wifi_config->sta.password, this->_cred_area.sta_password,
-                      sizeof(wifi_config->sta.password));
+    memcpy(wifi_config->sta.ssid, this->_cred_proto.GetSsid(), strlen(this->_cred_proto.GetSsid()) + 1);
+    memcpy(wifi_config->sta.password, this->_cred_proto.GetPassword(), strlen(this->_cred_proto.GetSsid()) + 1);
 }
 
 /**
@@ -263,8 +258,8 @@ void NetworkProcess::SetCredentials(wifi_config_t* wifi_config) {
  * @param[in] status The connection status to set.
  */
 void NetworkProcess::SetAPConnection(uint8_t status) {
-    this->_connection_area.connection_ap_status = status;
-    this->_need_update_network_data             = 1;
+    this->_connection_proto.UpdateStaStatus(status);
+    this->_need_update_network_data = 1;
 }
 
 /**
@@ -272,6 +267,6 @@ void NetworkProcess::SetAPConnection(uint8_t status) {
  * @param[in] status The connection status to set.
  */
 void NetworkProcess::SetSTAConnection(uint8_t status) {
-    this->_connection_area.connection_sta_status = status;
-    this->_need_update_network_data              = 1;
+    this->_connection_proto.UpdateStaStatus(status);
+    this->_need_update_network_data = 1;
 }

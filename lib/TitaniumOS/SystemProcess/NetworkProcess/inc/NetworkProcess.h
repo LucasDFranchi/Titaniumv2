@@ -1,13 +1,22 @@
 #ifndef NETWORK_MANAGER_H
 #define NETWORK_MANAGER_H
 
+#include "ConnectionStatusProto.h"
+#include "CredentialsProto.h"
 #include "HAL/memory/SharedMemoryManager.h"
 #include "SystemProcess/ProcessAreasIndex.h"
-#include "NetworkProcessDataModel.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
 
 #include "esp_err.h"
 #include "esp_wifi.h"
+
+/**
+ * @brief Namespace containing constants related to network status.
+ */
+namespace NetworkStatus {
+    constexpr uint8_t NOT_CONNECTED = 0;  ///< Indicates that the device is not connected to any network.
+    constexpr uint8_t CONNECTED     = 1;  ///< Indicates that the device is connected to a network.
+}  // namespace NetworkStatus
 
 /**
  * @brief NetworkProcess class for handling Wi-Fi configuration and events.
@@ -41,8 +50,8 @@ class NetworkProcess : public ProcessTemplate {
     TaskHandle_t _process_handler               = nullptr;  ///< Task handle for the NetworkProcess process.
     wifi_config_t _ap_config;                               ///< Wi-Fi configuration structure for AP mode.
     wifi_config_t _sta_config;                              ///< Wi-Fi configuration structure for STA mode.
-    credentials_st _cred_area;                              ///< Structure for credentials storage.
-    connection_st _connection_area;                         ///< Structure for connection status storage.
+    ConnectionStatusProtobuf _connection_proto;              ///< Structure for credentials storage.
+    CredentialsProtobuf _cred_proto;                        ///< Structure for connection status storage.
     uint8_t _need_update_network_data;                      ///< Flag indicating if network data needs updating.
 };
 

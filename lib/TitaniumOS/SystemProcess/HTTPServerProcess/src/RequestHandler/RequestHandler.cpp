@@ -2,8 +2,9 @@
 
 #include "HAL/memory/MemoryHandlers.h"
 #include "Libraries/Json/inc/jsmn.h"
-#include "SystemProcess/CommunicationProcess/inc/CommunicationProcessDataModel.h"
-#include "SystemProcess/NetworkProcess/inc/NetworkProcessDataModel.h"
+#include "SystemProcess/CommunicationProcess/inc/CommunicationProto.h"
+#include "SystemProcess/NetworkProcess/inc/CredentialsProto.h"
+#include "SystemProcess/NetworkProcess/inc/ConnectionStatusProto.h"
 #include "SystemProcess/ProcessAreasIndex.h"
 
 #include "esp_log.h"
@@ -50,18 +51,18 @@ namespace CommunicationTransmitJson {
  */
 uint32_t GetConnectionArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
     uint32_t response_length = 0;
-    connection_st connection;
+    ConnectionStatusProtobuf connection_proto;
 
     do {
         if (buffer == nullptr) {
             break;
         }
 
-        shared_memory_manager->Read(ProcessAreaIndex::CONNECTION, &connection);
+        shared_memory_manager->Read(ProcessAreaIndex::CONNECTION, &connection_proto);
         response_length = snprintf(buffer, Request::MAXIMUM_REQUEST_REPLY,
                                    ConnectionJson::JSON_STRING.c_str(),
-                                   connection.connection_ap_status,
-                                   connection.connection_sta_status);
+                                   connection_proto.GetApStatus(),
+                                   connection_proto.GetStaStatus());
 
         if (response_length > Request::MAXIMUM_REQUEST_REPLY) {
             response_length = 0;
@@ -85,18 +86,18 @@ uint32_t GetConnectionArea(char* buffer, SharedMemoryManager* shared_memory_mana
  */
 uint32_t GetCredentialsArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
     uint32_t response_length = 0;
-    credentials_st credentials;
+    CredentialsProtobuf credentials_proto;
 
     do {
         if (buffer == nullptr) {
             break;
         }
 
-        shared_memory_manager->Read(ProcessAreaIndex::CREDENTIALS, &credentials);
+        shared_memory_manager->Read(ProcessAreaIndex::CREDENTIALS, &credentials_proto);
         response_length = snprintf(buffer, Request::MAXIMUM_REQUEST_REPLY,
                                    CredentialsJson::JSON_STRING.c_str(),
-                                   credentials.sta_ssid,
-                                   credentials.sta_password);
+                                   credentials_proto.GetSsid(),
+                                   credentials_proto.GetPassword());
 
         if (response_length > Request::MAXIMUM_REQUEST_REPLY) {
             response_length = 0;
@@ -109,18 +110,18 @@ uint32_t GetCredentialsArea(char* buffer, SharedMemoryManager* shared_memory_man
 
 uint32_t GetCommunicationTransmitArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
     uint32_t response_length = 0;
-    communication_request_st communication_request;
+    CommunicationProtobuf communication_proto;
 
     do {
         if (buffer == nullptr) {
             break;
         }
 
-        shared_memory_manager->Read(ProcessAreaIndex::UART_TRANSMIT, &communication_request);
+        shared_memory_manager->Read(ProcessAreaIndex::UART_TRANSMIT, &communication_proto);
         response_length = snprintf(buffer, Request::MAXIMUM_REQUEST_REPLY,
                                    CommunicationTransmitJson::JSON_STRING.c_str(),
-                                   communication_request.memory_area,
-                                   communication_request.command);
+                                   communication_proto.GetMemoryArea(),
+                                   communication_proto.GetCommand());
 
         if (response_length > Request::MAXIMUM_REQUEST_REPLY) {
             response_length = 0;
@@ -144,7 +145,7 @@ uint32_t GetCommunicationTransmitArea(char* buffer, SharedMemoryManager* shared_
  */
 esp_err_t PostConnectionArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
     auto result = ESP_FAIL;
-    connection_st connection{};
+    ConnectionStatusProtobuf connection_proto{};
     jsmn_parser parser;
     jsmntok_t tokens[ConnectionJson::NUM_TOKENS];
 
@@ -169,7 +170,7 @@ esp_err_t PostConnectionArea(char* buffer, SharedMemoryManager* shared_memory_ma
                     key.end - key.start) != 0) {
             break;
         }
-        connection.connection_ap_status = atoi(buffer + value.start);
+        connection_proto.UpdateApStatus(atoi(buffer + value.start));
 
         key   = tokens[ConnectionJson::CONNECTION_STA_STATUS_TOKEN];
         value = tokens[ConnectionJson::CONNECTION_STA_STATUS_TOKEN + 1];
@@ -179,11 +180,9 @@ esp_err_t PostConnectionArea(char* buffer, SharedMemoryManager* shared_memory_ma
                     key.end - key.start) != 0) {
             break;
         }
-        connection.connection_sta_status = atoi(buffer + value.start);
+        connection_proto.UpdateStaStatus(atoi(buffer + value.start));
 
-        result = shared_memory_manager->Write(ProcessAreaIndex::CONNECTION,
-                                              sizeof(connection_st),
-                                              &connection);
+        result = shared_memory_manager->Write(ProcessAreaIndex::CONNECTION, &connection_proto);
     } while (0);
 
     return result;
@@ -202,7 +201,7 @@ esp_err_t PostConnectionArea(char* buffer, SharedMemoryManager* shared_memory_ma
  */
 esp_err_t PostCredentialsArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
     auto result = ESP_FAIL;
-    credentials_st credentials{};
+    CredentialsProtobuf credentials_proto;
     jsmn_parser parser;
     jsmntok_t tokens[CredentialsJson::NUM_TOKENS];
 
@@ -227,10 +226,7 @@ esp_err_t PostCredentialsArea(char* buffer, SharedMemoryManager* shared_memory_m
                     key.end - key.start) != 0) {
             break;
         }
-        auto ssid_len = value.end - value.start;
-        memcpy_s<uint8_t>(credentials.sta_ssid,
-                          reinterpret_cast<uint8_t*>(buffer + value.start),
-                          ssid_len);
+        credentials_proto.UpdateSsid(buffer + value.start);
 
         key   = tokens[CredentialsJson::STA_PASSWORD_TOKEN];
         value = tokens[CredentialsJson::STA_PASSWORD_TOKEN + 1];
@@ -240,14 +236,9 @@ esp_err_t PostCredentialsArea(char* buffer, SharedMemoryManager* shared_memory_m
                     key.end - key.start) != 0) {
             break;
         }
-        auto password_len = value.end - value.start;
-        memcpy_s<uint8_t>(credentials.sta_password,
-                          reinterpret_cast<uint8_t*>(buffer + value.start),
-                          password_len);
+        credentials_proto.UpdatePassword(buffer + value.start);
 
-        result = shared_memory_manager->Write(ProcessAreaIndex::CREDENTIALS,
-                                              sizeof(credentials_st),
-                                              &credentials);
+        result = shared_memory_manager->Write(ProcessAreaIndex::CREDENTIALS, &credentials_proto);
     } while (0);
 
     return result;
@@ -255,7 +246,7 @@ esp_err_t PostCredentialsArea(char* buffer, SharedMemoryManager* shared_memory_m
 
 esp_err_t PostCommunicationTransmitArea(char* buffer, SharedMemoryManager* shared_memory_manager, uint8_t memory_area) {
     auto result = ESP_FAIL;
-    communication_request_st communication_request{};
+    CommunicationProtobuf communication_proto;
     jsmn_parser parser;
     jsmntok_t tokens[CommunicationTransmitJson::NUM_TOKENS];
 
@@ -281,7 +272,7 @@ esp_err_t PostCommunicationTransmitArea(char* buffer, SharedMemoryManager* share
             break;
         }
 
-        communication_request.memory_area = atoi(buffer + value.start);
+        communication_proto.UpdateMemoryArea(atoi(buffer + value.start));
 
         key   = tokens[CommunicationTransmitJson::COMMAND_TOKEN];
         value = tokens[CommunicationTransmitJson::COMMAND_TOKEN + 1];
@@ -292,16 +283,13 @@ esp_err_t PostCommunicationTransmitArea(char* buffer, SharedMemoryManager* share
             break;
         }
 
-        communication_request.command = static_cast<command_e>(atoi(buffer + value.start));
+        communication_proto.UpdateCommand(atoi(buffer + value.start));
 
-        result = shared_memory_manager->Write(memory_area,
-                                              sizeof(communication_request_st),
-                                              &communication_request);
+        result = shared_memory_manager->Write(memory_area, &communication_proto);
     } while (0);
 
     return result;
 }
-
 
 /**
  * @brief Extracts a numeric key from the URI of an HTTP request.

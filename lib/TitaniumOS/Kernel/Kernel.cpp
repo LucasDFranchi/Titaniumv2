@@ -28,7 +28,7 @@ void Kernel::InitializeHAL(void) {
         this->_spi_initialized = true;
     }
 
-    ESP_ERROR_CHECK(this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::SCRATCH, 128, READ_WRITE));
+    // ESP_ERROR_CHECK(this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::SCRATCH, 128, READ_WRITE));
 }
 
 /**
@@ -42,8 +42,8 @@ esp_err_t Kernel::EnableNetworkProcess(uint32_t process_stack, uint8_t process_p
     auto result            = ESP_OK;
     this->_network_process = new NetworkProcess("Network Proccess", process_stack, process_priority);  // 10240 4
 
-    result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::CREDENTIALS, sizeof(credentials_st), READ_WRITE);
-    result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::CONNECTION, sizeof(connection_st), READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::CREDENTIALS, CredentialsProtobuf::GetStaticMaxSize(), READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::CONNECTION, ConnectionStatusProtobuf::GetStaticMaxSize(), READ_WRITE);
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
     }
@@ -86,7 +86,7 @@ esp_err_t Kernel::EnableUartProcess(uint32_t process_stack, uint8_t process_prio
         new UARTDriver(UART_NUM_0, Baudrate::BaudRate115200, 1024),
         ProcessAreaIndex::UART_TRANSMIT);
 
-    result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::UART_TRANSMIT, sizeof(communication_request_st), READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::UART_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
 
     this->_uart_communication_process->InitializeProcess();
 
@@ -118,7 +118,7 @@ esp_err_t Kernel::EnableLoraProcess(uint32_t process_stack, uint8_t process_prio
             new LoRaDriver(Regions::BRAZIL, CRCMode::DISABLE, 255),
             ProcessAreaIndex::LORA_TRANSMIT);
 
-        result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::LORA_TRANSMIT, sizeof(communication_request_st), READ_WRITE);
+        result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::LORA_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
 
         this->_lora_communication_process->InitializeProcess();
 
@@ -154,10 +154,10 @@ esp_err_t Kernel::SignUpSharedArea(uint8_t index, uint16_t size_in_bytes, Access
  *        This function is intended for debugging purposes and should not be exposed in production.
  */
 void Kernel::InjectDebugCredentials(const char* ssid, const char* password) {
-    credentials_st credentials_debug{};
+    CredentialsProtobuf credentials_debug{};
 
-    memcpy_s<uint8_t>(credentials_debug.sta_ssid, (uint8_t*)ssid, strlen(ssid) + 1); //TODO: implement a safe strlen, strcpy and strcmp
-    memcpy_s<uint8_t>(credentials_debug.sta_password, (uint8_t*)password, strlen(password) + 1);
+    credentials_debug.UpdateSsid(const_cast<char*>(ssid)); //TODO: implement a safe strlen, strcpy and strcmp
+    credentials_debug.UpdatePassword(const_cast<char*>(password)); //TODO: implement a safe strlen, strcpy and strcmp
 
-    this->_shared_memory_manager->Write(ProcessAreaIndex::CREDENTIALS, sizeof(credentials_st), &credentials_debug);
+    this->_shared_memory_manager->Write(ProcessAreaIndex::CREDENTIALS, &credentials_debug);
 }

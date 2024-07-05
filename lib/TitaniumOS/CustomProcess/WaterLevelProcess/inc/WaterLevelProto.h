@@ -1,15 +1,8 @@
-#ifndef WATER_LEVEL_PROTOBUF_H
-#define WATER_LEVEL_PROTOBUF_H
+#ifndef WATERLEVEL_PROTO_H
+#define WATERLEVEL_PROTO_H
 
 #include "stdint.h"
 #include "string.h"
-
-namespace Errors {
-    constexpr int8_t NO_ERROR = 0;
-    constexpr int8_t INVALID_BUFFER_PTR = -1;
-    constexpr int8_t INVALID_BUFFER_SIZE = -2;
-    constexpr int8_t OVERFLOW_BUFFER = -3;
-}
 
 class WaterLevelProtobuf {
 public:
@@ -20,14 +13,26 @@ public:
     uint64_t GetTimestamp(void) const {  return this->_timestamp; }
     uint32_t GetValue(void) const {  return this->_value; }
 
+    int16_t GetSerializedSize(void) const {
+        return (sizeof(this->_timestamp) + sizeof(this->_value));
+    }
+
+    int16_t GetMaxSize(void) {
+        return (sizeof(this->_timestamp) + sizeof(this->_value));
+    }
+
+    static int16_t GetStaticMaxSize(void) {
+        return (sizeof(uint64_t) + sizeof(uint32_t));
+    }
+
     int8_t UpdateTimestamp(uint64_t value) {
         this->_timestamp = value;
-        return Errors::NO_ERROR;
+        return 0;
     }
 
     int8_t UpdateValue(uint32_t value) {
         this->_value = value;
-        return Errors::NO_ERROR;
+        return 0;
     }
 
     int16_t Serialize(char* out_buffer, uint16_t out_buffer_size) const {
@@ -52,18 +57,18 @@ public:
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
         if (in_buffer == nullptr) {
-            return Errors::INVALID_BUFFER_PTR;
+            return -1;
         }
 
         uint16_t deserialized_min_size = sizeof(this->_timestamp) + sizeof(this->_value);
         uint16_t deserialized_max_size = sizeof(this->_timestamp) + sizeof(this->_value);
 
         if (in_buffer_size < deserialized_min_size) {
-            return Errors::OVERFLOW_BUFFER;
+            return -3;
         }
 
         if (in_buffer_size > deserialized_max_size) {
-            return Errors::OVERFLOW_BUFFER;
+            return -3;
         }
 
 
@@ -72,7 +77,7 @@ public:
         offset += sizeof(this->_timestamp);
         memcpy(&this->_value, &in_buffer[offset], sizeof(this->_value));
     
-        return Errors::NO_ERROR;
+        return 0;
     }
 
 private:
@@ -80,4 +85,5 @@ private:
     uint32_t _value = 0;
 };
 
-#endif /* WATER_LEVEL_PROTOBUF_H */
+#endif /* WATERLEVEL_PROTO_H */ 
+

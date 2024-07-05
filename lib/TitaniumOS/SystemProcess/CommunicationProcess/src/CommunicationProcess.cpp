@@ -3,8 +3,6 @@
 #include "HAL/memory/SharedMemoryManager.h"
 #include "Protocols/Titanium/TitaniumProtocol.h"
 
-#include "./../inc/CommunicationProcessDataModel.h"
-
 /**
  * @brief Stores a TitaniumPackage into the shared memory.
  *
@@ -12,11 +10,10 @@
  * @return ESP_OK on success, or an error code on failure.
  */
 esp_err_t CommunicationProcess::StorePackage(std::unique_ptr<TitaniumPackage>& package) {
-    auto payload = std::make_unique<uint8_t[]>(package.get()->size());
+    uint8_t payload[package.get()->size()] = {0};
+    package.get()->Consume(payload);
 
-    package.get()->Consume(payload.get());
-
-    return this->_shared_memory_manager.get()->Write(package.get()->memory_area(), package.get()->size(), payload.get());
+    return this->_shared_memory_manager.get()->Write(package.get()->memory_area(), package.get()->size(), payload);
 }
 
 /**
@@ -29,7 +26,7 @@ std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateResponsePackage(u
     auto response_size    = this->_shared_memory_manager.get()->GetAreaSize(memory_area);
     auto response_payload = std::make_unique<uint8_t[]>(response_size);
 
-    this->_shared_memory_manager.get()->Read<uint8_t>(memory_area, response_payload.get());
+    this->_shared_memory_manager.get()->Read(memory_area, response_size, response_payload.get());
 
     return std::make_unique<TitaniumPackage>(response_size, RESPONSE_COMMAND, memory_area, response_payload.get());
 }
@@ -39,17 +36,17 @@ std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateResponsePackage(u
  *
  * @return A unique pointer to the generated TitaniumPackage.
  */
-std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateTransmissionPackage(communication_request_st* communication_request) {
-    auto response_size                          = this->_shared_memory_manager.get()->GetAreaSize(communication_request->memory_area);
-    auto response_payload                       = std::make_unique<uint8_t[]>(response_size);
+std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateTransmissionPackage(CommunicationProtobuf& communication_proto) {
     std::unique_ptr<uint8_t[]> titanium_package = nullptr;
+    auto response_size                          = this->_shared_memory_manager.get()->GetWrittenBytes(communication_proto.GetMemoryArea());
+    auto response_payload                       = std::make_unique<uint8_t[]>(response_size);
 
     memset_s<uint8_t>(response_payload.get(), 0, response_size);
-    this->_shared_memory_manager.get()->Read<uint8_t>(communication_request->memory_area, response_payload.get());
+    this->_shared_memory_manager.get()->Read(communication_proto.GetMemoryArea(), response_size, response_payload.get());
 
     return std::make_unique<TitaniumPackage>(response_size,
-                                             communication_request->command,
-                                             communication_request->memory_area,
+                                             static_cast<command_e>(communication_proto.GetCommand()),
+                                             communication_proto.GetMemoryArea(),
                                              response_payload.get());
 }
 
@@ -71,6 +68,7 @@ void CommunicationProcess::Acknowledge(esp_err_t result) {
  */
 void CommunicationProcess::Execute(void) {
     auto protocol = TitaniumProtocol();
+    auto communication_proto = CommunicationProtobuf();
 
     if (this->Initialize() != ESP_OK) {
         vTaskDelete(this->_process_handler);
@@ -82,7 +80,6 @@ void CommunicationProcess::Execute(void) {
             continue;
         }
         
-
         auto received_bytes = this->_driver.get()->Read(this->_buffer.get());
         if (received_bytes > 0) {
             std::unique_ptr<TitaniumPackage> package = nullptr;
@@ -104,6 +101,13 @@ void CommunicationProcess::Execute(void) {
                          */
                         break;
                     }
+                    case ACK_COMMAND: {
+                        //TODO: Do something here! 
+                        /*
+                         * Here there is two options, the first one is to override the requested area, or store this data into a temp share memory buffer
+                         */
+                        break;
+                    }
                     case WRITE_COMMAND:
                     case TRANSMISSION_COMMAND: {
                         result = StorePackage(package);
@@ -118,11 +122,11 @@ void CommunicationProcess::Execute(void) {
             this->Acknowledge(result);
         }
         if (this->_shared_memory_manager.get()->IsAreaDataUpdated(this->_memory_area_transmit)) {
-            communication_request_st communication_request{};
+            
 
-            this->_shared_memory_manager.get()->Read(this->_memory_area_transmit, &communication_request);
+            this->_shared_memory_manager.get()->Read(this->_memory_area_transmit, &communication_proto);
 
-            auto response_package = this->GenerateTransmissionPackage(&communication_request);
+            auto response_package = this->GenerateTransmissionPackage(communication_proto);
   
             auto response_buffer_size = protocol.Encode(response_package, this->_buffer.get(), this->_driver.get()->buffer_size());
             this->_driver.get()->Write(this->_buffer.get(), response_buffer_size);
