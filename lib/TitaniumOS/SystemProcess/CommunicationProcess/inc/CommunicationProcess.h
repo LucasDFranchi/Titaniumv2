@@ -4,7 +4,7 @@
 #include "Drivers/DriverInterface/ICommunicationDriver.h"
 #include "HAL/memory/SharedMemoryManager.h"
 #include "Protocols/Titanium/TitaniumPackage.h"
-#include "SystemProcess/CommunicationProcess/inc/CommunicationProcessDataModel.h"
+#include "SystemProcess/CommunicationProcess/inc/CommunicationProto.h"
 #include "SystemProcess/ProcessAreasIndex.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
 
@@ -40,7 +40,7 @@ class CommunicationProcess : public ProcessTemplate {
     esp_err_t Initialize(void);
     esp_err_t StorePackage(std::unique_ptr<TitaniumPackage>& package);
     std::unique_ptr<TitaniumPackage> GenerateResponsePackage(uint8_t memory_area);
-    std::unique_ptr<TitaniumPackage> GenerateTransmissionPackage(communication_request_st* communication_request);
+    std::unique_ptr<TitaniumPackage> GenerateTransmissionPackage(CommunicationProtobuf& communication_proto);
     void Acknowledge(esp_err_t result);
 
    private:

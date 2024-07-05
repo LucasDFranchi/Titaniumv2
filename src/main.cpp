@@ -1,6 +1,6 @@
 #include "Kernel/Kernel.h"
 
-#include "CustomProcess/WaterLevelProcess/WaterLevelProcess.h"
+#include "CustomProcess/WaterLevelProcess/inc/WaterLevelProcess.h"
 
 int main(void) {
     Kernel kernel;
@@ -13,7 +13,7 @@ int main(void) {
     auto water_level_process = new WaterLevelProcess("Water Level Process", 1024, 2);
     water_level_process->InitializeProcess();
 
-    // kernel.InjectDebugCredentials("NETPARQUE_PAOLA", "NPQ196253");
+    kernel.InjectDebugCredentials("NETPARQUE_PAOLA", "NPQ196253");
 
     return 0;
 }

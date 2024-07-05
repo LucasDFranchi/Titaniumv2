@@ -1,9 +1,8 @@
-#include "WaterLevelProcess.h"
+#include "./../inc/WaterLevelProcess.h"
+#include "./../inc/WaterLevelProto.h"
 
 #include "HAL/memory/MemoryHandlers.h"
 #include "SystemProcess/ProcessAreasIndex.h"
-
-#include "./../proto/WaterLevel.pb-c.h"
 
 #include "esp_log.h"
 #include <string.h>
@@ -14,23 +13,13 @@ void WaterLevelProcess::Execute(void) {
         vTaskDelete(this->_process_handler);
     }
 
-    WaterLevel wl = WATER_LEVEL__INIT;
-
-    const char* foo = "FIELD1";
-    const char* bar = "FIELD1";
-
-    memcpy(wl.field1, foo, strlen(foo));
-    memcpy(wl.field2, bar, strlen(bar));
-
-    ESP_LOGI("WATER_LEVEL_SENSOR", "message size: %d", water_level__get_packed_size(&wl));
-
-    // water_level_st water_level{0};
+    WaterLevelProtobuf water_level_pb{};
 
     while (1) {
-        // water_level.value = 0xBAAD;
-        // water_level.timestamp = 0xDEADBEEF;
+        water_level_pb.UpdateTimestamp(123456);
+        water_level_pb.UpdateValue(123);
 
-        // this->_shared_memory_manager.get()->Write(CustomProcessAreaIndex::WATER_LEVEL, sizeof(water_level_st), &water_level);
+        this->_shared_memory_manager.get()->Write(CustomProcessAreaIndex::WATER_LEVEL, &water_level_pb);
 
         vTaskDelay(pdMS_TO_TICKS(10000));
     }

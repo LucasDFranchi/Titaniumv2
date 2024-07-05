@@ -1,13 +1,8 @@
-#ifndef WATER_LEVEL_PROCESS
-#define WATER_LEVEL_PROCESS
+#ifndef WATER_LEVEL_PROCESS_H
+#define WATER_LEVEL_PROCESS_H
 
 #include "HAL/memory/SharedMemoryManager.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
-
-typedef struct water_level_st {
-    uint16_t value;
-    uint64_t timestamp;
-} __attribute__((packed)) water_level_st;
 
 class WaterLevelProcess : public ProcessTemplate {
    public:
@@ -26,4 +21,4 @@ class WaterLevelProcess : public ProcessTemplate {
    uint8_t _water_level[5] = {0};
 };
 
-#endif /* WATER_LEVEL_PROCESS */
+#endif /* WATER_LEVEL_PROCESS_H */

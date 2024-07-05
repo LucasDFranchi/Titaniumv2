@@ -108,7 +108,7 @@ static esp_err_t get_uri_favicon_icon(httpd_req_t* req) {
  * @return ESP_OK on success, or an error code on failure.
  */
 static esp_err_t post_uri_wifi_credentials(httpd_req_t* req) {
-    credentials_st credentials;
+    CredentialsProtobuf credentials_proto;
     char ssid[32]     = {0};
     char password[64] = {0};
     esp_err_t result  = ESP_FAIL;
@@ -146,13 +146,10 @@ static esp_err_t post_uri_wifi_credentials(httpd_req_t* req) {
                                 "Error reading Password!");
             return ESP_FAIL;
         }
+        credentials_proto.UpdateSsid(ssid);
+        credentials_proto.UpdatePassword(password);
 
-        memcpy_s<uint8_t>(credentials.sta_ssid, reinterpret_cast<uint8_t*>(ssid), sizeof(credentials.sta_ssid));
-        memcpy_s<uint8_t>(credentials.sta_password, reinterpret_cast<uint8_t*>(password),
-                          sizeof(credentials.sta_password));
-
-        http_server_manager->memory_manager()->Write(
-            ProcessAreaIndex::CREDENTIALS, sizeof(credentials), &credentials);
+        http_server_manager->memory_manager()->Write(ProcessAreaIndex::CREDENTIALS, &credentials_proto);
         result = ESP_OK;
 
     } while (0);
@@ -264,18 +261,18 @@ void HTTPServerProcess::Execute(void) {
 
         do {
             auto ap_changed =
-                this->_last_connection_status.connection_ap_status !=
-                this->_connection_status.connection_ap_status;
+                this->_last_connection_status.GetApStatus() !=
+                this->_connection_status.GetApStatus();
             auto sta_changed =
-                this->_last_connection_status.connection_sta_status !=
-                this->_connection_status.connection_sta_status;
+                this->_last_connection_status.GetStaStatus() !=
+                this->_connection_status.GetStaStatus();
 
             if (!ap_changed && !sta_changed) {
                 break;
             }
 
-            auto ap_status  = this->_connection_status.connection_ap_status;
-            auto sta_status = this->_connection_status.connection_sta_status;
+            auto ap_status  = this->_connection_status.GetApStatus();
+            auto sta_status = this->_connection_status.GetStaStatus();
 
             if ((ap_status == NetworkStatus::CONNECTED) || (sta_status == NetworkStatus::CONNECTED)) {
                 if (this->_server_status != NetworkStatus::CONNECTED) {

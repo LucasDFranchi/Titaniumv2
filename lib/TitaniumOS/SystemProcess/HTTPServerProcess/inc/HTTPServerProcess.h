@@ -58,8 +58,8 @@ class HTTPServerProcess : public ProcessTemplate {
     httpd_handle_t _server                      = nullptr;       /**< HTTP server handle. */
     TaskHandle_t _process_handler               = nullptr;       /**< Handle for the HTTP server process task. */
     SharedMemoryManager* _shared_memory_manager = nullptr;       /**< Pointer to shared memory manager instance. */
-    connection_st _connection_status{};                          /**< Current connection status. */
-    connection_st _last_connection_status{};                     /**< Last recorded connection status. */
+    ConnectionStatusProtobuf _connection_status{};               /**< Current connection status. */
+    ConnectionStatusProtobuf _last_connection_status{};          /**< Last recorded connection status. */
     uint8_t _server_status = NetworkStatus::NOT_CONNECTED;       /**< Status of the HTTP server connection. */
 };
 

@@ -69,6 +69,21 @@ uint16_t SharedMemoryManager::GetAreaSize(uint8_t area_index) {
 }
 
 /**
+ * @brief Retrieves the size of the specified memory area.
+ *
+ * This function returns the amount of bytes written in that memory area at the given index within
+ * the shared memory array.
+ *
+ * @param[in] area_index The index of the memory area whose size is to be retrieved.
+ *                   The index must be within the valid range of the shared memory array.
+ * @return uint16_t The amount of written bytes.
+ */
+uint16_t SharedMemoryManager::GetWrittenBytes(uint8_t area_index) {
+    return this->_shared_memory_array[area_index]->GetWrittenBytes();
+}
+
+
+/**
  * @brief Returns the singleton instance of SharedMemoryManager.
  *
  * @return SharedMemoryManager* Pointer to the singleton instance of SharedMemoryManager.

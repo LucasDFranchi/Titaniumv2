@@ -1,16 +1,8 @@
-#ifndef CREDENTIALS_PROTOBUF_H
-#define CREDENTIALS_PROTOBUF_H
-
+#ifndef CREDENTIALS_PROTO_H
+#define CREDENTIALS_PROTO_H
 
 #include "stdint.h"
 #include "string.h"
-
-namespace Errors {
-    constexpr int8_t NO_ERROR = 0;
-    constexpr int8_t INVALID_BUFFER_PTR = -1;
-    constexpr int8_t INVALID_BUFFER_SIZE = -2;
-    constexpr int8_t OVERFLOW_BUFFER = -3;
-}
 
 class CredentialsProtobuf {
 public:
@@ -23,46 +15,58 @@ public:
     const char* GetSsid(void) const {  return this->_ssid; }
     const char* GetPassword(void) const {  return this->_password; }
 
+    int16_t GetSerializedSize(void) const {
+        return ((strlen(this->_ssid) + 1) + (strlen(this->_password) + 1));
+    }
+
+    int16_t GetMaxSize(void) const {
+        return (sizeof(this->_ssid) + sizeof(this->_password));
+    }
+
+    static int16_t GetStaticMaxSize(void) {
+        return (SSID_SIZE + PASSWORD_SIZE);
+    }
+
     int8_t UpdateSsid(char* value) {
-        if (value == nullptr || this->_ssid == nullptr) {
-            return Errors::INVALID_BUFFER_PTR;
+        if (value == nullptr) {
+            return -1;
         }
 
         size_t value_length = strlen(value) + 1;
 
         if ((value_length == 0) || SSID_SIZE == 0) {
-            return Errors::INVALID_BUFFER_SIZE;
+            return -2;
         }
 
         if (value_length > SSID_SIZE) {
-            return Errors::OVERFLOW_BUFFER;
+            return -3;
         }
 
         memset(this->_ssid, 0, SSID_SIZE);
         memcpy(this->_ssid, value, value_length);
 
-        return Errors::NO_ERROR;
+        return 0;
     }
 
     int8_t UpdatePassword(char* value) {
-        if (value == nullptr || this->_password == nullptr) {
-            return Errors::INVALID_BUFFER_PTR;
+        if (value == nullptr) {
+            return -1;
         }
 
         size_t value_length = strlen(value) + 1;
 
         if ((value_length == 0) || PASSWORD_SIZE == 0) {
-            return Errors::INVALID_BUFFER_SIZE;
+            return -2;
         }
 
         if (value_length > PASSWORD_SIZE) {
-            return Errors::OVERFLOW_BUFFER;
+            return -3;
         }
 
         memset(this->_password, 0, PASSWORD_SIZE);
         memcpy(this->_password, value, value_length);
 
-        return Errors::NO_ERROR;
+        return 0;
     }
 
     int16_t Serialize(char* out_buffer, uint16_t out_buffer_size) const {
@@ -87,18 +91,18 @@ public:
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
         if (in_buffer == nullptr) {
-            return Errors::INVALID_BUFFER_PTR;
+            return -1;
         }
 
         uint16_t deserialized_min_size = 1 + 1;
         uint16_t deserialized_max_size = sizeof(this->_ssid) + sizeof(this->_password);
 
         if (in_buffer_size < deserialized_min_size) {
-            return Errors::OVERFLOW_BUFFER;
+            return -3;
         }
 
         if (in_buffer_size > deserialized_max_size) {
-            return Errors::OVERFLOW_BUFFER;
+            return -3;
         }
 
         memset(this->_ssid, 0, SSID_SIZE);
@@ -109,7 +113,7 @@ public:
         offset += strlen(&in_buffer[offset]) + 1;
         memcpy(this->_password, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
     
-        return Errors::NO_ERROR;
+        return 0;
     }
 
 private:
@@ -117,4 +121,5 @@ private:
     char _password[64] = {0};
 };
 
-#endif /* CREDENTIALS_PROTOBUF_H */
+#endif /* CREDENTIALS_PROTO_H */ 
+
