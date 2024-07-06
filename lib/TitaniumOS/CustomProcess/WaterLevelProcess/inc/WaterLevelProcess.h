@@ -3,6 +3,7 @@
 
 #include "HAL/memory/SharedMemoryManager.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
+#include "WaterLevelProto.h"
 
 class WaterLevelProcess : public ProcessTemplate {
    public:

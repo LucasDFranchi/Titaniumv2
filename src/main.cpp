@@ -10,8 +10,10 @@ int main(void) {
     kernel.EnableUartProcess(10240, 5);
     kernel.EnableLoraProcess(10240, 5);
 
-    auto water_level_process = new WaterLevelProcess("Water Level Process", 1024, 2);
+    auto water_level_process = new WaterLevelProcess("Water Level Process", 10240, 2);
     water_level_process->InitializeProcess();
+
+    kernel.SignUpSharedArea(CustomProcessAreaIndex::WATER_LEVEL, WaterLevelProtobuf::GetStaticMaxSize(), READ_WRITE);
 
     kernel.InjectDebugCredentials("NETPARQUE_PAOLA", "NPQ196253");
 

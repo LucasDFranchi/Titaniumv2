@@ -4,6 +4,7 @@
 #include "HAL/memory/MemoryHandlers.h"
 #include "SystemProcess/ProcessAreasIndex.h"
 
+#include "esp_timer.h"
 #include "esp_log.h"
 #include <string.h>
 
@@ -13,13 +14,17 @@ void WaterLevelProcess::Execute(void) {
         vTaskDelete(this->_process_handler);
     }
 
-    WaterLevelProtobuf water_level_pb{};
+    WaterLevelProtobuf water_level_proto{};
+    uint32_t counter = 0;
 
     while (1) {
-        water_level_pb.UpdateTimestamp(123456);
-        water_level_pb.UpdateValue(123);
 
-        this->_shared_memory_manager.get()->Write(CustomProcessAreaIndex::WATER_LEVEL, &water_level_pb);
+
+        water_level_proto.UpdateTimestamp(esp_timer_get_time());
+        water_level_proto.UpdateValue(counter);
+        counter += 1;
+
+        this->_shared_memory_manager.get()->Write(CustomProcessAreaIndex::WATER_LEVEL, &water_level_proto);
 
         vTaskDelay(pdMS_TO_TICKS(10000));
     }

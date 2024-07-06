@@ -10,7 +10,7 @@ public:
     ~WaterLevelProtobuf() = default;
 
 
-    uint64_t GetTimestamp(void) const {  return this->_timestamp; }
+    uint32_t GetTimestamp(void) const {  return this->_timestamp; }
     uint32_t GetValue(void) const {  return this->_value; }
 
     int16_t GetSerializedSize(void) const {
@@ -22,10 +22,10 @@ public:
     }
 
     static int16_t GetStaticMaxSize(void) {
-        return (sizeof(uint64_t) + sizeof(uint32_t));
+        return (sizeof(uint32_t) + sizeof(uint32_t));
     }
 
-    int8_t UpdateTimestamp(uint64_t value) {
+    int8_t UpdateTimestamp(uint32_t value) {
         this->_timestamp = value;
         return 0;
     }
@@ -81,7 +81,7 @@ public:
     }
 
 private:
-    uint64_t _timestamp = 0;
+    uint32_t _timestamp = 0;
     uint32_t _value = 0;
 };
 

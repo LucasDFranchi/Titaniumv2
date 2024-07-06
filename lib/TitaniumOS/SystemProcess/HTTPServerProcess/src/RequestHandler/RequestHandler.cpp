@@ -1,10 +1,11 @@
 #include "./../../inc/RequestHandler/RequestHandler.h"
 
+#include "CustomProcess/WaterLevelProcess/inc/WaterLevelProto.h"
 #include "HAL/memory/MemoryHandlers.h"
 #include "Libraries/Json/inc/jsmn.h"
 #include "SystemProcess/CommunicationProcess/inc/CommunicationProto.h"
-#include "SystemProcess/NetworkProcess/inc/CredentialsProto.h"
 #include "SystemProcess/NetworkProcess/inc/ConnectionStatusProto.h"
+#include "SystemProcess/NetworkProcess/inc/CredentialsProto.h"
 #include "SystemProcess/ProcessAreasIndex.h"
 
 #include "esp_log.h"
@@ -12,7 +13,7 @@
 /* This should autogen based in schema */
 
 namespace ConnectionJson {
-    const std::string JSON_STRING("{\n\t\"connection_ap_status\": %d\n\t\"connection_sta_status\": %d\n}");
+    const std::string JSON_STRING("{\n\t\"connection_ap_status\": %d,\n\t\"connection_sta_status\": %d\n}");
     const std::string CONNECTION_AP_STATUS_TOKEN_VALUE("connection_ap_status");
     const std::string CONNECTION_STA_STATUS_TOKEN_VALUE("connection_sta_status");
     const uint8_t CONNECTION_AP_STATUS_TOKEN  = 1;
@@ -37,6 +38,15 @@ namespace CommunicationTransmitJson {
     const uint8_t COMMAND_TOKEN     = 3;
     const uint8_t NUM_TOKENS        = 5;
 }  // namespace CommunicationTransmitJson
+
+namespace WaterLevelJson {
+    const std::string JSON_STRING("{\n\t\"timestamp\": %lu,\n\t\"value\": %lu\n}");
+    const std::string TIMESTAMP_TOKEN_VALUE("timestamp");
+    const std::string VALUE_TOKEN_VALUE("value");
+    const uint8_t TIMESTAMP_TOKEN = 1;
+    const uint8_t VALUE_TOKEN     = 3;
+    constexpr uint8_t NUM_TOKENS  = 5;
+}  // namespace WaterLevelJson
 
 /**
  * @brief Retrieves connection information from shared memory and formats it into a response buffer.
@@ -122,6 +132,30 @@ uint32_t GetCommunicationTransmitArea(char* buffer, SharedMemoryManager* shared_
                                    CommunicationTransmitJson::JSON_STRING.c_str(),
                                    communication_proto.GetMemoryArea(),
                                    communication_proto.GetCommand());
+
+        if (response_length > Request::MAXIMUM_REQUEST_REPLY) {
+            response_length = 0;
+        }
+
+    } while (0);
+
+    return response_length;
+}
+
+uint32_t GetWaterLevelArea(char* buffer, SharedMemoryManager* shared_memory_manager) {
+    uint32_t response_length = 0;
+    WaterLevelProtobuf water_level_proto;
+
+    do {
+        if (buffer == nullptr) {
+            break;
+        }
+
+        shared_memory_manager->Read(CustomProcessAreaIndex::WATER_LEVEL, &water_level_proto);
+        response_length = snprintf(buffer, Request::MAXIMUM_REQUEST_REPLY,
+                                   WaterLevelJson::JSON_STRING.c_str(),
+                                   (uint32_t)water_level_proto.GetTimestamp(),
+                                   water_level_proto.GetValue());
 
         if (response_length > Request::MAXIMUM_REQUEST_REPLY) {
             response_length = 0;

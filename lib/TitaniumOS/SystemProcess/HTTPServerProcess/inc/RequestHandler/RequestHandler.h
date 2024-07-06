@@ -17,6 +17,7 @@ namespace Request {
 uint32_t GetConnectionArea(char* buffer, SharedMemoryManager* shared_memory_manager);
 uint32_t GetCredentialsArea(char* buffer, SharedMemoryManager* shared_memory_manager);
 uint32_t GetCommunicationTransmitArea(char* buffer, SharedMemoryManager* shared_memory_manager);
+uint32_t GetWaterLevelArea(char* buffer, SharedMemoryManager* shared_memory_manager);
 esp_err_t PostConnectionArea(char* buffer, SharedMemoryManager* shared_memory_manager);
 esp_err_t PostCredentialsArea(char* buffer, SharedMemoryManager* shared_memory_manager);
 esp_err_t PostCommunicationTransmitArea(char* buffer, SharedMemoryManager* shared_memory_manager, uint8_t memory_area);

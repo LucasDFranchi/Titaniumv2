@@ -193,6 +193,11 @@ static esp_err_t get_area_handler(httpd_req_t* req) {
                     GetCommunicationTransmitArea(&http_server_manager->response_buffer[0],
                                                  http_server_manager->memory_manager());
             } break;
+            case CustomProcessAreaIndex::WATER_LEVEL: {
+                response_size =
+                    GetWaterLevelArea(&http_server_manager->response_buffer[0],
+                                                 http_server_manager->memory_manager());
+            } break;
             default: {
                 httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
                                     "Invalid Memory Area!");
