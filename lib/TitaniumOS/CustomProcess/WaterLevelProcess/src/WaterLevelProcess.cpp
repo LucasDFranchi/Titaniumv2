@@ -18,15 +18,13 @@ void WaterLevelProcess::Execute(void) {
     uint32_t counter = 0;
 
     while (1) {
-
-
         water_level_proto.UpdateTimestamp(esp_timer_get_time());
         water_level_proto.UpdateValue(counter);
         counter += 1;
 
         this->_shared_memory_manager.get()->Write(CustomProcessAreaIndex::WATER_LEVEL, &water_level_proto);
 
-        vTaskDelay(pdMS_TO_TICKS(10000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 

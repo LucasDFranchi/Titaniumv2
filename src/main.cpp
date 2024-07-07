@@ -5,10 +5,11 @@
 int main(void) {
     Kernel kernel;
 
-    kernel.EnableNetworkProcess(10240, 4);
-    kernel.EnableHTTPServerProcess(20480, 2);
-    kernel.EnableUartProcess(10240, 5);
-    kernel.EnableLoraProcess(10240, 5);
+    kernel.EnableNetworkProcess(10240, 2);
+    kernel.EnableHTTPServerProcess(20480,3);
+    kernel.EnableUartProcess(10240, 4);
+    kernel.EnableLoraProcess(10240, 4);
+    kernel.EnableMQTTClientProcess(40240, 5);
 
     auto water_level_process = new WaterLevelProcess("Water Level Process", 10240, 2);
     water_level_process->InitializeProcess();

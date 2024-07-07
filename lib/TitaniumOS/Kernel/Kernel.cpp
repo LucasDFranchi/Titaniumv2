@@ -132,6 +132,30 @@ esp_err_t Kernel::EnableLoraProcess(uint32_t process_stack, uint8_t process_prio
 }
 
 /**
+ * @brief Initializes the LoRa communication component.
+ * @param[in] process_stack Stack size for the LoRa communication process.
+ * @param[in] process_priority Priority of the LoRa communication process.
+ * @param[in] can_fail Flag indicating if initialization failure should be tolerated.
+ * @return ESP_OK if initialization succeeds, otherwise an error code.
+ */
+esp_err_t Kernel::EnableMQTTClientProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail) {
+    auto result = ESP_OK;
+
+    do {
+        this->_mqtt_client_process = new MQTTClientProcess("MQTT Client Proccess", process_stack, process_priority);
+        result += this->_shared_memory_manager->SignUpSharedArea(ProcessAreaIndex::MQTT, MQTTClientProtobuf::GetStaticMaxSize(), READ_WRITE);
+        this->_mqtt_client_process->InitializeProcess();
+
+    } while (0);
+
+    if (!can_fail) {
+        ESP_ERROR_CHECK(result);
+    }
+
+    return result;
+}
+
+/**
  * @brief Signs up a shared memory area.
  * @param[in] index Index of the shared memory area.
  * @param[in] size_in_bytes Size of the shared memory area in bytes.
