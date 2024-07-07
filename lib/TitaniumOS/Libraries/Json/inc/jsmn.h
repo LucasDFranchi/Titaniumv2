@@ -26,9 +26,9 @@
 
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+// #ifdef __cplusplus
+// extern "C" {
+// #endif
 
 #ifdef JSMN_STATIC
 #define JSMN_API static
@@ -464,8 +464,8 @@ JSMN_API void jsmn_init(jsmn_parser *parser) {
 
 #endif /* JSMN_HEADER */
 
-#ifdef __cplusplus
-}
-#endif
+// #ifdef __cplusplus
+// }
+// #endif
 
 #endif /* JSMN_H */

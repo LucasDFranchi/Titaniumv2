@@ -44,7 +44,7 @@ class MQTTClientProcess : public ProcessTemplate {
     ConnectionStatusProtobuf _connection_status{};      /**< Current connection status. */
     ConnectionStatusProtobuf _last_connection_status{}; /**< Last recorded connection status. */
     MQTTClientProtobuf _mqtt_client_proto{};
-    uint8_t _server_status = NetworkStatus::NOT_CONNECTED; /**< Status of the HTTP server connection. */
+    uint8_t _client_status = NetworkStatus::NOT_CONNECTED; /**< Status of the HTTP server connection. */
 };
 
 #endif /* MQTT_CLIENT_PROCESS_H */

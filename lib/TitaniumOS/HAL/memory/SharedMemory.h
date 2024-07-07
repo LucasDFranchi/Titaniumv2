@@ -24,11 +24,11 @@ class SharedMemory {
      * @param access_type Access type of the memory area.
      */
     SharedMemory(uint8_t index, uint16_t size, AccessType access_type) {
-        this->_index       = index;
-        this->_size        = size;
-        this->_access_type = access_type;
-        this->_has_update  = false;
-        this->_mutex       = xSemaphoreCreateMutex();
+        this->_index         = index;
+        this->_size          = size;
+        this->_access_type   = access_type;
+        this->_has_update    = false;
+        this->_mutex         = xSemaphoreCreateMutex();
         this->_written_bytes = 0;
         this->_data.reset(new uint8_t[size]);
 

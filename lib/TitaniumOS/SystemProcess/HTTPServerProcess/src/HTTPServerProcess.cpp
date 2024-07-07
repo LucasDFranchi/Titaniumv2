@@ -3,8 +3,7 @@
  * @brief Implementation of HTTPServerProcess class methods and HTTP request handlers.
  */
 
-#include "./../inc/HTTPServerProcess.h"
-#include "./../inc/RequestHandler/RequestHandler.h"
+#include "SystemProcess/HTTPServerProcess/inc/HTTPServerProcess.h"
 
 #include "esp_log.h"
 

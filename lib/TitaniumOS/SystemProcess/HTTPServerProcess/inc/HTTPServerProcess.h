@@ -1,7 +1,7 @@
 #ifndef HTTP_SERVER_MANAGER_H
 #define HTTP_SERVER_MANAGER_H
 
-#include "./RequestHandler/RequestHandler.h"
+#include "Protocols/Web/RequestHandler.h"
 #include "HAL/memory/SharedMemoryManager.h"
 #include "SystemProcess/NetworkProcess/inc/NetworkProcess.h"
 #include "SystemProcess/Template/ProcessTemplate.h"

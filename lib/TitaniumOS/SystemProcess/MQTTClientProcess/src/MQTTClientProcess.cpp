@@ -7,14 +7,14 @@
 
 static const char *TAG = "mqtt_example";
 
-static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
-    ESP_LOGI(TAG, "MQTT CLIENT STARTED_CB");
-    esp_mqtt_client_handle_t client = event->client;
-    switch (event->event_id) {
+static void mqtt_event_handler(void *arg, esp_event_base_t base, int32_t event_id, void *event_data) {
+    auto event               = reinterpret_cast<esp_mqtt_event_handle_t>(event_data);
+    // auto client              = event->client;
+    // auto mqtt_client_process = reinterpret_cast<MQTTClientProcess *>(arg);
+
+    switch (event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-            // esp_mqtt_client_subscribe(client, "my_topic", 0);
-            // esp_mqtt_client_publish(client, "my_topic", "Hi to all from ESP32 .........", 0, 1, 0);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -30,8 +30,6 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
             break;
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-            printf("\nTOPIC=%.*s\r\n", event->topic_len, event->topic);
-            printf("DATA=%.*s\r\n", event->data_len, event->data);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -40,11 +38,6 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
             ESP_LOGI(TAG, "Other event id:%d", event->event_id);
             break;
     }
-    return ESP_OK;
-}
-
-static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
-    mqtt_event_handler_cb((esp_mqtt_event_handle_t)event_data);
 }
 
 esp_err_t MQTTClientProcess::Initialize(void) {
@@ -93,15 +86,15 @@ void MQTTClientProcess::Execute(void) {
             auto sta_status = this->_connection_status.GetStaStatus();
 
             if ((ap_status == NetworkStatus::CONNECTED) || (sta_status == NetworkStatus::CONNECTED)) {
-                if (this->_server_status != NetworkStatus::CONNECTED) {
+                if (this->_client_status != NetworkStatus::CONNECTED) {
                     this->StartMQTTClient();
-                    this->_server_status = NetworkStatus::CONNECTED;
+                    this->_client_status = NetworkStatus::CONNECTED;
                     ESP_LOGI(TAG, "MQTT CLIENT STARTED");
                 }
             } else if ((ap_status == NetworkStatus::NOT_CONNECTED) && (sta_status == NetworkStatus::NOT_CONNECTED)) {
-                if (this->_server_status != NetworkStatus::CONNECTED) {
+                if (this->_client_status != NetworkStatus::CONNECTED) {
                     this->StopMQTTClient();
-                    this->_server_status = NetworkStatus::NOT_CONNECTED;
+                    this->_client_status = NetworkStatus::NOT_CONNECTED;
                     ESP_LOGI(TAG, "MQTT CLIENT STOPED");
                 }
             }
@@ -128,3 +121,4 @@ esp_err_t MQTTClientProcess::StartMQTTClient(void) {
 esp_err_t MQTTClientProcess::StopMQTTClient(void) {
     return esp_mqtt_client_stop(this->_client);
 }
+
