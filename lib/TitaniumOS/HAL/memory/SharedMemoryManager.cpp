@@ -38,6 +38,7 @@ esp_err_t SharedMemoryManager::SignUpSharedArea(uint8_t index, uint16_t size_in_
 
         this->_shared_memory_array[index] = std::make_unique<SharedMemory>(index, size_in_bytes, access_type);
         result                            = ESP_OK;
+        this->_num_areas++;
 
     } while (0);
 
@@ -80,6 +81,10 @@ uint16_t SharedMemoryManager::GetAreaSize(uint8_t area_index) {
  */
 uint16_t SharedMemoryManager::GetWrittenBytes(uint8_t area_index) {
     return this->_shared_memory_array[area_index]->GetWrittenBytes();
+}
+
+uint16_t SharedMemoryManager::GetNumAreas(void) {
+    return this->_num_areas;
 }
 
 /**

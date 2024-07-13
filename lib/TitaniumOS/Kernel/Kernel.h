@@ -10,6 +10,7 @@
 #include <HAL/spi/SPIManager.h>
 #include <SystemProcess/CommunicationProcess/inc/CommunicationProcess.h>
 #include <SystemProcess/HTTPServerProcess/inc/HTTPServerProcess.h>
+#include <SystemProcess/MQTTClientProcess/inc/MQTTClientProcess.h>
 #include <SystemProcess/NetworkProcess/inc/NetworkProcess.h>
 #include <SystemProcess/ProcessAreasIndex.h>
 
@@ -27,8 +28,9 @@ class Kernel {
     };
     esp_err_t EnableNetworkProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
     esp_err_t EnableHTTPServerProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
-    esp_err_t EnableLoraProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
     esp_err_t EnableUartProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
+    esp_err_t EnableLoraProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
+    esp_err_t EnableMQTTClientProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail = false);
     esp_err_t SignUpSharedArea(uint8_t index, uint16_t size_in_bytes,
                                AccessType access_type, bool can_fail = false);
 
@@ -47,6 +49,7 @@ class Kernel {
     HTTPServerProcess* _http_server_process;                      ///< Pointer to HTTPServerManager instance.
     CommunicationProcess* _uart_communication_process = nullptr;  ///< Pointer to UART Communication Manager instance.
     CommunicationProcess* _lora_communication_process = nullptr;  ///< Pointer to LoRa Communication Manager instance.
+    MQTTClientProcess* _mqtt_client_process           = nullptr;  ///<
 };
 
 #endif /* KERNEL_H */

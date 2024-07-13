@@ -8,7 +8,8 @@ int main(void) {
     kernel.EnableNetworkProcess(10240, 4);
     kernel.EnableHTTPServerProcess(20480, 2);
     kernel.EnableUartProcess(10240, 5);
-    // kernel.EnableLoraProcess(10240, 5, true);
+    kernel.EnableLoraProcess(10240, 5);
+    kernel.EnableMQTTClientProcess(10240, 5);
 
     auto water_level_process = new WaterLevelProcess("Water Level Process", 10240, 2);
     water_level_process->InitializeProcess();

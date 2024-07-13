@@ -22,6 +22,7 @@ class SharedMemoryManager {
     bool IsAreaDataUpdated(uint8_t area_index);
     uint16_t GetAreaSize(uint8_t area_index);
     uint16_t GetWrittenBytes(uint8_t area_index);
+    uint16_t GetNumAreas(void);
 
    private:
     SharedMemoryManager(){};
@@ -29,6 +30,7 @@ class SharedMemoryManager {
 
    private:
     static constexpr uint16_t _maximum_shared_memory = 32;
+    uint16_t _num_areas                              = 0;
     // std::unique_ptr<std::unique_ptr<SharedMemory>[]> _shared_memory_array;
     std::unique_ptr<SharedMemory> _shared_memory_array[SharedMemoryManager::_maximum_shared_memory];
 

@@ -4,7 +4,7 @@
  * configuration and events.
  */
 
-#include "./../inc/NetworkProcess.h"
+#include "SystemProcess/NetworkProcess/inc/NetworkProcess.h"
 
 #include "esp_event.h"
 #include "esp_log.h"

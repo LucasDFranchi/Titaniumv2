@@ -36,6 +36,11 @@ namespace ProcessAreaIndex {
      * @brief Index for LoRa transmit area.
      */
     constexpr int8_t LORA_TRANSMIT = 4;
+
+    /**
+     * @brief Index for MQTT area.
+     */
+    constexpr int8_t MQTT = 5;
 }  // namespace ProcessAreaIndex
 
 /**
@@ -45,7 +50,7 @@ namespace CustomProcessAreaIndex {
     /**
      * @brief Invalid index.
      */
-    constexpr int8_t WATER_LEVEL = 5;
+    constexpr int8_t WATER_LEVEL = 6;
 }  // namespace CustomProcessAreaIndex
 
 
