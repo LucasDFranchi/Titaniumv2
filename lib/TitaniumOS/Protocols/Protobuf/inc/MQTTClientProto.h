@@ -8,7 +8,7 @@
 
 #include "stdint.h"
 #include "string.h"
-#include "jsmn.h"
+#include "Libraries/JSON/jsmn/jsmn.h"
 #include "IProtobuf.h"
 
 class MQTTClientProtobuf : public IProtobuf {

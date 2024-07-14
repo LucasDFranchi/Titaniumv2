@@ -11,4 +11,4 @@ else
 fi
 
 # Run Docker container
-docker run -it -v $(pwd)/../:/app $DOCKER_IMAGE
+docker run -v $(pwd)/../:/app $DOCKER_IMAGE

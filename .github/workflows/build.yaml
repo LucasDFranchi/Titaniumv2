@@ -19,6 +19,7 @@ jobs:
       - name: Build project
         run: |
           cd container
+          chmod +x environment_helper.sh
           ./environment_helper.sh
-          docker run -it -v $(pwd)/../:/app titanium_env bash -c "cd /app && pio run"
-          docker run -it -v $(pwd)/../:/app titanium_env bash -c "cd /app && python3 execute_test_qemu.py"
+          docker run -t -v $(pwd)/../:/app titanium_env bash -c "cd /app && pio run"
+          docker run -t -v $(pwd)/../:/app titanium_env bash -c "cd /app && python3 container/execute_test_qemu.py --env heltec_wifi_lora_32_V2"
