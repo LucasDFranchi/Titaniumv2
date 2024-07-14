@@ -1,0 +1,24 @@
+name: Embedded Project CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build project
+        run: |
+          cd container
+          ./environment_helper.sh
+          docker run -it -v $(pwd)/../:/app titanium_env bash -c "cd /app && pio run"
+          docker run -it -v $(pwd)/../:/app titanium_env bash -c "cd /app && python3 execute_test_qemu.py"
