@@ -31,6 +31,7 @@ class MQTTClientProcess : public ProcessTemplate {
     }
 
     esp_err_t PublishMemoryArea(uint8_t area_index);
+    esp_err_t SubscribeMemoryArea(void);
 
    private:
     void Execute(void);

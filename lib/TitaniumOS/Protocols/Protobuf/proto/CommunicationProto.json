@@ -4,7 +4,11 @@
     "fields": [
       {
         "type": "uint8_t",
-        "name": "memory_area"
+        "name": "read_memory_area"
+      },
+      {
+        "type": "uint8_t",
+        "name": "write_memory_area"
       },
       {
         "type": "uint8_t",

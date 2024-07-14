@@ -38,15 +38,15 @@ std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateResponsePackage(u
  */
 std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateTransmissionPackage(CommunicationProtobuf& communication_proto) {
     std::unique_ptr<uint8_t[]> titanium_package = nullptr;
-    auto response_size                          = this->_shared_memory_manager.get()->GetWrittenBytes(communication_proto.GetMemoryArea());
+    auto response_size                          = this->_shared_memory_manager.get()->GetWrittenBytes(communication_proto.GetReadMemoryArea());
     auto response_payload                       = std::make_unique<uint8_t[]>(response_size);
 
     memset_s<uint8_t>(response_payload.get(), 0, response_size);
-    this->_shared_memory_manager.get()->Read(communication_proto.GetMemoryArea(), response_size, response_payload.get());
+    this->_shared_memory_manager.get()->Read(communication_proto.GetReadMemoryArea(), response_size, response_payload.get());
 
     return std::make_unique<TitaniumPackage>(response_size,
                                              static_cast<command_e>(communication_proto.GetCommand()),
-                                             communication_proto.GetMemoryArea(),
+                                             communication_proto.GetWriteMemoryArea(),
                                              response_payload.get());
 }
 
