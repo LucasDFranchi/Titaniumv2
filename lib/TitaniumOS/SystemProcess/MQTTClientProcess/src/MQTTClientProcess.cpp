@@ -1,9 +1,4 @@
 #include "SystemProcess/MQTTClientProcess/inc/MQTTClientProcess.h"
-#include "CustomProcess/WaterLevelProcess/inc/WaterLevelProto.h"
-#include "SystemProcess/CommunicationProcess/inc/CommunicationProto.h"
-#include "SystemProcess/NetworkProcess/inc/ConnectionStatusProto.h"
-#include "SystemProcess/NetworkProcess/inc/CredentialsProto.h"
-#include "SystemProcess/ProcessAreasIndex.h"
 
 #include "esp_log.h"
 #include "mqtt_client.h"
@@ -26,19 +21,19 @@ static void mqtt_event_handler(void *arg, esp_event_base_t base, int32_t event_i
             esp_mqtt_client_subscribe(client, "titanium_area/6", 0);
             break;
         case MQTT_EVENT_DISCONNECTED:
-            ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+            // ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
             break;
         case MQTT_EVENT_SUBSCRIBED:
-            ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+            // ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
             break;
         case MQTT_EVENT_UNSUBSCRIBED:
-            ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
+            // ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
             break;
         case MQTT_EVENT_PUBLISHED:
-            ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+            // ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
             break;
         case MQTT_EVENT_DATA:
-            ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            // ESP_LOGI(TAG, "MQTT_EVENT_DATA");
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -74,12 +69,10 @@ void MQTTClientProcess::Execute(void) {
     }
 
     while (1) {
-        if (this->_shared_memory_manager.get()->IsAreaDataUpdated(ProcessAreaIndex::CONNECTION)) {
-            this->_shared_memory_manager.get()->Read(ProcessAreaIndex::CONNECTION,
-                                                     &this->_connection_status);
-        }
-
         do {
+            this->_shared_memory_manager.get()->Read(ProtobufIndex::CONNECTION,
+                                                     &this->_connection_status);
+                                                     
             auto ap_changed =
                 this->_last_connection_status.GetApStatus() !=
                 this->_connection_status.GetApStatus();
@@ -138,42 +131,27 @@ esp_err_t MQTTClientProcess::StopMQTTClient(void) {
 esp_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
     char response_buffer[512] = {0};
     char topic_area[64]       = {0};
-    uint16_t response_size    = 0;
     esp_err_t result          = ESP_FAIL;
 
-    switch (area_index) {
-        case ProcessAreaIndex::CONNECTION: {
-            ConnectionStatusProtobuf protobuf{};
-            this->_shared_memory_manager->Read<ConnectionStatusProtobuf>(area_index, &protobuf);
-            response_size = protobuf.SerializeJson(response_buffer, sizeof(response_buffer));
-        } break;
-        case ProcessAreaIndex::CREDENTIALS: {
-            CredentialsProtobuf protobuf{};
-            this->_shared_memory_manager->Read<CredentialsProtobuf>(area_index, &protobuf);
-            response_size = protobuf.SerializeJson(response_buffer, sizeof(response_buffer));
-        } break;
-        case ProcessAreaIndex::UART_TRANSMIT:
-        case ProcessAreaIndex::LORA_TRANSMIT: {
-            CommunicationProtobuf protobuf{};
-            this->_shared_memory_manager->Read<CommunicationProtobuf>(area_index, &protobuf);
-            response_size = protobuf.SerializeJson(response_buffer, sizeof(response_buffer));
-        } break;
-        case CustomProcessAreaIndex::WATER_LEVEL: {
-            WaterLevelProtobuf protobuf{};
-            this->_shared_memory_manager->Read<WaterLevelProtobuf>(area_index, &protobuf);
-            response_size = protobuf.SerializeJson(response_buffer, sizeof(response_buffer));
-        } break;
-        default: {
-            response_size = 0;
-        }
-    }
+    do {
+        auto protobuf = ProtobufFactory::CreateProtobuf(area_index);
 
-    if (response_size > 0) {
-        if (snprintf(topic_area, sizeof(topic_area), "titanium_area/%d", area_index) > 0) {
-            esp_mqtt_client_publish(this->_client, topic_area, response_buffer, 0, 1, 0);
-            result = ESP_OK;
+        if (protobuf.get() == nullptr) {
+            break;
         }
-    }
+        this->_shared_memory_manager->Read(area_index, protobuf.get());
+
+        if (protobuf->SerializeJson(response_buffer, sizeof(response_buffer)) <= 0) {
+            break;
+        }
+        if (snprintf(topic_area, sizeof(topic_area), "titanium_area/%d", area_index) < 0) {
+            break;
+        }
+
+        esp_mqtt_client_publish(this->_client, topic_area, response_buffer, 0, 1, 0);
+        result = ESP_OK;
+
+    } while (0);
 
     return result;
 }

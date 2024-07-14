@@ -2,10 +2,10 @@
 #define SHARED_MEMORY_MANAGER_H
 
 #include <stdint.h>
-
 #include <memory>
 
 #include "SharedMemory.h"
+#include "Protocols/Protobuf/inc/IProtobuf.h"
 #include "esp_err.h"
 
 /**
@@ -46,8 +46,7 @@ class SharedMemoryManager {
      *          - ESP_OK if the write operation was successful.
      *          - ESP_FAIL if an error occurred during the write operation.
      */
-    template <typename T>
-    esp_err_t Write(uint8_t area_index, T* protobuf) {
+    esp_err_t Write(uint8_t area_index, IProtobuf* protobuf) {
         esp_err_t result = ESP_FAIL;
 
         do {
@@ -121,8 +120,7 @@ class SharedMemoryManager {
         return result;
     }
 
-    template <typename T>
-    uint16_t Read(uint8_t area_index, T* protobuf) {
+    uint16_t Read(uint8_t area_index, IProtobuf* protobuf) {
         uint16_t result = 0;
 
         do {

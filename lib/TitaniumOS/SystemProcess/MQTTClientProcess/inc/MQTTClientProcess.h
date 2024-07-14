@@ -2,7 +2,6 @@
 #define MQTT_CLIENT_PROCESS_H
 
 #include "HAL/memory/SharedMemoryManager.h"
-#include "SystemProcess/MQTTClientProcess/inc/MQTTClientProto.h"
 #include "SystemProcess/NetworkProcess/inc/NetworkProcess.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
 

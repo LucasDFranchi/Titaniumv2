@@ -151,13 +151,13 @@ void NetworkProcess::Execute(void) {
     esp_wifi_connect();
 
     while (1) {
-        if (shared_memory_manager->IsAreaDataUpdated(ProcessAreaIndex::CREDENTIALS)) {
+        if (shared_memory_manager->IsAreaDataUpdated(ProtobufIndex::CREDENTIALS)) {
             this->SetStationMode(&this->_sta_config);
             esp_wifi_connect();
         }
 
         if (this->_need_update_network_data) {
-            shared_memory_manager->Write(ProcessAreaIndex::CONNECTION, &this->_connection_proto);
+            shared_memory_manager->Write(ProtobufIndex::CONNECTION, &this->_connection_proto);
             this->_need_update_network_data = 0;
         }
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -247,7 +247,7 @@ esp_err_t NetworkProcess::SetAccessPointMode(wifi_config_t* ap_config) {
  * @param[in] wifi_config Pointer to the Wi-Fi configuration structure.
  */
 void NetworkProcess::SetCredentials(wifi_config_t* wifi_config) {
-    this->_shared_memory_manager->Read(ProcessAreaIndex::CREDENTIALS, &this->_cred_proto);
+    this->_shared_memory_manager->Read(ProtobufIndex::CREDENTIALS, &this->_cred_proto);
 
     memcpy(wifi_config->sta.ssid, this->_cred_proto.GetSsid(), strlen(this->_cred_proto.GetSsid()) + 1);
     memcpy(wifi_config->sta.password, this->_cred_proto.GetPassword(), strlen(this->_cred_proto.GetSsid()) + 1);

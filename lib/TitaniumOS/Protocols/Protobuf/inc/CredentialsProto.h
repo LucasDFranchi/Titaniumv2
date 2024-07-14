@@ -9,22 +9,9 @@
 #include "stdint.h"
 #include "string.h"
 #include "jsmn.h"
+#include "IProtobuf.h"
 
-#ifndef PROTOBUFS_ERRORS_H
-#define PROTOBUFS_ERRORS_H
-
-enum protobufs_errors {
-  PROTO_NO_ERROR   = 0,
-  PROTO_INVAL_PTR  = -1,
-  PROTO_OVERFLOW   = -2,
-  PROTO_INVAL_SIZE = -3,
-  PROTO_INVAL_NUM_TOKEN = -4,
-  PROTO_INVAL_JSON_KEY = -5,
-};
-
-#endif // PROTOBUFS_ERRORS_H
-
-class CredentialsProtobuf {
+class CredentialsProtobuf : public IProtobuf {
 public:
     CredentialsProtobuf() = default;
     ~CredentialsProtobuf() = default;

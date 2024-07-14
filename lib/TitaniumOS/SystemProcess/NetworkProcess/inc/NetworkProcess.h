@@ -1,10 +1,8 @@
 #ifndef NETWORK_MANAGER_H
 #define NETWORK_MANAGER_H
 
-#include "ConnectionStatusProto.h"
-#include "CredentialsProto.h"
 #include "HAL/memory/SharedMemoryManager.h"
-#include "SystemProcess/ProcessAreasIndex.h"
+#include "Protocols/Protobuf/inc/ProtobufFactory.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
 
 #include "esp_err.h"
@@ -50,7 +48,7 @@ class NetworkProcess : public ProcessTemplate {
     TaskHandle_t _process_handler               = nullptr;  ///< Task handle for the NetworkProcess process.
     wifi_config_t _ap_config;                               ///< Wi-Fi configuration structure for AP mode.
     wifi_config_t _sta_config;                              ///< Wi-Fi configuration structure for STA mode.
-    ConnectionStatusProtobuf _connection_proto;              ///< Structure for credentials storage.
+    ConnectionStatusProtobuf _connection_proto;             ///< Structure for credentials storage.
     CredentialsProtobuf _cred_proto;                        ///< Structure for connection status storage.
     uint8_t _need_update_network_data;                      ///< Flag indicating if network data needs updating.
 };

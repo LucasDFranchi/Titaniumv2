@@ -14,7 +14,7 @@ int main(void) {
     auto water_level_process = new WaterLevelProcess("Water Level Process", 10240, 2);
     water_level_process->InitializeProcess();
     
-    kernel.SignUpSharedArea(CustomProcessAreaIndex::WATER_LEVEL, WaterLevelProtobuf::GetStaticMaxSize(), READ_WRITE);
+    kernel.SignUpSharedArea(ProtobufIndex::WATER_LEVEL, WaterLevelProtobuf::GetStaticMaxSize(), READ_WRITE);
 
     kernel.InjectDebugCredentials("NETPARQUE_PAOLA", "NPQ196253");
 

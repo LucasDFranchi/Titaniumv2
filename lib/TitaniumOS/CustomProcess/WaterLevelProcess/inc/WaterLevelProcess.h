@@ -2,8 +2,8 @@
 #define WATER_LEVEL_PROCESS_H
 
 #include "HAL/memory/SharedMemoryManager.h"
+#include "Protocols/Protobuf/inc/ProtobufFactory.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
-#include "WaterLevelProto.h"
 
 class WaterLevelProcess : public ProcessTemplate {
    public:
@@ -17,9 +17,7 @@ class WaterLevelProcess : public ProcessTemplate {
    private:
     TaskHandle_t _process_handler                               = NULL;
     std::unique_ptr<SharedMemoryManager> _shared_memory_manager = nullptr;
-
-   private:
-   uint8_t _water_level[5] = {0};
+    WaterLevelProtobuf water_level_proto{};
 };
 
 #endif /* WATER_LEVEL_PROCESS_H */

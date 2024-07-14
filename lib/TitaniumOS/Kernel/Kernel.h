@@ -12,7 +12,7 @@
 #include <SystemProcess/HTTPServerProcess/inc/HTTPServerProcess.h>
 #include <SystemProcess/MQTTClientProcess/inc/MQTTClientProcess.h>
 #include <SystemProcess/NetworkProcess/inc/NetworkProcess.h>
-#include <SystemProcess/ProcessAreasIndex.h>
+#include <Protocols/Protobuf/inc/ProtobufIndex.h>
 
 class Kernel {
    public:

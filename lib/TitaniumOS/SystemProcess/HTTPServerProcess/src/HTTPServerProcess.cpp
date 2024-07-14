@@ -4,12 +4,9 @@
  */
 
 #include "SystemProcess/HTTPServerProcess/inc/HTTPServerProcess.h"
-#include "CustomProcess/WaterLevelProcess/inc/WaterLevelProto.h"
 #include "HAL/memory/MemoryHandlers.h"
-#include "SystemProcess/CommunicationProcess/inc/CommunicationProto.h"
-#include "SystemProcess/NetworkProcess/inc/ConnectionStatusProto.h"
-#include "SystemProcess/NetworkProcess/inc/CredentialsProto.h"
-#include "SystemProcess/ProcessAreasIndex.h"
+#include "Protocols/Protobuf/inc/ProtobufFactory.h"
+
 #include "esp_log.h"
 
 static const char* TAG = "HTTPServerProcess"; /**< Logging tag for HTTPServerProcess class. */
@@ -150,7 +147,7 @@ static esp_err_t post_uri_wifi_credentials(httpd_req_t* req) {
         credentials_proto.UpdateSsid(ssid);
         credentials_proto.UpdatePassword(password);
 
-        http_server_manager->memory_manager()->Write(ProcessAreaIndex::CREDENTIALS, &credentials_proto);
+        http_server_manager->memory_manager()->Write(ProtobufIndex::CREDENTIALS, &credentials_proto);
         result = ESP_OK;
 
     } while (0);
@@ -167,97 +164,50 @@ static esp_err_t post_uri_wifi_credentials(httpd_req_t* req) {
 static esp_err_t get_area_handler(httpd_req_t* req) {
     uint32_t response_size = 0;
     uint16_t area_index    = 0;
+    auto result            = ESP_FAIL;
 
-    if (GetRequestKey(req, "/get_area?id=", &area_index)) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Index out of range!");
-        return ESP_FAIL;
-    }
+    do {
+        if (GetRequestKey(req, "/get_area?id=", &area_index) != ESP_OK) {
+            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Index out of range!");
+            break;
+        }
 
-    HTTPServerProcess* http_server_manager =
-        reinterpret_cast<HTTPServerProcess*>(req->user_ctx);
+        HTTPServerProcess* http_server_process =
+            reinterpret_cast<HTTPServerProcess*>(req->user_ctx);
 
-    if (req->method == HTTP_GET) {
-        switch (area_index) {
-            case ProcessAreaIndex::CONNECTION: {
-                ConnectionStatusProtobuf protobuf{};
-                http_server_manager->memory_manager()->Read<ConnectionStatusProtobuf>(area_index, &protobuf);
-                response_size = protobuf.SerializeJson(&http_server_manager->response_buffer[0],
-                                                       sizeof(http_server_manager->response_buffer));
-            } break;
-            case ProcessAreaIndex::CREDENTIALS: {
-                CredentialsProtobuf protobuf{};
-                http_server_manager->memory_manager()->Read<CredentialsProtobuf>(area_index, &protobuf);
-                response_size = protobuf.SerializeJson(&http_server_manager->response_buffer[0],
-                                                       sizeof(http_server_manager->response_buffer));
-            } break;
-            case ProcessAreaIndex::UART_TRANSMIT:
-            case ProcessAreaIndex::LORA_TRANSMIT: {
-                CommunicationProtobuf protobuf{};
-                http_server_manager->memory_manager()->Read<CommunicationProtobuf>(area_index, &protobuf);
-                response_size = protobuf.SerializeJson(&http_server_manager->response_buffer[0],
-                                                       sizeof(http_server_manager->response_buffer));
-            } break;
-            case CustomProcessAreaIndex::WATER_LEVEL: {
-                WaterLevelProtobuf protobuf{};
-                http_server_manager->memory_manager()->Read<WaterLevelProtobuf>(area_index, &protobuf);
-                response_size = protobuf.SerializeJson(&http_server_manager->response_buffer[0],
-                                                       sizeof(http_server_manager->response_buffer));
-            } break;
-            default: {
-                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
-                                    "Invalid Memory Area!");
-                return ESP_FAIL;
+        auto protobuf = ProtobufFactory::CreateProtobuf(area_index);
+
+        if (protobuf.get() == nullptr) {
+            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid Memory Area");
+            break;
+        }
+
+        if (req->method == HTTP_GET) {
+            http_server_process->memory_manager()->Read(area_index, protobuf.get());
+
+            response_size = protobuf->SerializeJson(&http_server_process->response_buffer[0],
+                                                    sizeof(http_server_process->response_buffer));
+
+            if (response_size > 0) {
+                httpd_resp_send(req, http_server_process->response_buffer,
+                                response_size);
+                result = ESP_OK;
             }
-        }
-        if (response_size > 0) {
-            httpd_resp_send(req, http_server_manager->response_buffer,
-                            response_size);
-        }
-    } else if ((req->method == HTTP_POST)) {
-        esp_err_t result = ESP_FAIL;
-
-        if (GetRequestData(req, http_server_manager->read_buffer,
-                           sizeof(http_server_manager->read_buffer)) != ESP_OK) {
-            return ESP_FAIL;
-        }
-
-        switch (area_index) {
-            case ProcessAreaIndex::CONNECTION: {
-                ConnectionStatusProtobuf protobuf{};
-                response_size = protobuf.DeSerializeJson(http_server_manager->read_buffer,
-                                                         sizeof(http_server_manager->read_buffer));
-                if (response_size == 0) {
-                    result = http_server_manager->memory_manager()->Write<ConnectionStatusProtobuf>(area_index, &protobuf);
-                } else {
-                    result = ESP_FAIL;
-                }
-            } break;
-            case ProcessAreaIndex::CREDENTIALS: {
-                CredentialsProtobuf protobuf{};
-                response_size = protobuf.DeSerializeJson(http_server_manager->read_buffer,
-                                                         sizeof(http_server_manager->read_buffer));
-                if (response_size == 0) {
-                    result = http_server_manager->memory_manager()->Write<CredentialsProtobuf>(area_index, &protobuf);
-                } else {
-                    result = ESP_FAIL;
-                }
-            } break;
-            case ProcessAreaIndex::UART_TRANSMIT:
-            case ProcessAreaIndex::LORA_TRANSMIT: {
-                CommunicationProtobuf protobuf{};
-                response_size = protobuf.DeSerializeJson(http_server_manager->read_buffer,
-                                                         sizeof(http_server_manager->read_buffer));
-                if (response_size == 0) {
-                    result = http_server_manager->memory_manager()->Write<CommunicationProtobuf>(area_index, &protobuf);
-                } else {
-                    result = ESP_FAIL;
-                }
-            } break;
-            default: {
-                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
-                                    "Invalid Memory Area!");
-                return ESP_FAIL;
+        } else if ((req->method == HTTP_POST)) {
+            if (GetRequestData(req, http_server_process->read_buffer,
+                               sizeof(http_server_process->read_buffer)) != ESP_OK) {
+                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid receive data!");
+                break;
             }
+
+            result = protobuf->DeSerializeJson(http_server_process->read_buffer,
+                                               sizeof(http_server_process->read_buffer));
+
+            if (result != ESP_OK) {
+                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid Json Data!");
+                break;
+            }
+            result = http_server_process->memory_manager()->Write(area_index, protobuf.get());
         }
 
         if (result == ESP_OK) {
@@ -267,9 +217,10 @@ static esp_err_t get_area_handler(httpd_req_t* req) {
         }
 
         httpd_resp_sendstr_chunk(req, NULL);
-    }
 
-    return ESP_OK;
+    } while (0);
+
+    return result;
 }
 
 /**
@@ -281,12 +232,9 @@ void HTTPServerProcess::Execute(void) {
     this->Initialize();
 
     while (1) {
-        if (this->_shared_memory_manager->IsAreaDataUpdated(ProcessAreaIndex::CONNECTION)) {
-            this->_shared_memory_manager->Read(ProcessAreaIndex::CONNECTION,
-                                               &this->_connection_status);
-        }
-
         do {
+            this->_shared_memory_manager->Read(ProtobufIndex::CONNECTION,
+                                               &this->_connection_status);
             auto ap_changed =
                 this->_last_connection_status.GetApStatus() !=
                 this->_connection_status.GetApStatus();

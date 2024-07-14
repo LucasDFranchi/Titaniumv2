@@ -1,19 +1,13 @@
-#include "./../inc/WaterLevelProcess.h"
-#include "./../inc/WaterLevelProto.h"
-
-#include "HAL/memory/MemoryHandlers.h"
-#include "SystemProcess/ProcessAreasIndex.h"
+#include "CustomProcess/WaterLevelProcess/inc/WaterLevelProcess.h"
 
 #include "esp_log.h"
 #include "esp_timer.h"
-#include <string.h>
 
 void WaterLevelProcess::Execute(void) {
     if (this->Initialize() != ESP_OK) {
         vTaskDelete(this->_process_handler);
     }
 
-    WaterLevelProtobuf water_level_proto{};
     uint32_t counter = 0;
 
     while (1) {
@@ -21,7 +15,7 @@ void WaterLevelProcess::Execute(void) {
         water_level_proto.UpdateValue(counter);
         counter += 1;
 
-        this->_shared_memory_manager.get()->Write(CustomProcessAreaIndex::WATER_LEVEL, &water_level_proto);
+        this->_shared_memory_manager.get()->Write(ProtobufIndex::WATER_LEVEL, &water_level_proto);
 
         vTaskDelay(pdMS_TO_TICKS(10000));
     }

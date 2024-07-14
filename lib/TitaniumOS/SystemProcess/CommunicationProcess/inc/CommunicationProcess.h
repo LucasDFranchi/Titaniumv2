@@ -3,9 +3,8 @@
 
 #include "Drivers/DriverInterface/ICommunicationDriver.h"
 #include "HAL/memory/SharedMemoryManager.h"
+#include "Protocols/Protobuf/inc/ProtobufFactory.h"
 #include "Protocols/Titanium/TitaniumPackage.h"
-#include "SystemProcess/CommunicationProcess/inc/CommunicationProto.h"
-#include "SystemProcess/ProcessAreasIndex.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
 
 #include <memory>
@@ -50,7 +49,7 @@ class CommunicationProcess : public ProcessTemplate {
     std::unique_ptr<SharedMemoryManager> _shared_memory_manager = nullptr;  ///< Shared memory manager.
 
    private:
-    uint8_t _memory_area_transmit = ProcessAreaIndex::INVALID;  ///< Memory area for transmitting data.
+    uint8_t _memory_area_transmit = ProtobufIndex::INVALID;  ///< Memory area for transmitting data.
 };
 
 #endif /* COMMUNICATION_PROCESS_H */

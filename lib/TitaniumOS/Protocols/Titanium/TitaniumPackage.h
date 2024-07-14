@@ -31,10 +31,9 @@ class TitaniumPackage {
      */
     TitaniumPackage(uint16_t size, command_e command, uint8_t memory_area, uint8_t* data)
         : _command(command), _memory_area(memory_area) {
-        uint16_t real_size = this->TrimTrailingZeros(data, size);
-        this->_size        = real_size;
-        this->_data        = std::make_unique<uint8_t[]>(real_size);
-        memcpy_s<uint8_t>(this->_data.get(), data, real_size);
+        this->_size        = size;
+        this->_data        = std::make_unique<uint8_t[]>(size);
+        memcpy_s<uint8_t>(this->_data.get(), data, size);
     }
     /**
      * @brief Retrieves the package data.
@@ -79,32 +78,6 @@ class TitaniumPackage {
      */
     uint8_t memory_area() const {
         return _memory_area;
-    }
-
-   private:
-    /**
-     * @brief Trims trailing zeros from a buffer and returns the size of the data without trailing zeros.
-     *
-     * @param[in] buffer The buffer containing the data.
-     * @param[in] maximum_size The maximum size of the buffer.
-     * @return uint16_t The size of the data without trailing zeros.
-     *
-     * This function iterates through the buffer from the end towards the beginning to find the
-     * last non-zero byte. It then returns the length of the buffer excluding any trailing zeros.
-     * If the buffer is NULL, it returns 0.
-     */
-    uint16_t TrimTrailingZeros(uint8_t* buffer, uint16_t maximum_size) {
-        if (buffer == nullptr) {
-            return 0;
-        }
-
-        uint16_t real_size = maximum_size;
-
-        // while (real_size > 0 && buffer[real_size - 1] == 0) {
-        //     real_size--;
-        // }
-
-        return real_size;
     }
 
    private:

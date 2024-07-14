@@ -1,57 +1,44 @@
 /**
- * @file WaterLevelProtobuf.h
+ * @file CommunicationProtobuf.h
  * @brief Auto-generated header file generated.
  */
 
-#ifndef WATERLEVEL_PROTO_H
-#define WATERLEVEL_PROTO_H
+#ifndef COMMUNICATION_PROTO_H
+#define COMMUNICATION_PROTO_H
 
 #include "stdint.h"
 #include "string.h"
 #include "jsmn.h"
+#include "IProtobuf.h"
 
-#ifndef PROTOBUFS_ERRORS_H
-#define PROTOBUFS_ERRORS_H
-
-enum protobufs_errors {
-  PROTO_NO_ERROR   = 0,
-  PROTO_INVAL_PTR  = -1,
-  PROTO_OVERFLOW   = -2,
-  PROTO_INVAL_SIZE = -3,
-  PROTO_INVAL_NUM_TOKEN = -4,
-  PROTO_INVAL_JSON_KEY = -5,
-};
-
-#endif // PROTOBUFS_ERRORS_H
-
-class WaterLevelProtobuf {
+class CommunicationProtobuf : public IProtobuf {
 public:
-    WaterLevelProtobuf() = default;
-    ~WaterLevelProtobuf() = default;
+    CommunicationProtobuf() = default;
+    ~CommunicationProtobuf() = default;
 
 
-    uint64_t GetTimestamp(void) const { return this->_timestamp; }
-    uint32_t GetValue(void) const { return this->_value; }
+    uint8_t GetMemoryArea(void) const { return this->_memory_area; }
+    uint8_t GetCommand(void) const { return this->_command; }
 
     int16_t GetSerializedSize(void) const {
-        return (sizeof(this->_timestamp) + sizeof(this->_value));
+        return (sizeof(this->_memory_area) + sizeof(this->_command));
     }
 
     int16_t GetMaxSize(void) const {
-        return (sizeof(this->_timestamp) + sizeof(this->_value));
+        return (sizeof(this->_memory_area) + sizeof(this->_command));
     }
 
     static int16_t GetStaticMaxSize(void) {
-        return (sizeof(uint64_t) + sizeof(uint32_t));
+        return (sizeof(uint8_t) + sizeof(uint8_t));
     }
 
-    int8_t UpdateTimestamp(uint64_t value) {
-        this->_timestamp = value;
+    int8_t UpdateMemoryArea(uint8_t value) {
+        this->_memory_area = value;
         return PROTO_NO_ERROR;
     }
 
-    int8_t UpdateValue(uint32_t value) {
-        this->_value = value;
+    int8_t UpdateCommand(uint8_t value) {
+        this->_command = value;
         return PROTO_NO_ERROR;
     }
 
@@ -60,7 +47,7 @@ public:
             return 0;
         }
 
-        uint16_t serialized_size = sizeof(this->_timestamp) + sizeof(this->_value);
+        uint16_t serialized_size = sizeof(this->_memory_area) + sizeof(this->_command);
 
         if (out_buffer_size < serialized_size) {
             return 0;
@@ -68,9 +55,9 @@ public:
 
         uint16_t offset = 0;
 
-        memcpy(&out_buffer[offset], &this->_timestamp, sizeof(this->_timestamp));
-        offset += sizeof(this->_timestamp);
-        memcpy(&out_buffer[offset], &this->_value, sizeof(this->_value));
+        memcpy(&out_buffer[offset], &this->_memory_area, sizeof(this->_memory_area));
+        offset += sizeof(this->_memory_area);
+        memcpy(&out_buffer[offset], &this->_command, sizeof(this->_command));
 
         return serialized_size;
     }
@@ -80,8 +67,8 @@ public:
             return PROTO_INVAL_PTR;
         }
 
-        uint16_t deserialized_min_size = sizeof(this->_timestamp) + sizeof(this->_value) + 0;
-        uint16_t deserialized_max_size = sizeof(this->_timestamp) + sizeof(this->_value);
+        uint16_t deserialized_min_size = sizeof(this->_memory_area) + sizeof(this->_command) + 0;
+        uint16_t deserialized_max_size = sizeof(this->_memory_area) + sizeof(this->_command);
 
         if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
             return PROTO_INVAL_SIZE;
@@ -89,9 +76,9 @@ public:
 
 
         uint16_t offset = 0;
-        memcpy(&this->_timestamp, &in_buffer[offset], sizeof(this->_timestamp));
-        offset += sizeof(this->_timestamp);
-        memcpy(&this->_value, &in_buffer[offset], sizeof(this->_value));
+        memcpy(&this->_memory_area, &in_buffer[offset], sizeof(this->_memory_area));
+        offset += sizeof(this->_memory_area);
+        memcpy(&this->_command, &in_buffer[offset], sizeof(this->_command));
 
         return PROTO_NO_ERROR;
     }
@@ -103,7 +90,7 @@ public:
                 break;
             }
 
-            uint16_t serialized_size = sizeof(this->_timestamp) + sizeof(this->_value);
+            uint16_t serialized_size = sizeof(this->_memory_area) + sizeof(this->_command);
 
             if (out_buffer_size < serialized_size) {
                 return 0;
@@ -111,8 +98,8 @@ public:
 
             response_length = snprintf(out_buffer, out_buffer_size,
                                        this->_json_string,
-                                       this->_timestamp,
-                                       this->_value);
+                                       this->_memory_area,
+                                       this->_command);
         } while (0);
 
         return response_length;
@@ -142,27 +129,27 @@ public:
             jsmntok_t value{};
             uint16_t token_length = 0;
 
-            key   = tokens[this->_TIMESTAMP_TOKEN_ID];
-            value = tokens[this->_TIMESTAMP_TOKEN_ID + 1];
+            key   = tokens[this->_MEMORY_AREA_TOKEN_ID];
+            value = tokens[this->_MEMORY_AREA_TOKEN_ID + 1];
             token_length = key.end - key.start;
 
-            if (strncmp(in_buffer + key.start, this->_TIMESTAMP_TOKEN_NAME, token_length) != 0) {
+            if (strncmp(in_buffer + key.start, this->_MEMORY_AREA_TOKEN_NAME, token_length) != 0) {
                 result = PROTO_INVAL_JSON_KEY;
                 break;
             }
 
-            this->UpdateTimestamp(atoi(in_buffer + value.start));
+            this->UpdateMemoryArea(atoi(in_buffer + value.start));
 
-            key   = tokens[this->_VALUE_TOKEN_ID];
-            value = tokens[this->_VALUE_TOKEN_ID + 1];
+            key   = tokens[this->_COMMAND_TOKEN_ID];
+            value = tokens[this->_COMMAND_TOKEN_ID + 1];
             token_length = key.end - key.start;
 
-            if (strncmp(in_buffer + key.start, this->_VALUE_TOKEN_NAME, token_length) != 0) {
+            if (strncmp(in_buffer + key.start, this->_COMMAND_TOKEN_NAME, token_length) != 0) {
                 result = PROTO_INVAL_JSON_KEY;
                 break;
             }
 
-            this->UpdateValue(atoi(in_buffer + value.start));
+            this->UpdateCommand(atoi(in_buffer + value.start));
 
             result = PROTO_NO_ERROR;
 
@@ -172,16 +159,16 @@ public:
     }
 
 private:
-    uint64_t _timestamp = 0;
-    uint32_t _value = 0;
+    uint8_t _memory_area = 0;
+    uint8_t _command = 0;
     const char* _json_string = R"({
-    "timestamp": %llu,
-    "value": %u
+    "memory_area": %u,
+    "command": %u
 })";  
-    const char* _TIMESTAMP_TOKEN_NAME = "timestamp";
-    const uint8_t _TIMESTAMP_TOKEN_ID = 1;  
-    const char* _VALUE_TOKEN_NAME = "value";
-    const uint8_t _VALUE_TOKEN_ID = 3;
+    const char* _MEMORY_AREA_TOKEN_NAME = "memory_area";
+    const uint8_t _MEMORY_AREA_TOKEN_ID = 1;  
+    const char* _COMMAND_TOKEN_NAME = "command";
+    const uint8_t _COMMAND_TOKEN_ID = 3;
     const uint8_t _NUM_TOKENS  = 5;
 };
-#endif /* WATERLEVEL_PROTO_H */
+#endif /* COMMUNICATION_PROTO_H */
