@@ -3,20 +3,21 @@
 #include "CustomProcess/WaterLevelProcess/inc/WaterLevelProcess.h"
 
 int main(void) {
-    Kernel kernel;
+    Kernel kernel(HealthMonitor::ENABLE_MONITORING);
 
-    kernel.EnableNetworkProcess(10240, 4);
-    kernel.EnableHTTPServerProcess(20480, 2);
-    kernel.EnableUartProcess(10240, 5);
-    kernel.EnableLoraProcess(10240, 5);
-    kernel.EnableMQTTClientProcess(10240, 5);
+    kernel.EnableNetworkProcess(4096, 4);
+    kernel.EnableHTTPServerProcess(2048, 2);
+    kernel.EnableUartProcess(2048, 5);
+    kernel.EnableLoraProcess(2048, 5);
+    kernel.EnableMQTTClientProcess(4096, 5);
 
-    auto water_level_process = new WaterLevelProcess("Water Level Process", 10240, 2);
+    auto water_level_process = new WaterLevelProcess("Water Level Process", 2048, 2);
     water_level_process->InitializeProcess();
     
     kernel.SignUpSharedArea(ProtobufIndex::WATER_LEVEL, WaterLevelProtobuf::GetStaticMaxSize(), READ_WRITE);
+    kernel.MonitorProcess(water_level_process);
 
-    kernel.InjectDebugCredentials("ssid", "password");
+    kernel.InjectDebugCredentials("NETPARQUE_PAOLA", "NPQ196253");
 
     return 0;   
 }

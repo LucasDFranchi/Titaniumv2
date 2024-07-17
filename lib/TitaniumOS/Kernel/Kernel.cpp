@@ -14,7 +14,7 @@ SPIManager* SPIManager::singleton_pointer_                   = nullptr;
  * @brief Initializes the Hardware Abstraction Layer (HAL) components.
  *        Initializes shared memory manager, GPIO manager, and SPI manager.
  */
-void Kernel::InitializeHAL(void) {
+void Kernel::InitializeHAL(bool should_enable_monitor) {
     this->_shared_memory_manager = SharedMemoryManager::GetInstance();
     this->_gpio_manager          = GPIOManager::GetInstance();
     this->_spi_manager           = SPIManager::GetInstance();
@@ -28,7 +28,10 @@ void Kernel::InitializeHAL(void) {
         this->_spi_initialized = true;
     }
 
-    // ESP_ERROR_CHECK(this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::SCRATCH, 128, READ_WRITE));
+    if (should_enable_monitor) {
+        this->_health_monitor_process = new HealthMonitorProcess("Health Monitor Process", 4096, 10);
+        this->_health_monitor_process->InitializeProcess();
+    }
 }
 
 /**
@@ -49,6 +52,9 @@ esp_err_t Kernel::EnableNetworkProcess(uint32_t process_stack, uint8_t process_p
     }
 
     this->_network_process->InitializeProcess();
+    if (this->_should_enable_monitor) {
+        this->_health_monitor_process->MonitorProcess(this->_network_process);
+    }
 
     return result;
 }
@@ -67,6 +73,10 @@ esp_err_t Kernel::EnableHTTPServerProcess(uint32_t process_stack, uint8_t proces
 
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
+    }
+
+    if (this->_should_enable_monitor) {
+        this->_health_monitor_process->MonitorProcess(this->_http_server_process);
     }
 
     return result;
@@ -89,6 +99,9 @@ esp_err_t Kernel::EnableUartProcess(uint32_t process_stack, uint8_t process_prio
     result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::UART_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
 
     this->_uart_communication_process->InitializeProcess();
+    if (this->_should_enable_monitor) {
+        this->_health_monitor_process->MonitorProcess(this->_uart_communication_process);
+    }
 
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
@@ -121,6 +134,9 @@ esp_err_t Kernel::EnableLoraProcess(uint32_t process_stack, uint8_t process_prio
         result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::LORA_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
 
         this->_lora_communication_process->InitializeProcess();
+        if (this->_should_enable_monitor) {
+            this->_health_monitor_process->MonitorProcess(this->_lora_communication_process);
+        }
 
     } while (0);
 
@@ -145,6 +161,9 @@ esp_err_t Kernel::EnableMQTTClientProcess(uint32_t process_stack, uint8_t proces
         this->_mqtt_client_process = new MQTTClientProcess("MQTT Client Proccess", process_stack, process_priority);
         result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::MQTT, MQTTClientProtobuf::GetStaticMaxSize(), READ_WRITE);
         this->_mqtt_client_process->InitializeProcess();
+        if (this->_should_enable_monitor) {
+            this->_health_monitor_process->MonitorProcess(this->_mqtt_client_process);
+        }
 
     } while (0);
 
@@ -173,6 +192,16 @@ esp_err_t Kernel::SignUpSharedArea(uint8_t index, uint16_t size_in_bytes, Access
     return result;
 }
 
+esp_err_t Kernel::MonitorProcess(ProcessTemplate* process) {
+    auto result = ESP_FAIL;
+
+    if (this->_should_enable_monitor) {
+        result = this->_health_monitor_process->MonitorProcess(process);
+    }
+
+    return result;
+}
+
 /**
  * @brief Injects debug credentials into the credentials shared memory area.
  *        This function is intended for debugging purposes and should not be exposed in production.
@@ -180,8 +209,8 @@ esp_err_t Kernel::SignUpSharedArea(uint8_t index, uint16_t size_in_bytes, Access
 void Kernel::InjectDebugCredentials(const char* ssid, const char* password) {
     CredentialsProtobuf credentials_debug{};
 
-    credentials_debug.UpdateSsid(const_cast<char*>(ssid)); //TODO: implement a safe strlen, strcpy and strcmp
-    credentials_debug.UpdatePassword(const_cast<char*>(password)); //TODO: implement a safe strlen, strcpy and strcmp
+    credentials_debug.UpdateSsid(const_cast<char*>(ssid));          // TODO: implement a safe strlen, strcpy and strcmp
+    credentials_debug.UpdatePassword(const_cast<char*>(password));  // TODO: implement a safe strlen, strcpy and strcmp
 
     this->_shared_memory_manager->Write(ProtobufIndex::CREDENTIALS, &credentials_debug);
 }

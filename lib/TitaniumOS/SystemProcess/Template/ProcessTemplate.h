@@ -44,8 +44,27 @@ class ProcessTemplate {
      * @brief Initializes the process by creating a FreeRTOS task.
      */
     void InitializeProcess() {
-        xTaskCreate(ProcessTemplate::ExecuteProcess, this->name, this->memory, static_cast<void *>(this->object_pointer), this->priority, this->handle);
+        if (this->_is_initalized == false) {
+            xTaskCreate(ProcessTemplate::ExecuteProcess, this->name, this->memory, static_cast<void *>(this->object_pointer), this->priority, this->handle);
+            this->_is_initalized = true;
+        }
     }
+
+    TaskHandle_t *GetTaskHandler(void) {
+        return this->handle;
+    }
+
+    uint32_t GetTaskHeapUsage(void) {
+        uint32_t scale_conversion = 10000;
+
+        return scale_conversion - (uxTaskGetStackHighWaterMark(*this->handle) * scale_conversion) / this->memory;
+    }
+
+    const char *GetTaskName(void) {
+        return this->name;
+    }
+
+   private:
     /**
      * @brief Pure virtual function to be implemented by derived classes to define process execution logic.
      */
@@ -56,7 +75,8 @@ class ProcessTemplate {
     ProcessTemplate *object_pointer;   /**< Pointer to the process object. */
     uint32_t memory      = 0;          /**< Memory size allocated for the process. */
     UBaseType_t priority = 0;          /**< Priority of the process. */
-    TaskHandle_t *handle = NULL;       /**< Handle for the task. */
+    TaskHandle_t *handle = nullptr;    /**< Handle for the task. */
+    bool _is_initalized  = false;
 };
 
 #endif /* PROCESS_TEMPLATE_H */
