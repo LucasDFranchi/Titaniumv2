@@ -1,11 +1,10 @@
 #ifndef TITANIUM_PACKAGE_H
 #define TITANIUM_PACKAGE_H
 
-#include <memory>
-
 #include "esp_err.h"
-
-#include "TitaniumProtocolEnums.h"
+#include "esp_log.h"
+#include "esp_random.h"
+#include <memory>
 
 #include "HAL/memory/MemoryHandlers.h"
 
@@ -25,32 +24,67 @@ class TitaniumPackage {
      * and data. The data provided is copied into an internal buffer.
      *
      * @param[in] size The size of the package data.
-     * @param[in] command The command type associated with the package.
+     * @param[in] address The address associated with the package.
      * @param[in] memory_area The memory area identifier associated with the package.
      * @param[in] data A pointer to the data to be copied into the package.
      */
-    TitaniumPackage(uint16_t size, command_e command, uint8_t memory_area, uint8_t* data)
-        : _command(command), _memory_area(memory_area) {
-        this->_size        = size;
-        this->_data        = std::make_unique<uint8_t[]>(size);
-        memcpy_s<uint8_t>(this->_data.get(), data, size);
+    TitaniumPackage(uint16_t size, uint16_t address, uint8_t memory_area, uint8_t* data)
+        : _memory_area(memory_area) {
+        this->_size    = size;
+        this->_address = address;
+        this->_data    = std::make_unique<uint8_t[]>(size);
+        this->_uuid    = this->GenerateUUID();
+        memcpy_s(this->_data.get(), data, size);
+    }
+    /**
+     * @brief Constructs a TitaniumPackage object.
+     *
+     * Constructs a TitaniumPackage object with the specified size, command type, memory area,
+     * and data. The data provided is copied into an internal buffer.
+     *
+     * @param[in] size The size of the package data.
+     * @param[in] address The address associated with the package.
+     * @param[in] memory_area The memory area identifier associated with the package.
+     * @param[in] data A pointer to the data to be copied into the package.
+     */
+    TitaniumPackage(uint16_t size, uint16_t address, uint8_t memory_area, char* data)
+        : _memory_area(memory_area) {
+        this->_size    = size;
+        this->_address = address;
+        this->_data    = std::make_unique<uint8_t[]>(size);
+        this->_uuid    = this->GenerateUUID();
+        memcpy_s(this->_data.get(), data, size);
     }
     /**
      * @brief Retrieves the package data.
      *
      * Copies the package data into the provided buffer.
      *
-     * @param[in] data A pointer to the buffer where the package data will be copied.
+     * @param[in] data_out A pointer to the buffer where the package data will be copied.
      * @return The size of the package data copied, or 0 if an error occurs.
      */
-    uint16_t Consume(uint8_t* data) {
-        auto result = memcpy_s<uint8_t>(data, this->_data.get(), this->_size);
+    uint16_t Consume(uint8_t* data_out) {
+        uint16_t result = 0;
+        do {
+            if (this->_data.get() == nullptr) {
+                break;
+            }
 
-        if (result == ESP_OK) {
-            return this->_size;
-        }
+            if (data_out == nullptr) {
+                break;
+            }
 
-        return 0;
+            if (memcpy_s(data_out, this->_data.get(), this->_size) != ESP_OK) {
+                break;
+            }
+            result = this->_size;
+        } while (0);
+
+        return result;
+    }
+
+    uint32_t GenerateUUID() {
+        return esp_random();
     }
 
     /**
@@ -63,12 +97,12 @@ class TitaniumPackage {
     }
 
     /**
-     * @brief Get the command type associated with the package.
+     * @brief Get the address of the package data.
      *
-     * @return The command type associated with the package.
+     * @return The address of the package data.
      */
-    command_e command() const {
-        return _command;
+    uint16_t address() const {
+        return _address;
     }
 
     /**
@@ -80,9 +114,20 @@ class TitaniumPackage {
         return _memory_area;
     }
 
+    /**
+     * @brief Get the UUID the package, to make the protocol robust and
+     *        compact we re-use the crc32 as UUID.
+     *
+     * @return The UUID associated with the package.
+     */
+    uint32_t uuid() const {
+        return _uuid;
+    }
+
    private:
     uint16_t _size       = 0;                  ///< The size of the package data.
-    command_e _command   = INVALID_OPERATION;  ///< The command type associated with the package.
+    uint32_t _uuid       = -1;                 ///< The UUID associated with the package.
+    uint16_t _address    = 0;                  ///< The address of the transmitted package.
     uint8_t _memory_area = -1;                 ///< The memory area identifier associated with the package.
     std::unique_ptr<uint8_t[]> _data;          ///< The buffer storing the package data.
 };

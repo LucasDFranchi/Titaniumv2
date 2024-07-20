@@ -2,6 +2,7 @@
 #define UART_DRIVER_GUARD
 
 #include "Drivers/DriverInterface/ICommunicationDriver.h"
+#include "Application/error/error_enum.h"
 #include "driver/uart.h"
 
 namespace Baudrate {
@@ -59,10 +60,10 @@ class UARTDriver : public IDriverInterface {
      * @brief Reads data from the UART driver.
      *
      * @param[out] raw_bytes Pointer to an array where the read bytes will be stored.
-     * @return The number of bytes read, or ESP_FAIL if an error occurred.
+     * @return The number of bytes read, or Error::UNKNOW_FAIL if an error occurred.
      */
     uint16_t Read(uint8_t* raw_bytes) override {
-        auto result = ESP_FAIL;
+        auto result = Error::UNKNOW_FAIL;
 
         do {
             if (raw_bytes == nullptr) {
@@ -81,10 +82,10 @@ class UARTDriver : public IDriverInterface {
      *
      * @param[in] raw_bytes Pointer to an array containing the bytes to write.
      * @param[in] size Number of bytes to write.
-     * @return ESP_OK on success, or an error code from esp_err_t on failure.
+     * @return ESP_OK on success, or an error code from titan_err_t on failure.
      */
-    esp_err_t Write(uint8_t* raw_bytes, uint16_t size) override {
-        auto result = ESP_FAIL;
+    titan_err_t Write(uint8_t* raw_bytes, uint16_t size) override {
+        auto result = Error::UNKNOW_FAIL;
 
         do {
             if (raw_bytes == nullptr) {
@@ -92,7 +93,7 @@ class UARTDriver : public IDriverInterface {
             }
 
             uint16_t written_bytes = uart_write_bytes(this->_uart_num, raw_bytes, size);
-            result                 = (written_bytes == size) ? ESP_OK : ESP_FAIL;
+            result                 = (written_bytes == size) ? ESP_OK : Error::UNKNOW_FAIL;
 
         } while (0);
 

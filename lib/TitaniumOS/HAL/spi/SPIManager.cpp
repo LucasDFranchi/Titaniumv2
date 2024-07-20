@@ -11,7 +11,7 @@
  * @param[in] sclk GPIO number for SCLK line.
  * @return ESP_OK if initialization is successful, otherwise an error code.
  */
-esp_err_t SPIManager::Initialize(gpio_num_t mosi, gpio_num_t miso, gpio_num_t sclk) {
+titan_err_t SPIManager::Initialize(gpio_num_t mosi, gpio_num_t miso, gpio_num_t sclk) {
     auto result = ESP_OK;
     this->_gpio_manager = GPIOManager::GetInstance();
 
@@ -46,9 +46,9 @@ esp_err_t SPIManager::Initialize(gpio_num_t mosi, gpio_num_t miso, gpio_num_t sc
  * @param[in] size Size of the data to be transmitted and received.
  * @return ESP_OK if the transaction is successful, otherwise an error code.
  */
-esp_err_t SPIManager::DeviceTransmit(uint8_t* transmission_packet,
+titan_err_t SPIManager::DeviceTransmit(uint8_t* transmission_packet,
                                      uint8_t* receive_packet, uint8_t size) {
-    auto result = ESP_FAIL;
+    auto result = Error::UNKNOW_FAIL;
 
     spi_transaction_t transaction_command{};
     transaction_command.flags = 0;

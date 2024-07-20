@@ -1,15 +1,15 @@
 #ifndef GPIO_INTERNAL_H
 #define GPIO_INTERNAL_H
 
+#include <freertos/FreeRTOS.h>
+#include "freertos/semphr.h"
+#include <freertos/task.h>
+
 #include "GPIOEnums.h"
 
 #include "stdint.h"
 
-#include "esp_err.h"
-
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include "freertos/semphr.h"
+#include "Application/error/error_enum.h"
 
 /**
  * @brief Task-safe GPIO class.
@@ -70,7 +70,7 @@ class GPIOInternal {
      * @param[in] state The state to set the GPIO pin to (LOW or HIGH).
      * @return ESP_OK if the operation was successful, an error code otherwise.
      */
-    esp_err_t SetGPIOState(state_gpio_et state) {
+    titan_err_t SetGPIOState(state_gpio_et state) {
         auto result = ESP_OK;
 
         if (xSemaphoreTake(this->_mutex, portMAX_DELAY)) {

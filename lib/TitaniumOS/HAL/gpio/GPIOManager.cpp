@@ -18,7 +18,7 @@ GPIOInternal gpio_internal_list[] = {
  *
  * @return ESP_OK if initialization is successful, otherwise an error code.
  */
-esp_err_t GPIOManager::Initialize(void) {
+titan_err_t GPIOManager::Initialize(void) {
     auto result = ESP_OK;
 
     this->_gpio_array_list_size =
@@ -36,8 +36,8 @@ esp_err_t GPIOManager::Initialize(void) {
  * @param[in] state The state to be written (HIGH or LOW).
  * @return ESP_OK if writing is successful, otherwise an error code.
  */
-esp_err_t GPIOManager::WriteGPIO(gpio_id_et id, state_gpio_et state) {
-    auto result                 = ESP_FAIL;
+titan_err_t GPIOManager::WriteGPIO(gpio_id_et id, state_gpio_et state) {
+    auto result                 = Error::UNKNOW_FAIL;
     GPIOInternal *selected_gpio = this->GetGPIO(id);
 
     do {
@@ -65,7 +65,7 @@ esp_err_t GPIOManager::WriteGPIO(gpio_id_et id, state_gpio_et state) {
  * @return The state of the GPIO pin (HIGH or LOW), or -1 if an error occurs.
  */
 uint8_t GPIOManager::ReadGPIO(gpio_id_et id) {
-    auto result        = ESP_FAIL;
+    auto result        = Error::UNKNOW_FAIL;
     auto selected_gpio = this->GetGPIO(id);
 
     do {

@@ -2,9 +2,8 @@
 #define GPIO_MANAGER_H
 
 #include "GPIOInternal.h"
+#include "Application/error/error_enum.h"
 #include "driver/gpio.h"
-#include "esp_err.h"
-#include "stdint.h"
 
 /**
  * @brief Manages GPIO interfaces.
@@ -15,8 +14,8 @@ class GPIOManager {
     static GPIOManager* GetInstance(void);
 
    public:
-    esp_err_t Initialize(void);
-    esp_err_t WriteGPIO(gpio_id_et id, state_gpio_et state);
+    titan_err_t Initialize(void);
+    titan_err_t WriteGPIO(gpio_id_et id, state_gpio_et state);
     uint8_t ReadGPIO(gpio_id_et id);
 
    private:

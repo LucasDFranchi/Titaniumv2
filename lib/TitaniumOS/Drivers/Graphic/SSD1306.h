@@ -1,4 +1,5 @@
-#include "./../DriverInterface/IGraphicDriver.h"
+#include "Drivers/DriverInterface/IGraphicDriver.h"
+#include "Application/error/error_enum.h"
 #include "driver/i2c.h"
 #include "driver/gpio.h"
 
@@ -19,7 +20,7 @@ public:
    * 
    * @returns ESP_OK if initialization is successful, otherwise an error code.
    */
-  esp_err_t Initialize(void);
+  titan_err_t Initialize(void);
 
   /**
    * @brief Processes the given memory area data and prints the pattern on the SSD1306 display.
@@ -38,22 +39,22 @@ private:
    * 
    * @returns ESP_OK if the initialization commands were sent successfully, otherwise an error code.
    */
-  esp_err_t SendInitializationCommands_(void);
+  titan_err_t SendInitializationCommands_(void);
 
   /**
    * @brief Clears the display of the SSD1306 OLED module.
    * 
    * @returns ESP_OK if the display was cleared successfully, otherwise an error code.
    */
-  esp_err_t ClearDisplay_(void);
+  titan_err_t ClearDisplay_(void);
 
   /**
    * @brief Prints a pattern on the SSD1306 OLED display.
    * 
    * @param pattern A pointer to the pattern data.
-   * @returns ESP_OK if the pattern was printed successfully, ESP_FAIL if the pattern pointer is null.
+   * @returns ESP_OK if the pattern was printed successfully, Error::UNKNOW_FAIL if the pattern pointer is null.
    */
-  esp_err_t PrintPattern_(uint8_t *pattern);
+  titan_err_t PrintPattern_(uint8_t *pattern);
 
   /**
    * @brief Sets up the SSD1306 display for a specific page.
@@ -61,7 +62,7 @@ private:
    * @param page The page number to set up (must be between 0 and 7).
    * @returns ESP_OK if the setup is successful, otherwise an error code.
    */
-  esp_err_t SetupPage_(int page);
+  titan_err_t SetupPage_(int page);
 
   /**
    * @brief Sends a reset command to the SSD1306 display.

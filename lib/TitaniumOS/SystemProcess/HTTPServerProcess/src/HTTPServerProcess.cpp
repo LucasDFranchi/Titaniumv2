@@ -5,7 +5,6 @@
 
 #include "SystemProcess/HTTPServerProcess/inc/HTTPServerProcess.h"
 #include "HAL/memory/MemoryHandlers.h"
-#include "Protocols/Protobuf/inc/ProtobufFactory.h"
 
 #include "esp_log.h"
 
@@ -30,7 +29,7 @@ namespace BinaryData {
  * @param[in] req HTTP request object.
  * @return ESP_OK on success, or an error code on failure.
  */
-static esp_err_t get_uri_index_html(httpd_req_t* req) {
+static titan_err_t get_uri_index_html(httpd_req_t* req) {
     httpd_resp_set_type(req, "text/html");
     httpd_resp_send(req,
                     reinterpret_cast<const char*>(BinaryData::index_html_start),
@@ -45,7 +44,7 @@ static esp_err_t get_uri_index_html(httpd_req_t* req) {
  * @param[in] req HTTP request object.
  * @return ESP_OK on success, or an error code on failure.
  */
-static esp_err_t get_uri_get_app_css(httpd_req_t* req) {
+static titan_err_t get_uri_get_app_css(httpd_req_t* req) {
     httpd_resp_set_type(req, "text/css");
     httpd_resp_send(req,
                     reinterpret_cast<const char*>(BinaryData::styles_css_start),
@@ -60,7 +59,7 @@ static esp_err_t get_uri_get_app_css(httpd_req_t* req) {
  * @param[in] req HTTP request object.
  * @return ESP_OK on success, or an error code on failure.
  */
-static esp_err_t get_uri_get_app_js(httpd_req_t* req) {
+static titan_err_t get_uri_get_app_js(httpd_req_t* req) {
     httpd_resp_set_type(req, "text/javascript");
     httpd_resp_send(req,
                     reinterpret_cast<const char*>(BinaryData::app_js_start),
@@ -75,7 +74,7 @@ static esp_err_t get_uri_get_app_js(httpd_req_t* req) {
  * @param[in] req HTTP request object.
  * @return ESP_OK on success, or an error code on failure.
  */
-static esp_err_t get_uri_get_jquery_js(httpd_req_t* req) {
+static titan_err_t get_uri_get_jquery_js(httpd_req_t* req) {
     httpd_resp_set_type(req, "text/javascript");
     httpd_resp_send(
         req, reinterpret_cast<const char*>(BinaryData::jquery3_js_start),
@@ -90,7 +89,7 @@ static esp_err_t get_uri_get_jquery_js(httpd_req_t* req) {
  * @param[in] req HTTP request object.
  * @return ESP_OK on success, or an error code on failure.
  */
-static esp_err_t get_uri_favicon_icon(httpd_req_t* req) {
+static titan_err_t get_uri_favicon_icon(httpd_req_t* req) {
     httpd_resp_set_type(req, "image/x-icon");
     httpd_resp_send(
         req, reinterpret_cast<const char*>(BinaryData::favicon_ico_start),
@@ -105,11 +104,11 @@ static esp_err_t get_uri_favicon_icon(httpd_req_t* req) {
  * @param[in] req HTTP request object.
  * @return ESP_OK on success, or an error code on failure.
  */
-static esp_err_t post_uri_wifi_credentials(httpd_req_t* req) {
-    CredentialsProtobuf credentials_proto;
+static titan_err_t post_uri_wifi_credentials(httpd_req_t* req) {
+    network_credentials credentials_proto;
     char ssid[32]     = {0};
     char password[64] = {0};
-    esp_err_t result  = ESP_FAIL;
+    titan_err_t result  = Error::UNKNOW_FAIL;
 
     HTTPServerProcess* http_server_manager =
         reinterpret_cast<HTTPServerProcess*>(req->user_ctx);
@@ -122,32 +121,32 @@ static esp_err_t post_uri_wifi_credentials(httpd_req_t* req) {
         if (ssid_size <= 0) {
             httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
                                 "SSID size equals to 0!");
-            return ESP_FAIL;
+            return Error::UNKNOW_FAIL;
         }
 
         if (pwd_size <= 0) {
             httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
                                 "Password size equals to 0!");
-            return ESP_FAIL;
+            return Error::UNKNOW_FAIL;
         }
 
         if (httpd_req_get_hdr_value_str(req, "my-connected-ssid", ssid,
                                         ssid_size) != ESP_OK) {
             httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
                                 "Error reading SSID!");
-            return ESP_FAIL;
+            return Error::UNKNOW_FAIL;
         }
 
         if (httpd_req_get_hdr_value_str(req, "my-connected-pwd", password,
                                         pwd_size) != ESP_OK) {
             httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST,
                                 "Error reading Password!");
-            return ESP_FAIL;
+            return Error::UNKNOW_FAIL;
         }
-        credentials_proto.UpdateSsid(ssid);
-        credentials_proto.UpdatePassword(password);
+        strcpy(credentials_proto.ssid, ssid);
+        strcpy(credentials_proto.password, password);
 
-        http_server_manager->memory_manager()->Write(ProtobufIndex::CREDENTIALS, &credentials_proto);
+        http_server_manager->memory_manager()->Write(MEMORY_AREAS_NETWORK_CREDENTIALS, credentials_proto, network_credentials_t_msg);
         result = ESP_OK;
 
     } while (0);
@@ -161,10 +160,10 @@ static esp_err_t post_uri_wifi_credentials(httpd_req_t* req) {
  * @param[in] req HTTP request object.
  * @return ESP_OK on success, or an error code on failure.
  */
-static esp_err_t get_area_handler(httpd_req_t* req) {
+static titan_err_t get_area_handler(httpd_req_t* req) {
     uint32_t response_size = 0;
     uint16_t area_index    = 0;
-    auto result            = ESP_FAIL;
+    auto result            = Error::UNKNOW_FAIL;
 
     do {
         if (GetRequestKey(req, "/get_area?id=", &area_index) != ESP_OK) {
@@ -175,18 +174,11 @@ static esp_err_t get_area_handler(httpd_req_t* req) {
         HTTPServerProcess* http_server_process =
             reinterpret_cast<HTTPServerProcess*>(req->user_ctx);
 
-        auto protobuf = ProtobufFactory::CreateProtobuf(area_index);
-
-        if (protobuf.get() == nullptr) {
-            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid Memory Area");
-            break;
-        }
-
         if (req->method == HTTP_GET) {
-            http_server_process->memory_manager()->Read(area_index, protobuf.get());
-
-            response_size = protobuf->SerializeJson(&http_server_process->response_buffer[0],
-                                                    sizeof(http_server_process->response_buffer));
+            response_size = http_server_process->memory_manager()->Read(area_index,
+                                                        &http_server_process->response_buffer[0],
+                                                        sizeof(http_server_process->response_buffer),
+                                                        true);
 
             if (response_size > 0) {
                 httpd_resp_send(req, http_server_process->response_buffer,
@@ -200,14 +192,9 @@ static esp_err_t get_area_handler(httpd_req_t* req) {
                 break;
             }
 
-            result = protobuf->DeSerializeJson(http_server_process->read_buffer,
-                                               sizeof(http_server_process->read_buffer));
-
-            if (result != ESP_OK) {
-                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid Json Data!");
-                break;
-            }
-            result = http_server_process->memory_manager()->Write(area_index, protobuf.get());
+            result = http_server_process->memory_manager()->Write(area_index,
+                                                                  http_server_process->read_buffer, 
+                                                                  strlen(http_server_process->read_buffer));
         }
 
         if (result == ESP_OK) {
@@ -233,32 +220,33 @@ void HTTPServerProcess::Execute(void) {
 
     while (1) {
         do {
-            this->_shared_memory_manager->Read(ProtobufIndex::CONNECTION,
-                                               &this->_connection_status);
+            this->_shared_memory_manager->Read(MEMORY_AREAS_NETWORK_INFORMATION,
+                                               this->_connection_status,
+                                               network_information_t_msg);
             auto ap_changed =
-                this->_last_connection_status.GetApStatus() !=
-                this->_connection_status.GetApStatus();
+                this->_last_connection_status.ap_connected !=
+                this->_connection_status.ap_connected;
             auto sta_changed =
-                this->_last_connection_status.GetStaStatus() !=
-                this->_connection_status.GetStaStatus();
+                this->_last_connection_status.sta_connected !=
+                this->_connection_status.sta_connected;
 
             if (!ap_changed && !sta_changed) {
                 break;
             }
 
-            auto ap_status  = this->_connection_status.GetApStatus();
-            auto sta_status = this->_connection_status.GetStaStatus();
+            auto ap_status  = this->_connection_status.ap_connected;
+            auto sta_status = this->_connection_status.sta_connected;
 
-            if ((ap_status == NetworkStatus::CONNECTED) || (sta_status == NetworkStatus::CONNECTED)) {
-                if (this->_server_status != NetworkStatus::CONNECTED) {
+            if ((ap_status == NETWORK_STATUS_CONNECTED) || (sta_status == NETWORK_STATUS_CONNECTED)) {
+                if (this->_server_status != NETWORK_STATUS_CONNECTED) {
                     this->StartHTTPServer();
-                    this->_server_status = NetworkStatus::CONNECTED;
+                    this->_server_status = NETWORK_STATUS_CONNECTED;
                     ESP_LOGI(TAG, "HTTP SERVER STARTED");
                 }
-            } else if ((ap_status == NetworkStatus::NOT_CONNECTED) && (sta_status == NetworkStatus::NOT_CONNECTED)) {
-                if (this->_server_status != NetworkStatus::CONNECTED) {
+            } else if ((ap_status == NETWORK_STATUS_DISCONNECTED) && (sta_status == NETWORK_STATUS_DISCONNECTED)) {
+                if (this->_server_status != NETWORK_STATUS_CONNECTED) {
                     this->StopHTTPServer();
-                    this->_server_status = NetworkStatus::NOT_CONNECTED;
+                    this->_server_status = NETWORK_STATUS_DISCONNECTED;
                     ESP_LOGI(TAG, "HTTP SERVER STOPED");
                 }
             }
@@ -273,7 +261,7 @@ void HTTPServerProcess::Execute(void) {
  *
  * @return ESP_OK on success, or an error code on failure.
  */
-esp_err_t HTTPServerProcess::Initialize(void) {
+titan_err_t HTTPServerProcess::Initialize(void) {
     auto result = ESP_OK;
 
     this->_config                   = HTTPD_DEFAULT_CONFIG();
@@ -292,7 +280,7 @@ esp_err_t HTTPServerProcess::Initialize(void) {
  *
  * @return ESP_OK on success, or an error code on failure.
  */
-esp_err_t HTTPServerProcess::StartHTTPServer(void) {
+titan_err_t HTTPServerProcess::StartHTTPServer(void) {
     auto result = ESP_OK;
 
     if (httpd_start(&this->_server, &this->_config) == ESP_OK) {
@@ -307,7 +295,7 @@ esp_err_t HTTPServerProcess::StartHTTPServer(void) {
  *
  * @return ESP_OK on success, or an error code on failure.
  */
-esp_err_t HTTPServerProcess::StopHTTPServer(void) {
+titan_err_t HTTPServerProcess::StopHTTPServer(void) {
     return httpd_stop(&this->_server);
 }
 
@@ -386,7 +374,7 @@ void HTTPServerProcess::InitializeRequestList(void) {
  *
  * @return ESP_OK on success, or an error code on failure.
  */
-esp_err_t HTTPServerProcess::RegisterHandlers(void) {
+titan_err_t HTTPServerProcess::RegisterHandlers(void) {
     auto result = ESP_OK;
 
     for (int i = 0; i < this->maximum_requests_list_size; i++) {
