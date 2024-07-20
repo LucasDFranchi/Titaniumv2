@@ -25,14 +25,16 @@ class TitaniumPackage {
      * and data. The data provided is copied into an internal buffer.
      *
      * @param[in] size The size of the package data.
+     * @param[in] address The address associated with the package.
      * @param[in] command The command type associated with the package.
      * @param[in] memory_area The memory area identifier associated with the package.
      * @param[in] data A pointer to the data to be copied into the package.
      */
-    TitaniumPackage(uint16_t size, command_e command, uint8_t memory_area, uint8_t* data)
+    TitaniumPackage(uint16_t size, uint16_t address, command_e command, uint8_t memory_area, uint8_t* data)
         : _command(command), _memory_area(memory_area) {
-        this->_size        = size;
-        this->_data        = std::make_unique<uint8_t[]>(size);
+        this->_size = size;
+        this->_address = address;
+        this->_data = std::make_unique<uint8_t[]>(size);
         memcpy_s<uint8_t>(this->_data.get(), data, size);
     }
     /**
@@ -63,6 +65,15 @@ class TitaniumPackage {
     }
 
     /**
+     * @brief Get the address of the package data.
+     *
+     * @return The address of the package data.
+     */
+    uint16_t address() const {
+        return _address;
+    }
+
+    /**
      * @brief Get the command type associated with the package.
      *
      * @return The command type associated with the package.
@@ -82,6 +93,7 @@ class TitaniumPackage {
 
    private:
     uint16_t _size       = 0;                  ///< The size of the package data.
+    uint16_t _address    = 0;                  ///< The address of the transmitted package.
     command_e _command   = INVALID_OPERATION;  ///< The command type associated with the package.
     uint8_t _memory_area = -1;                 ///< The memory area identifier associated with the package.
     std::unique_ptr<uint8_t[]> _data;          ///< The buffer storing the package data.

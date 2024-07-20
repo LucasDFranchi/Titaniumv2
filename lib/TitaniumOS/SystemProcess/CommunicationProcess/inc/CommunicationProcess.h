@@ -26,13 +26,8 @@ class CommunicationProcess : public ProcessTemplate {
     CommunicationProcess(const char* name, uint32_t memory, UBaseType_t priority)
         : ProcessTemplate(name, memory, priority, &this->_process_handler){};
 
-    /**
-     * @brief Installs the communication driver and configures memory areas for read and write.
-     *
-     * @param[in] driver_interface Pointer to the communication driver interface.
-     * @param[in] memory_area_write Index of the memory area for write operations.
-     */
-    void InstallDriver(IDriverInterface* driver_interface, uint8_t memory_area_write);
+    void InstallDriver(IDriverInterface* driver_interface);
+    void Configure(uint16_t address, uint8_t memory_area_transmit);
 
    private:
     void Execute(void);
@@ -50,6 +45,7 @@ class CommunicationProcess : public ProcessTemplate {
 
    private:
     uint8_t _memory_area_transmit = ProtobufIndex::INVALID;  ///< Memory area for transmitting data.
+    uint16_t _address             = 0xFFFF;                  ///< Memory Address of this device
 };
 
 #endif /* COMMUNICATION_PROCESS_H */
