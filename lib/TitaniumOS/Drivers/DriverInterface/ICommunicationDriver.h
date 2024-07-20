@@ -1,7 +1,7 @@
 #ifndef COMMUNICATION_DRIVER_INTERFACE_H
 #define COMMUNICATION_DRIVER_INTERFACE_H
 
-#include "esp_err.h"
+#include "Kernel/error/error_enum.h"
 
 /**
  * @brief Interface for communication driver.
@@ -20,9 +20,9 @@ class IDriverInterface {
      *
      * @param raw_bytes Pointer to the raw bytes to be written.
      * @param size Number of bytes to write.
-     * @return esp_err_t ESP_OK on success, or an error code on failure.
+     * @return titan_err_t ESP_OK on success, or an error code on failure.
      */
-    virtual esp_err_t Write(uint8_t* raw_bytes, uint16_t size) = 0;
+    virtual titan_err_t Write(uint8_t* raw_bytes, uint16_t size) = 0;
 
     /**
      * @brief Read data from the communication interface.

@@ -3,7 +3,7 @@
 
 #include "Drivers/DriverInterface/ICommunicationDriver.h"
 #include "HAL/spi/SPIManager.h"
-#include "esp_err.h"
+#include "Kernel/error/error_enum.h"
 
 namespace CRCMode {
     constexpr uint8_t ENABLE  = 0x00; /**< CRC enable mode. */
@@ -45,7 +45,7 @@ class LoRaDriver : public IDriverInterface {
         this->SetCRCMode(crc_mode);
     };
 
-    esp_err_t Write(uint8_t* raw_bytes, uint16_t size);
+    titan_err_t Write(uint8_t* raw_bytes, uint16_t size);
     uint16_t Read(uint8_t* raw_bytes);
 
     /**
@@ -58,7 +58,7 @@ class LoRaDriver : public IDriverInterface {
     }
 
    private:
-    esp_err_t Initialize(void);
+    titan_err_t Initialize(void);
     void Reset(void);
 
     void SetExplicitHeaderMode(void);
@@ -81,9 +81,9 @@ class LoRaDriver : public IDriverInterface {
     bool isDataInReceiver(void);
     void SendPacket(uint8_t* pOut, uint8_t size);
     uint8_t ReceivePacket(uint8_t* pIn, uint8_t size);
-    esp_err_t WriteRegister(uint8_t register_address, uint8_t register_value);
+    titan_err_t WriteRegister(uint8_t register_address, uint8_t register_value);
     uint32_t ReadRegister(uint8_t register_address);
-    esp_err_t ValidateVersion(void);
+    titan_err_t ValidateVersion(void);
 
     SPIManager* spi_manager   = nullptr; /**< Pointer to the SPI manager instance. */
     GPIOManager* gpio_manager = nullptr; /**< Pointer to the GPIO manager instance. */

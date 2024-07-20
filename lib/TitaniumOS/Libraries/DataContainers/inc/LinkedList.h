@@ -3,11 +3,11 @@
  * @brief A simple singly linked list implementation in C++ with FreeRTOS compatibility.
  */
 
-#ifndef KERNEL_H
-#define KERNEL_H
+#ifndef LINKED_LIST_H
+#define LINKED_LIST_H
 
-#include "freertos/semphr.h"
 #include <freertos/FreeRTOS.h>
+#include "freertos/semphr.h"
 #include <freertos/task.h>
 
 /**
@@ -132,4 +132,4 @@ class LinkedList {
     }
 };
 
-#endif /* KERNEL_H */
+#endif /* LINKED_LIST_H */

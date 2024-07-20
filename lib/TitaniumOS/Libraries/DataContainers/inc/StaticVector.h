@@ -51,14 +51,24 @@ class StaticVector {
         return this->_internal_vector->back();
     }
 
+    T get(uint32_t index) {
+        return this->_internal_vector->get(index);
+    }
+
+    T erase(uint32_t index) {
+        return this->_internal_vector->get(index);
+    }
+
     /**
-     * @brief Removes and returns the last element of the vector.
-     *
-     * @return The last element of the vector.
+     * @brief Removes the last element of the vector.
      */
-    T pop_back(void) {
+    void pop_back(void) {
         this->_size--;
-        return this->_internal_vector->pop_back();
+        this->_internal_vector->pop_back();
+    }
+
+    size_t size(void) const {
+        return this->_size;
     }
 
    private:

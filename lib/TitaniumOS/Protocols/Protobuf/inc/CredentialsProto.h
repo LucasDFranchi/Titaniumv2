@@ -8,7 +8,7 @@
 
 #include "stdint.h"
 #include "string.h"
-#include "Libraries/JSON/jsmn/jsmn.h"
+#include "Libraries/JSON/ArduinoJson/ArduinoJson.h"
 #include "IProtobuf.h"
 
 class CredentialsProtobuf : public IProtobuf {
@@ -23,7 +23,7 @@ public:
     const char* GetPassword(void) const { return this->_password; }
 
     int16_t GetSerializedSize(void) const {
-        return ((strlen(this->_ssid) + 1) + (strlen(this->_password) + 1));
+        return (strlen(this->_ssid) + strlen(this->_password));
     }
 
     int16_t GetMaxSize(void) const {
@@ -41,7 +41,7 @@ public:
 
         size_t value_length = strlen(value) + 1;
 
-        if ((value_length == 0) || SSID_SIZE == 0) {
+        if ((value_length == 1) || SSID_SIZE == 0) {
             return PROTO_OVERFLOW;
         }
 
@@ -81,7 +81,7 @@ public:
 
         size_t value_length = strlen(value) + 1;
 
-        if ((value_length == 0) || PASSWORD_SIZE == 0) {
+        if ((value_length == 1) || PASSWORD_SIZE == 0) {
             return PROTO_OVERFLOW;
         }
 
@@ -119,7 +119,7 @@ public:
             return 0;
         }
 
-        uint16_t serialized_size = (strlen(this->_ssid) + 1) + (strlen(this->_password) + 1);
+        uint16_t serialized_size = strlen(this->_ssid) + strlen(this->_password);
 
         if (out_buffer_size < serialized_size) {
             return 0;
@@ -136,16 +136,14 @@ public:
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
         if (in_buffer == nullptr) {
-            return PROTO_INVAL_PTR;
+            return -1;
         }
 
         uint16_t deserialized_min_size =  + 2;
-        uint16_t deserialized_max_size = sizeof(this->_ssid) + sizeof(this->_password);
 
-        if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
-            return PROTO_INVAL_SIZE;
+        if (in_buffer_size < deserialized_min_size) {
+            return -3;
         }
-
         memset(this->_ssid, 0, SSID_SIZE);
         memset(this->_password, 0, PASSWORD_SIZE);
 
@@ -154,8 +152,9 @@ public:
         offset += strlen(&in_buffer[offset]) + 1;
         memcpy(this->_password, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
 
-        return PROTO_NO_ERROR;
+        return 0;
     }
+
     int32_t SerializeJson(char* out_buffer, uint16_t out_buffer_size) {
         uint32_t response_length = 0;
 
@@ -164,16 +163,10 @@ public:
                 break;
             }
 
-            uint16_t serialized_size = (strlen(this->_ssid) + 1) + (strlen(this->_password) + 1);
-
-            if (out_buffer_size < serialized_size) {
-                return 0;
-            }
-
-            response_length = snprintf(out_buffer, out_buffer_size,
-                                       this->_json_string,
-                                       this->_ssid,
-                                       this->_password);
+            StaticJsonDocument<512> doc;         
+            doc["ssid"] = this->_ssid;         
+            doc["password"] = this->_password;
+            response_length = serializeJson(doc, out_buffer, out_buffer_size);
         } while (0);
 
         return response_length;
@@ -181,49 +174,35 @@ public:
 
     int8_t DeSerializeJson(const char* in_buffer, uint16_t in_buffer_size) {
         auto result = PROTO_NO_ERROR;
-        jsmn_parser parser;
-        jsmntok_t tokens[this->_NUM_TOKENS];
-
-        jsmn_init(&parser);
 
         do {
             if (in_buffer == nullptr) {
                 result = PROTO_INVAL_PTR;
                 break;
             }
-
-            auto num_tokens = jsmn_parse(&parser, in_buffer, strlen(in_buffer), tokens, this->_NUM_TOKENS);
-
-            if (num_tokens != this->_NUM_TOKENS) {
-                result = PROTO_INVAL_NUM_TOKEN;
+            
+            StaticJsonDocument<512> doc;
+            
+            if (deserializeJson(doc, in_buffer)) {
+                result = PROTO_INVAL_JSON_PARSE;
                 break;
             }
-
-            jsmntok_t key{};
-            jsmntok_t value{};
-            uint16_t token_length = 0;
-
-            key   = tokens[this->_SSID_TOKEN_ID];
-            value = tokens[this->_SSID_TOKEN_ID + 1];
-            token_length = key.end - key.start;
-
-            if (strncmp(in_buffer + key.start, this->_SSID_TOKEN_NAME, token_length) != 0) {
+            if (!doc.containsKey("ssid")) {
                 result = PROTO_INVAL_JSON_KEY;
                 break;
             }
-
-            this->UpdateSsid(in_buffer + value.start, value.end - value.start);
-
-            key   = tokens[this->_PASSWORD_TOKEN_ID];
-            value = tokens[this->_PASSWORD_TOKEN_ID + 1];
-            token_length = key.end - key.start;
-
-            if (strncmp(in_buffer + key.start, this->_PASSWORD_TOKEN_NAME, token_length) != 0) {
+            if (!doc.containsKey("password")) {
                 result = PROTO_INVAL_JSON_KEY;
                 break;
             }
-
-            this->UpdatePassword(in_buffer + value.start, value.end - value.start);
+            if (this->UpdateSsid(doc["ssid"])) {
+                result = PROTO_INVAL_JSON_VALUE;
+                break;
+            }
+            if (this->UpdatePassword(doc["password"])) {
+                result = PROTO_INVAL_JSON_VALUE;
+                break;
+            }
 
             result = PROTO_NO_ERROR;
 
@@ -235,14 +214,5 @@ public:
 private:
     char _ssid[32] = {0};
     char _password[64] = {0};
-    const char* _json_string = R"({
-    "ssid": "%s",
-    "password": "%s"
-})";  
-    const char* _SSID_TOKEN_NAME = "ssid";
-    const uint8_t _SSID_TOKEN_ID = 1;  
-    const char* _PASSWORD_TOKEN_NAME = "password";
-    const uint8_t _PASSWORD_TOKEN_ID = 3;
-    const uint8_t _NUM_TOKENS  = 5;
 };
 #endif /* CREDENTIALS_PROTO_H */

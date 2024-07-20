@@ -15,7 +15,7 @@ void WaterLevelProcess::Execute(void) {
         water_level_proto.UpdateValue(counter);
         counter += 1;
 
-        this->_shared_memory_manager.get()->Write(ProtobufIndex::WATER_LEVEL, &water_level_proto);
+        this->_shared_memory_manager.get()->Write(ProtobufIndex::WATERLEVEL, water_level_proto);
 
         vTaskDelay(pdMS_TO_TICKS(10000));
     }
@@ -26,7 +26,7 @@ void WaterLevelProcess::Execute(void) {
  *
  * @returns The result of the initialization process.
  */
-esp_err_t WaterLevelProcess::Initialize(void) {
+titan_err_t WaterLevelProcess::Initialize(void) {
     this->_shared_memory_manager.reset(SharedMemoryManager::GetInstance());
     return ESP_OK;
 }

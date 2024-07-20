@@ -73,8 +73,8 @@ namespace Driver {
  * @param[in] size Size of the data buffer in bytes.
  * @return ESP_OK if the transmission is successful, otherwise an error code.
  */
-esp_err_t LoRaDriver::Write(uint8_t *raw_bytes, uint16_t size) {
-    auto result = ESP_FAIL;
+titan_err_t LoRaDriver::Write(uint8_t *raw_bytes, uint16_t size) {
+    auto result = Error::UNKNOW_FAIL;
 
     do {
         if (raw_bytes == nullptr) {
@@ -129,7 +129,7 @@ uint16_t LoRaDriver::Read(uint8_t *raw_bytes) {
  *
  * @return ESP_OK if initialization is successful, otherwise an error code.
  */
-esp_err_t LoRaDriver::Initialize(void) {
+titan_err_t LoRaDriver::Initialize(void) {
     auto result = ESP_OK;
 
     this->spi_manager  = SPIManager::GetInstance();
@@ -148,8 +148,6 @@ esp_err_t LoRaDriver::Initialize(void) {
     this->SetTxPower(17);
 
     this->SetIdleMode();
-
-    ESP_ERROR_CHECK(result);
 
     return result;
 }
@@ -525,7 +523,7 @@ uint8_t LoRaDriver::GetLastPacket4TSNR(void) {
  * @param[in] register_value Value to write to the register.
  * @return ESP_OK if the write operation is successful, otherwise an error code.
  */
-esp_err_t LoRaDriver::WriteRegister(uint8_t register_address,
+titan_err_t LoRaDriver::WriteRegister(uint8_t register_address,
                                     uint8_t register_value) {
     uint8_t write_address = Driver::WRITE_COMMAND | register_address;
     uint8_t out[2]        = {write_address, register_value};
@@ -559,8 +557,8 @@ uint32_t LoRaDriver::ReadRegister(uint8_t register_address) {
  *
  * @return ESP_OK if the version is valid, otherwise an error code.
  */
-esp_err_t LoRaDriver::ValidateVersion(void) {
-    auto result      = ESP_FAIL;
+titan_err_t LoRaDriver::ValidateVersion(void) {
+    auto result      = Error::UNKNOW_FAIL;
     auto max_retires = 5;
 
     for (uint8_t i = 0; i < max_retires; i++) {

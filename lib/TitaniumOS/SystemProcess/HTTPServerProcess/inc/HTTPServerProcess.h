@@ -38,11 +38,11 @@ class HTTPServerProcess : public ProcessTemplate {
 
    private:
     void Execute(void);
-    esp_err_t Initialize(void);
-    esp_err_t StartHTTPServer(void);
-    esp_err_t StopHTTPServer(void);
-    esp_err_t RegisterHandlers(void);
-    esp_err_t HandleAreaRequests(uint8_t area_index);
+    titan_err_t Initialize(void);
+    titan_err_t StartHTTPServer(void);
+    titan_err_t StopHTTPServer(void);
+    titan_err_t RegisterHandlers(void);
+    titan_err_t HandleAreaRequests(uint8_t area_index);
     void InitializeRequestList(void);
 
    private:

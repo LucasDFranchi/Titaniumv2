@@ -2,10 +2,10 @@
 #define MQTT_CLIENT_PROCESS_H
 
 #include "HAL/memory/SharedMemoryManager.h"
+#include "Kernel/error/error_enum.h"
 #include "SystemProcess/NetworkProcess/inc/NetworkProcess.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
 
-#include "esp_err.h"
 #include "mqtt_client.h"
 
 class MQTTClientProcess : public ProcessTemplate {
@@ -30,14 +30,14 @@ class MQTTClientProcess : public ProcessTemplate {
         return this->_shared_memory_manager.get();
     }
 
-    esp_err_t PublishMemoryArea(uint8_t area_index);
-    esp_err_t SubscribeMemoryArea(void);
+    titan_err_t PublishMemoryArea(uint8_t area_index);
+    titan_err_t SubscribeMemoryArea(void);
 
    private:
     void Execute(void);
-    esp_err_t Initialize(void);
-    esp_err_t StartMQTTClient(void);
-    esp_err_t StopMQTTClient(void);
+    titan_err_t Initialize(void);
+    titan_err_t StartMQTTClient(void);
+    titan_err_t StopMQTTClient(void);
 
    private:
     esp_mqtt_client_handle_t _client{};
@@ -45,7 +45,7 @@ class MQTTClientProcess : public ProcessTemplate {
     std::unique_ptr<SharedMemoryManager> _shared_memory_manager = nullptr;
     ConnectionStatusProtobuf _connection_status{};      /**< Current connection status. */
     ConnectionStatusProtobuf _last_connection_status{}; /**< Last recorded connection status. */
-    MQTTClientProtobuf _mqtt_client_proto{};
+    MQTTUriProtobuf _mqtt_client_proto{};
     uint8_t _client_status = NetworkStatus::NOT_CONNECTED; /**< Status of the HTTP server connection. */
 };
 

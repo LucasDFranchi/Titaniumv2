@@ -2,14 +2,16 @@
 #define SHARED_MEMORY_H
 
 #include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
+#include "freertos/semphr.h"
 #include <freertos/task.h>
 
+#include "Kernel/error/error_enum.h"
 #include "MemoryHandlers.h"
 #include "MemoryTypes.h"
-#include "esp_err.h"
 
 #include <memory>
+
+#include "esp_log.h"
 
 /**
  * @brief Template for a memory area.
@@ -24,11 +26,11 @@ class SharedMemory {
      * @param access_type Access type of the memory area.
      */
     SharedMemory(uint8_t index, uint16_t size, AccessType access_type) {
-        this->_index       = index;
-        this->_size        = size;
-        this->_access_type = access_type;
-        this->_has_update  = false;
-        this->_mutex       = xSemaphoreCreateMutex();
+        this->_index         = index;
+        this->_size          = size;
+        this->_access_type   = access_type;
+        this->_has_update    = false;
+        this->_mutex         = xSemaphoreCreateMutex();
         this->_written_bytes = 0;
         this->_data.reset(new uint8_t[size]);
 
@@ -37,9 +39,9 @@ class SharedMemory {
     /**
      * @brief Clears the memory area by setting all its data to zero.
      *
-     * @return esp_err_t Error code indicating the result of the operation.
+     * @return titan_err_t Error code indicating the result of the operation.
      */
-    esp_err_t Clear(void) {
+    titan_err_t Clear(void) {
         return memset_s(this->_data.get(), 0, this->_size);
     }
     /**
@@ -87,57 +89,29 @@ class SharedMemory {
         return this->_has_update;
     }
 
-    template <typename T>
-    esp_err_t Write(T* protobuf) {
+    titan_err_t Write(IProtobuf& protobuf) {
         auto serialized_size = 0;
 
         if (this->_access_type == READ_ONLY) {
-            return ESP_FAIL;
+            return Error::UNKNOW_FAIL;
         }
 
         if (this->_mutex != NULL) {
             if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
-                memset_s<uint8_t>(this->_data.get(), 0, this->_size);
-                serialized_size      = protobuf->Serialize(reinterpret_cast<char*>(this->_data.get()), this->_size);
+                memset_s(this->_data.get(), 0, this->_size);
+                serialized_size = protobuf.Serialize(reinterpret_cast<char*>(this->_data.get()), this->_size);
+
                 this->_has_update    = true;
                 this->_written_bytes = serialized_size;
 
                 xSemaphoreGive(this->_mutex);
             }
         }
-        return serialized_size != 0 ? ESP_OK : ESP_FAIL;
+        return serialized_size != 0 ? ESP_OK : Error::UNKNOW_FAIL;
     }
 
-    /**
-     * @brief Writes data to the memory area.
-     *
-     * @param[in] pointer_data Pointer to the data to write.
-     * @param[in] size Size of the data to write.
-     * @return esp_err_t Error code indicating the result of the operation.
-     */
-    esp_err_t Write(uint8_t* pointer_data, size_t size) {
-        auto result = ESP_FAIL;
-
-        if (this->_access_type == READ_ONLY) {
-            return result;
-        }
-
-        if (this->_mutex != NULL) {
-            if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
-                memset_s<uint8_t>(this->_data.get(), 0, size);
-                result               = memcpy_s<uint8_t>(this->_data.get(), pointer_data, size);
-                this->_has_update    = true;
-                this->_written_bytes = size;
-
-                xSemaphoreGive(this->_mutex);
-            }
-        }
-        return result;
-    }
-
-    template <typename T>
-    esp_err_t Read(T* protobuf) {
-        auto result = ESP_FAIL;
+    titan_err_t Read(IProtobuf& protobuf) {
+        auto result = Error::UNKNOW_FAIL;
 
         if (this->_access_type == WRITE_ONLY) {
             return result;
@@ -145,32 +119,8 @@ class SharedMemory {
 
         if (this->_mutex != NULL) {
             if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
-                result            = protobuf->DeSerialize(reinterpret_cast<char*>(this->_data.get()), this->_written_bytes);
-                this->_has_update = false;
-                xSemaphoreGive(this->_mutex);
-            }
-        }
+                result = protobuf.DeSerialize(reinterpret_cast<char*>(this->_data.get()), this->_written_bytes);
 
-        return result;
-    }
-
-    /**
-     * @brief Reads data from the memory area.
-     *
-     * @param[out] pointer_data Pointer to the buffer where the read data will
-     * be stored.
-     * @return esp_err_t Error code indicating the result of the operation.
-     */
-    esp_err_t Read(uint8_t* pointer_data) {
-        auto result = ESP_FAIL;
-
-        if (this->_access_type == WRITE_ONLY) {
-            return result;
-        }
-
-        if (this->_mutex != NULL) {
-            if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
-                result            = memcpy_s<uint8_t>(pointer_data, this->_data.get(), this->_written_bytes);
                 this->_has_update = false;
                 xSemaphoreGive(this->_mutex);
             }

@@ -4,8 +4,8 @@
 #include "HAL/memory/SharedMemoryManager.h"
 #include "Protocols/Protobuf/inc/ProtobufFactory.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
+#include "Kernel/error/error_enum.h"
 
-#include "esp_err.h"
 #include "esp_wifi.h"
 
 /**
@@ -35,10 +35,10 @@ class NetworkProcess : public ProcessTemplate {
 
    private:
     void Execute(void);
-    esp_err_t Initialize(void);
-    esp_err_t RegisterWiFiEvents(void);
-    esp_err_t SetStationMode(wifi_config_t* sta_config);
-    esp_err_t SetAccessPointMode(wifi_config_t* ap_config);
+    titan_err_t Initialize(void);
+    titan_err_t RegisterWiFiEvents(void);
+    titan_err_t SetStationMode(wifi_config_t* sta_config);
+    titan_err_t SetAccessPointMode(wifi_config_t* ap_config);
     void SetCredentials(wifi_config_t* wifi_config);
 
    private:

@@ -4,6 +4,7 @@
 #include "HAL/memory/SharedMemoryManager.h"
 #include "Protocols/Protobuf/inc/ProtobufFactory.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
+#include "Kernel/error/error_enum.h"
 
 class WaterLevelProcess : public ProcessTemplate {
    public:
@@ -12,7 +13,7 @@ class WaterLevelProcess : public ProcessTemplate {
     void Execute(void);
 
    private:
-    esp_err_t Initialize(void);
+    titan_err_t Initialize(void);
 
    private:
     TaskHandle_t _process_handler                               = NULL;

@@ -38,7 +38,7 @@ static void mqtt_event_handler(void *arg, esp_event_base_t base, int32_t event_i
     }
 }
 
-esp_err_t MQTTClientProcess::Initialize(void) {
+titan_err_t MQTTClientProcess::Initialize(void) {
     auto result                       = ESP_OK;
     esp_mqtt_client_config_t mqtt_cfg = {};
 
@@ -64,8 +64,8 @@ void MQTTClientProcess::Execute(void) {
 
     while (1) {
         do {
-            this->_shared_memory_manager.get()->Read(ProtobufIndex::CONNECTION,
-                                                     &this->_connection_status);
+            this->_shared_memory_manager.get()->Read(ProtobufIndex::CONNECTIONSTATUS,
+                                                     this->_connection_status);
 
             auto ap_changed =
                 this->_last_connection_status.GetApStatus() !=
@@ -111,7 +111,7 @@ void MQTTClientProcess::Execute(void) {
  *
  * @return ESP_OK on success, or an error code on failure.
  */
-esp_err_t MQTTClientProcess::StartMQTTClient(void) {
+titan_err_t MQTTClientProcess::StartMQTTClient(void) {
     return esp_mqtt_client_start(this->_client);
 }
 
@@ -120,14 +120,14 @@ esp_err_t MQTTClientProcess::StartMQTTClient(void) {
  *
  * @return ESP_OK on success, or an error code on failure.
  */
-esp_err_t MQTTClientProcess::StopMQTTClient(void) {
+titan_err_t MQTTClientProcess::StopMQTTClient(void) {
     return esp_mqtt_client_stop(this->_client);
 }
 
-esp_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
+titan_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
     char response_buffer[512] = {0};
     char topic_area[64]       = {0};
-    esp_err_t result          = ESP_FAIL;
+    titan_err_t result          = Error::UNKNOW_FAIL;
 
     do {
         auto protobuf = ProtobufFactory::CreateProtobuf(area_index);
@@ -135,7 +135,7 @@ esp_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
         if (protobuf.get() == nullptr) {
             break;
         }
-        this->_shared_memory_manager->Read(area_index, protobuf.get());
+        this->_shared_memory_manager->Read(area_index, *protobuf);
 
         if (protobuf->SerializeJson(response_buffer, sizeof(response_buffer)) <= 0) {
             break;
@@ -152,10 +152,9 @@ esp_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
     return result;
 }
 
-esp_err_t MQTTClientProcess::SubscribeMemoryArea(void) {
-    // char response_buffer[512] = {0};
+titan_err_t MQTTClientProcess::SubscribeMemoryArea(void) {
     char topic_area[64]       = {0};
-    esp_err_t result          = ESP_FAIL;
+    titan_err_t result          = Error::UNKNOW_FAIL;
 
     do {
         if (this->_shared_memory_manager == nullptr) {
