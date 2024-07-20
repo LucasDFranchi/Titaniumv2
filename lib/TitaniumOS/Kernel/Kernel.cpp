@@ -83,8 +83,8 @@ esp_err_t Kernel::EnableUartProcess(uint32_t process_stack, uint8_t process_prio
     auto result                       = ESP_OK;
     this->_uart_communication_process = new CommunicationProcess("UART Communication Proccess", process_stack, process_priority);
     this->_uart_communication_process->InstallDriver(
-        new UARTDriver(UART_NUM_0, Baudrate::BaudRate115200, 1024),
-        ProtobufIndex::UART_TRANSMIT);
+        new UARTDriver(UART_NUM_0, Baudrate::BaudRate115200, 1024));
+    this->_uart_communication_process->Configure(0x0000, ProtobufIndex::UART_TRANSMIT);
 
     result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::UART_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
 
@@ -115,8 +115,8 @@ esp_err_t Kernel::EnableLoraProcess(uint32_t process_stack, uint8_t process_prio
 
         this->_lora_communication_process = new CommunicationProcess("LoRa Communication Proccess", process_stack, process_priority);
         this->_lora_communication_process->InstallDriver(
-            new LoRaDriver(Regions::BRAZIL, CRCMode::DISABLE, 255),
-            ProtobufIndex::LORA_TRANSMIT);
+            new LoRaDriver(Regions::BRAZIL, CRCMode::DISABLE, 255));
+        this->_lora_communication_process->Configure(0x0000, ProtobufIndex::UART_TRANSMIT);
 
         result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::LORA_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
 
@@ -180,8 +180,8 @@ esp_err_t Kernel::SignUpSharedArea(uint8_t index, uint16_t size_in_bytes, Access
 void Kernel::InjectDebugCredentials(const char* ssid, const char* password) {
     CredentialsProtobuf credentials_debug{};
 
-    credentials_debug.UpdateSsid(const_cast<char*>(ssid)); //TODO: implement a safe strlen, strcpy and strcmp
-    credentials_debug.UpdatePassword(const_cast<char*>(password)); //TODO: implement a safe strlen, strcpy and strcmp
+    credentials_debug.UpdateSsid(const_cast<char*>(ssid));          // TODO: implement a safe strlen, strcpy and strcmp
+    credentials_debug.UpdatePassword(const_cast<char*>(password));  // TODO: implement a safe strlen, strcpy and strcmp
 
     this->_shared_memory_manager->Write(ProtobufIndex::CREDENTIALS, &credentials_debug);
 }

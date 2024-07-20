@@ -4,20 +4,23 @@
 #include "HAL/memory/MemoryHandlers.h"
 
 namespace Protocol {
-    constexpr uint8_t START_BYTE                = 2;    /**< Start byte of the message. */
-    constexpr uint8_t START_BYTE_OFFSET         = 0;    /**< Offset position of the start byte. */
-    constexpr uint8_t PAYLOAD_LENGTH_LSB_OFFSET = 1;    /**< Offset of the least significant byte of payload length. */
-    constexpr uint8_t PAYLOAD_LENGTH_MSB_OFFSET = 2;    /**< Offset of the most significant byte of payload length. */
-    constexpr uint8_t COMMAND_OFFSET            = 3;    /**< Offset of the command byte in the message. */
-    constexpr uint8_t MEMORY_AREA_OFFSET        = 4;    /**< Offset of the memory area byte in the message. */
-    constexpr uint8_t HEADER_OFFSET             = 5;    /**< Offset of the message header. */
-    constexpr uint8_t END_BYTE                  = 3;    /**< End byte of the message. */
-    constexpr uint8_t STATIC_MESSAGE_SIZE       = 9;    /**< Size of the static part of the message. */
-    constexpr uint8_t CRC_FIRST_BYTE            = 0;    /**< First byte of the CRC. */
-    constexpr uint8_t CRC_SECOND_BYTE           = 1;    /**< Second byte of the CRC. */
-    constexpr uint8_t CRC_THIRD_BYTE            = 2;    /**< Third byte of the CRC. */
-    constexpr uint8_t CRC_FOURTH_BYTE           = 3;    /**< Fourth byte of the CRC. */
-    constexpr uint16_t MAXIMUM_MESSAGE_SIZE     = 1024; /**< Maximum size of a message. */
+    constexpr uint8_t START_BYTE                = 2;      /**< Start byte of the message. */
+    constexpr uint8_t START_BYTE_OFFSET         = 0;      /**< Offset position of the start byte. */
+    constexpr uint8_t PAYLOAD_LENGTH_LSB_OFFSET = 1;      /**< Offset of the least significant byte of payload length. */
+    constexpr uint8_t PAYLOAD_LENGTH_MSB_OFFSET = 2;      /**< Offset of the most significant byte of payload length. */
+    constexpr uint8_t COMMAND_OFFSET            = 3;      /**< Offset of the command byte in the message. */
+    constexpr uint8_t MEMORY_AREA_OFFSET        = 4;      /**< Offset of the memory area byte in the message. */
+    constexpr uint8_t ADDRESS_LSB_OFFSET        = 5;      /**< Offset of the least significant byte of address. */
+    constexpr uint8_t ADDRESS_MSB_OFFSET        = 6;      /**< Offset of the most significant byte of address. */
+    constexpr uint8_t HEADER_OFFSET             = 7;      /**< Offset of the message header. */
+    constexpr uint8_t END_BYTE                  = 3;      /**< End byte of the message. */
+    constexpr uint8_t STATIC_MESSAGE_SIZE       = 11;     /**< Size of the static part of the message. */
+    constexpr uint8_t CRC_FIRST_BYTE            = 0;      /**< First byte of the CRC. */
+    constexpr uint8_t CRC_SECOND_BYTE           = 1;      /**< Second byte of the CRC. */
+    constexpr uint8_t CRC_THIRD_BYTE            = 2;      /**< Third byte of the CRC. */
+    constexpr uint8_t CRC_FOURTH_BYTE           = 3;      /**< Fourth byte of the CRC. */
+    constexpr uint16_t MAXIMUM_MESSAGE_SIZE     = 1024;   /**< Maximum size of a message. */
+    constexpr uint16_t INVALID_ADDRESS          = 0xFFFF; /**< Invalid Address. */
 }  // namespace Protocol
 
 /**
@@ -132,6 +135,29 @@ std::pair<uint8_t, esp_err_t> TitaniumProtocol::GetMemoryArea(uint8_t* buffer) {
     return result;
 }
 
+std::pair<uint16_t, esp_err_t> TitaniumProtocol::GetAddress(uint8_t* buffer) {
+    std::pair<uint16_t, esp_err_t> result =
+        std::make_pair(ProtocolErrors::INVALID_MEMORY_AREA, ESP_ERR_NO_MEM);
+
+    do {
+        if (buffer == nullptr) {
+            break;
+        }
+
+        uint8_t address_lsb =
+            buffer[Protocol::ADDRESS_LSB_OFFSET];
+        uint8_t address_msb =
+            buffer[Protocol::ADDRESS_MSB_OFFSET];
+        uint16_t address =
+            (address_msb << 8) | address_lsb;
+
+        result = std::make_pair(address, ESP_OK);
+
+    } while (0);
+
+    return result;
+}
+
 /**
  * @brief Retrieve the pointer to the payload from the buffer.
  *
@@ -229,6 +255,12 @@ esp_err_t TitaniumProtocol::ValidatePayloadLength(uint16_t payload_length) {
                : ProtocolErrors::INVALID_PAYLOAD_SIZE;
 }
 
+esp_err_t TitaniumProtocol::ValidateAddress(uint16_t address) {
+    return address == Protocol::INVALID_ADDRESS
+               ? ProtocolErrors::INVALID_ADDRESS
+               : ESP_OK;
+}
+
 /**
  * @brief Validate if the command is one of the expected types.
  *
@@ -316,6 +348,12 @@ void TitaniumProtocol::EncodePayloadLength(uint8_t* buffer,
     buffer[Protocol::PAYLOAD_LENGTH_MSB_OFFSET] = (payload_length >> 8) & 0xFF;
 }
 
+void TitaniumProtocol::EncodeAddress(uint8_t* buffer,
+                                     uint16_t address) {
+    buffer[Protocol::ADDRESS_LSB_OFFSET] = address & 0xFF;
+    buffer[Protocol::ADDRESS_MSB_OFFSET] = (address >> 8) & 0xFF;
+}
+
 /**
  * @brief Encode the CRC into the buffer.
  *
@@ -365,6 +403,11 @@ esp_err_t TitaniumProtocol::Decode(uint8_t* buffer, size_t size,
             result = memory_area.second;
             break;
         }
+        auto address = this->GetAddress(start_message_pointer);
+        if (address.second == ESP_ERR_NO_MEM) {
+            result = address.second;
+            break;
+        }
         auto payload = this->GetPayload(start_message_pointer);
         if (payload.second == ESP_ERR_NO_MEM) {
             result = payload.second;
@@ -394,6 +437,10 @@ esp_err_t TitaniumProtocol::Decode(uint8_t* buffer, size_t size,
         if (result != ESP_OK) {
             break;
         }
+        result = this->ValidateAddress(address.first);
+        if (result != ESP_OK) {
+            break;
+        }
         result = this->ValidatePayload(payload.first);
         if (result != ESP_OK) {
             break;
@@ -411,7 +458,9 @@ esp_err_t TitaniumProtocol::Decode(uint8_t* buffer, size_t size,
 
         if (result == ESP_OK) {
             package.reset(new TitaniumPackage(payload_length.first,
-                                              command.first, memory_area.first,
+                                              address.first,
+                                              command.first,
+                                              memory_area.first,
                                               payload.first));
         }
     } while (0);
@@ -452,6 +501,7 @@ uint16_t TitaniumProtocol::Encode(std::unique_ptr<TitaniumPackage>& package,
         package.get()->Consume(&buffer[Protocol::HEADER_OFFSET]);
 
         this->EncodePayloadLength(buffer, package.get()->size());
+        this->EncodeAddress(buffer, package.get()->size());
         this->EncodeCRC(&buffer[crc_offset], CalculatedCRC32(buffer, crc_offset));
 
         result = expected_size;

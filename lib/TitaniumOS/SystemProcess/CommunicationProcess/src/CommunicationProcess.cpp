@@ -28,7 +28,7 @@ std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateResponsePackage(u
 
     this->_shared_memory_manager.get()->Read(memory_area, response_size, response_payload.get());
 
-    return std::make_unique<TitaniumPackage>(response_size, RESPONSE_COMMAND, memory_area, response_payload.get());
+    return std::make_unique<TitaniumPackage>(response_size, this->_address, RESPONSE_COMMAND, memory_area, response_payload.get());
 }
 
 /**
@@ -45,6 +45,7 @@ std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateTransmissionPacka
     this->_shared_memory_manager.get()->Read(communication_proto.GetReadMemoryArea(), response_size, response_payload.get());
 
     return std::make_unique<TitaniumPackage>(response_size,
+                                             this->_address,
                                              static_cast<command_e>(communication_proto.GetCommand()),
                                              communication_proto.GetWriteMemoryArea(),
                                              response_payload.get());
@@ -67,7 +68,7 @@ void CommunicationProcess::Acknowledge(esp_err_t result) {
  * @brief Main execution loop for the CommunicationProcess.
  */
 void CommunicationProcess::Execute(void) {
-    auto protocol = TitaniumProtocol();
+    auto protocol            = TitaniumProtocol();
     auto communication_proto = CommunicationProtobuf();
 
     if (this->Initialize() != ESP_OK) {
@@ -79,13 +80,18 @@ void CommunicationProcess::Execute(void) {
             vTaskDelay(pdMS_TO_TICKS(1000));
             continue;
         }
-        
+
         auto received_bytes = this->_driver.get()->Read(this->_buffer.get());
         if (received_bytes > 0) {
             std::unique_ptr<TitaniumPackage> package = nullptr;
 
             auto result = protocol.Decode(this->_buffer.get(), received_bytes, package);
+
             if (result == ESP_OK) {
+                if (this->_address != package.get()->address()) {
+                    continue;
+                }
+
                 switch (package.get()->command()) {
                     case READ_COMMAND: {
                         auto response_package     = this->GenerateResponsePackage(package.get()->memory_area());
@@ -95,14 +101,14 @@ void CommunicationProcess::Execute(void) {
                         break;
                     }
                     case RESPONSE_COMMAND: {
-                        //TODO: Do something here! 
+                        // TODO: Do something here!
                         /*
                          * Here there is two options, the first one is to override the requested area, or store this data into a temp share memory buffer
                          */
                         break;
                     }
                     case ACK_COMMAND: {
-                        //TODO: Do something here! 
+                        // TODO: Do something here!
                         /*
                          * Here there is two options, the first one is to override the requested area, or store this data into a temp share memory buffer
                          */
@@ -122,12 +128,10 @@ void CommunicationProcess::Execute(void) {
             this->Acknowledge(result);
         }
         if (this->_shared_memory_manager.get()->IsAreaDataUpdated(this->_memory_area_transmit)) {
-            
-
             this->_shared_memory_manager.get()->Read(this->_memory_area_transmit, &communication_proto);
 
             auto response_package = this->GenerateTransmissionPackage(communication_proto);
-  
+
             auto response_buffer_size = protocol.Encode(response_package, this->_buffer.get(), this->_driver.get()->buffer_size());
             this->_driver.get()->Write(this->_buffer.get(), response_buffer_size);
         }
@@ -142,10 +146,14 @@ void CommunicationProcess::Execute(void) {
  * @param[in] memory_area_receive The memory area to receive data.
  * @param[in] memory_area_transmit The memory area to transmit data.
  */
-void CommunicationProcess::InstallDriver(IDriverInterface* driver_interface, uint8_t memory_area_transmit) {
+void CommunicationProcess::InstallDriver(IDriverInterface* driver_interface) {
     this->_driver.reset(driver_interface);
-    this->_buffer               = std::make_unique<uint8_t[]>(driver_interface->buffer_size());
+    this->_buffer = std::make_unique<uint8_t[]>(driver_interface->buffer_size());
     memset_s<uint8_t>(this->_buffer.get(), 0, driver_interface->buffer_size());
+}
+
+void CommunicationProcess::Configure(uint16_t address, uint8_t memory_area_transmit) {
+    this->_address              = address;
     this->_memory_area_transmit = memory_area_transmit;
 }
 
