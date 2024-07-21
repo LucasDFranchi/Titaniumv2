@@ -20,17 +20,18 @@ public:
     uint8_t GetReadMemoryArea(void) const { return this->_read_memory_area; }
     uint8_t GetWriteMemoryArea(void) const { return this->_write_memory_area; }
     uint8_t GetCommand(void) const { return this->_command; }
+    uint8_t GetAddress(void) const { return this->_address; }
 
     int16_t GetSerializedSize(void) const {
-        return (sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command));
+        return (sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command) + sizeof(this->_address));
     }
 
     int16_t GetMaxSize(void) const {
-        return (sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command));
+        return (sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command) + sizeof(this->_address));
     }
 
     static int16_t GetStaticMaxSize(void) {
-        return (sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint8_t));
+        return (sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint8_t));
     }
 
     int8_t UpdateReadMemoryArea(uint8_t value) {
@@ -48,12 +49,17 @@ public:
         return PROTO_NO_ERROR;
     }
 
+    int8_t UpdateAddress(uint8_t value) {
+        this->_address = value;
+        return PROTO_NO_ERROR;
+    }
+
     int16_t Serialize(char* out_buffer, uint16_t out_buffer_size) const {
         if (out_buffer == nullptr) {
             return 0;
         }
 
-        uint16_t serialized_size = sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command);
+        uint16_t serialized_size = sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command) + sizeof(this->_address);
 
         if (out_buffer_size < serialized_size) {
             return 0;
@@ -66,6 +72,8 @@ public:
         memcpy(&out_buffer[offset], &this->_write_memory_area, sizeof(this->_write_memory_area));
         offset += sizeof(this->_write_memory_area);
         memcpy(&out_buffer[offset], &this->_command, sizeof(this->_command));
+        offset += sizeof(this->_command);
+        memcpy(&out_buffer[offset], &this->_address, sizeof(this->_address));
 
         return serialized_size;
     }
@@ -75,8 +83,8 @@ public:
             return PROTO_INVAL_PTR;
         }
 
-        uint16_t deserialized_min_size = sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command) + 0;
-        uint16_t deserialized_max_size = sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command);
+        uint16_t deserialized_min_size = sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command) + sizeof(this->_address) + 0;
+        uint16_t deserialized_max_size = sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command) + sizeof(this->_address);
 
         if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
             return PROTO_INVAL_SIZE;
@@ -89,6 +97,8 @@ public:
         memcpy(&this->_write_memory_area, &in_buffer[offset], sizeof(this->_write_memory_area));
         offset += sizeof(this->_write_memory_area);
         memcpy(&this->_command, &in_buffer[offset], sizeof(this->_command));
+        offset += sizeof(this->_command);
+        memcpy(&this->_address, &in_buffer[offset], sizeof(this->_address));
 
         return PROTO_NO_ERROR;
     }
@@ -100,7 +110,7 @@ public:
                 break;
             }
 
-            uint16_t serialized_size = sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command);
+            uint16_t serialized_size = sizeof(this->_read_memory_area) + sizeof(this->_write_memory_area) + sizeof(this->_command) + sizeof(this->_address);
 
             if (out_buffer_size < serialized_size) {
                 return 0;
@@ -110,7 +120,8 @@ public:
                                        this->_json_string,
                                        this->_read_memory_area,
                                        this->_write_memory_area,
-                                       this->_command);
+                                       this->_command,
+                                       this->_address);
         } while (0);
 
         return response_length;
@@ -173,6 +184,17 @@ public:
 
             this->UpdateCommand(atoi(in_buffer + value.start));
 
+            key   = tokens[this->_ADDRESS_TOKEN_ID];
+            value = tokens[this->_ADDRESS_TOKEN_ID + 1];
+            token_length = key.end - key.start;
+
+            if (strncmp(in_buffer + key.start, this->_ADDRESS_TOKEN_NAME, token_length) != 0) {
+                result = PROTO_INVAL_JSON_KEY;
+                break;
+            }
+
+            this->UpdateAddress(atoi(in_buffer + value.start));
+
             result = PROTO_NO_ERROR;
 
         } while(0);
@@ -184,17 +206,21 @@ private:
     uint8_t _read_memory_area = 0;
     uint8_t _write_memory_area = 0;
     uint8_t _command = 0;
+    uint8_t _address = 0;
     const char* _json_string = R"({
     "read_memory_area": %u,
     "write_memory_area": %u,
-    "command": %u
+    "command": %u,
+    "address": %u
 })";  
     const char* _READ_MEMORY_AREA_TOKEN_NAME = "read_memory_area";
     const uint8_t _READ_MEMORY_AREA_TOKEN_ID = 1;  
     const char* _WRITE_MEMORY_AREA_TOKEN_NAME = "write_memory_area";
     const uint8_t _WRITE_MEMORY_AREA_TOKEN_ID = 3;  
     const char* _COMMAND_TOKEN_NAME = "command";
-    const uint8_t _COMMAND_TOKEN_ID = 5;
-    const uint8_t _NUM_TOKENS  = 7;
+    const uint8_t _COMMAND_TOKEN_ID = 5;  
+    const char* _ADDRESS_TOKEN_NAME = "address";
+    const uint8_t _ADDRESS_TOKEN_ID = 7;
+    const uint8_t _NUM_TOKENS  = 9;
 };
 #endif /* COMMUNICATION_PROTO_H */

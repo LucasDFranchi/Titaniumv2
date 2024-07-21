@@ -13,6 +13,15 @@
       {
         "type": "uint8_t",
         "name": "command"
+      },
+      {
+        "type": "uint8_t",
+        "name": "address"
+      },
+      {
+        "type": "string",
+        "name": "payload",
+        "maximum_size": 128
       }
     ]
   }

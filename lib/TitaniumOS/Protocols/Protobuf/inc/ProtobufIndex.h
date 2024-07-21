@@ -40,7 +40,27 @@ namespace ProtobufIndex {
     /**
      * @brief Invalid index.
      */
-    constexpr int8_t WATER_LEVEL = 5;
+    constexpr int8_t END_DEVICE_00 = 5;
+
+    /**
+     * @brief Invalid index.
+     */
+    constexpr int8_t END_DEVICE_01 = 6;
+
+    /**
+     * @brief Invalid index.
+     */
+    constexpr int8_t END_DEVICE_02 = 7;
+
+    /**
+     * @brief Invalid index.
+     */
+    constexpr int8_t END_DEVICE_03 = 8;
+
+    /**
+     * @brief Invalid index.
+     */
+    constexpr int8_t END_DEVICE_04 = 9;
 }  // namespace ProtobufIndex
 
 

@@ -45,7 +45,7 @@ std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateTransmissionPacka
     this->_shared_memory_manager.get()->Read(communication_proto.GetReadMemoryArea(), response_size, response_payload.get());
 
     return std::make_unique<TitaniumPackage>(response_size,
-                                             this->_address,
+                                             communication_proto.GetAddress(),
                                              static_cast<command_e>(communication_proto.GetCommand()),
                                              communication_proto.GetWriteMemoryArea(),
                                              response_payload.get());

@@ -34,7 +34,11 @@ class ProtobufFactory {
                 protobuf = std::make_unique<MQTTClientProtobuf>();
                 break;
             }
-            case ProtobufIndex::WATER_LEVEL: {
+            case ProtobufIndex::END_DEVICE_00:
+            case ProtobufIndex::END_DEVICE_01:
+            case ProtobufIndex::END_DEVICE_02:
+            case ProtobufIndex::END_DEVICE_03:
+            case ProtobufIndex::END_DEVICE_04: {
                 protobuf = std::make_unique<WaterLevelProtobuf>();
                 break;
             }
