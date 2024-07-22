@@ -16,7 +16,7 @@ int main(void) {
     
     kernel.SignUpSharedArea(ProtobufIndex::WATER_LEVEL, WaterLevelProtobuf::GetStaticMaxSize(), READ_WRITE);
 
-    kernel.InjectDebugCredentials("ssid", "password");
+    kernel.InjectDebugCredentials("NETPARQUE_PAOLA", "NPQ196253");
 
     return 0;   
 }

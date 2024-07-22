@@ -34,7 +34,8 @@ class CommunicationProcess : public ProcessTemplate {
     esp_err_t Initialize(void);
     esp_err_t StorePackage(std::unique_ptr<TitaniumPackage>& package);
     std::unique_ptr<TitaniumPackage> GenerateResponsePackage(uint8_t memory_area);
-    std::unique_ptr<TitaniumPackage> GenerateTransmissionPackage(CommunicationProtobuf& communication_proto);
+    std::unique_ptr<TitaniumPackage> GenerateTransmitPackage(CommunicationProtobuf& communication_proto);
+    bool CheckAddressPackage(uint16_t address);
     void Acknowledge(esp_err_t result);
 
    private:

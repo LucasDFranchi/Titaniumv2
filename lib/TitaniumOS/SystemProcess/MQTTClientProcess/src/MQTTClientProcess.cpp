@@ -153,7 +153,6 @@ esp_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
 }
 
 esp_err_t MQTTClientProcess::SubscribeMemoryArea(void) {
-    // char response_buffer[512] = {0};
     char topic_area[64]       = {0};
     esp_err_t result          = ESP_FAIL;
 

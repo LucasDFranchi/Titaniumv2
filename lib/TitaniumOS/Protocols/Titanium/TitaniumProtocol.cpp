@@ -274,13 +274,15 @@ esp_err_t TitaniumProtocol::ValidateCommand(command_e command) {
         switch (command) {
             case READ_COMMAND:
             case WRITE_COMMAND:
-            case RESPONSE_COMMAND:
-            case TRANSMISSION_COMMAND: {
-                result = ESP_OK;
-                break;
-            }
-            default: {
-                result = ProtocolErrors::INVALID_COMMAND;
+            case READ_RESPONSE_COMMAND:
+            case NACK_COMMAND: {
+                case ACK_COMMAND: {
+                    result = ESP_OK;
+                    break;
+                }
+                default: {
+                    result = ProtocolErrors::INVALID_COMMAND;
+                }
             }
         }
 
