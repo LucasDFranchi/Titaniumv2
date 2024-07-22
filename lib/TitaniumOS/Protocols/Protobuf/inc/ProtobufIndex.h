@@ -33,14 +33,19 @@ namespace ProtobufIndex {
     constexpr int8_t LORA_TRANSMIT = 3;
 
     /**
+     * @brief Index for LoRa receive area.
+     */
+    constexpr int8_t LORA_RECEIVE = 4;
+
+    /**
      * @brief Index for MQTT area.
      */
-    constexpr int8_t MQTT = 4;
+    constexpr int8_t MQTT = 5;
 
     /**
      * @brief Invalid index.
      */
-    constexpr int8_t WATER_LEVEL = 5;
+    constexpr int8_t WATER_LEVEL = 6;
 }  // namespace ProtobufIndex
 
 

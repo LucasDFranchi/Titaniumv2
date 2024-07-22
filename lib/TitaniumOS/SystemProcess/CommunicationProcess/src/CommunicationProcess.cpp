@@ -76,7 +76,6 @@ void CommunicationProcess::Execute(void) {
             vTaskDelay(pdMS_TO_TICKS(1000));
             continue;
         }
-
         auto received_bytes = this->_driver.get()->Read(this->_buffer.get());
 
         if (received_bytes == 0) {
@@ -91,9 +90,18 @@ void CommunicationProcess::Execute(void) {
             std::unique_ptr<TitaniumPackage> package = nullptr;
             auto result                              = protocol.Decode(this->_buffer.get(), received_bytes, package);
 
-            if (this->CheckAddressPackage(package.get()->address())) {
+            if (result != ESP_OK) {
+                ESP_LOGI("Communication Process", "Decode Error: %d", result);
+                vTaskDelay(pdMS_TO_TICKS(100));
                 continue;
             }
+
+            if (this->CheckAddressPackage(package.get()->address())) {
+                ESP_LOGI("Communication Process", "Error Address");
+                vTaskDelay(pdMS_TO_TICKS(100));
+                continue;
+            }
+            ESP_LOGI("Communication Process", "Right Address");
 
             switch (package.get()->command()) {
                 case READ_COMMAND: {
@@ -102,23 +110,29 @@ void CommunicationProcess::Execute(void) {
                     auto protobuf             = ProtobufFactory::CreateProtobuf(package.get()->memory_area());
 
                     if (protobuf.get() == nullptr) {
+                        ESP_LOGI("Communication Protocol", "NULL PROTOBUF");
                         break;
                     }
                     this->_shared_memory_manager->Read(package.get()->memory_area(), protobuf.get());
                     uint16_t response_buffer_size = protobuf->SerializeJson(response_buffer, sizeof(response_buffer));
                     if (response_buffer_size <= 0) {
+                        ESP_LOGI("Communication Protocol", "INVALID JSON");
                         break;
                     }
                     transmit_proto.UpdateAddress(this->_address);
                     transmit_proto.UpdateCommand(READ_RESPONSE_COMMAND);
-                    // transmit_proto.UpdateMemoryArea(ProtobufIndex::LORA_RECEIVE);
+                    transmit_proto.UpdateMemoryArea(ProtobufIndex::LORA_RECEIVE);
                     transmit_proto.UpdatePayload(response_buffer, response_buffer_size);
 
-                    this->GenerateTransmitPackage(transmit_proto);
+                    auto response_package = this->GenerateTransmitPackage(transmit_proto);
+                    response_buffer_size = protocol.Encode(response_package, this->_buffer.get(), this->_driver.get()->buffer_size());
+                    ESP_LOGI("Communication Protocol", "WRITE RESPONSE");
+                    this->_driver.get()->Write(this->_buffer.get(), response_buffer_size);
                     break;
                 }
                 case READ_RESPONSE_COMMAND: {
                     ESP_LOGI("Communication Protocol", "READ_RESPONSE_COMMAND");
+                    // ADD p´rints here
                     break;
                 }
                 case ACK_COMMAND: {
@@ -140,8 +154,8 @@ void CommunicationProcess::Execute(void) {
 
                     package.get()->Consume(reinterpret_cast<uint8_t*>(response_buffer));
 
-                    uint16_t response_buffer_size = protobuf->DeSerializeJson(response_buffer, sizeof(response_buffer));
-                    this->_shared_memory_manager->Write(package.get()->memory_area(), protobuf.get());
+                    // uint16_t response_buffer_size = protobuf->DeSerializeJson(response_buffer, sizeof(response_buffer));
+                    // this->_shared_memory_manager->Write(package.get()->memory_area(), protobuf.get());
                     break;
                 }
                 default: {
@@ -149,7 +163,7 @@ void CommunicationProcess::Execute(void) {
                 }
             }
 
-            // this->ProcessReceivedPackage(package);
+            //     // this->ProcessReceivedPackage(package);
         }
 
         // if (result == ESP_OK) {
@@ -204,5 +218,8 @@ bool CommunicationProcess::CheckAddressPackage(uint16_t address) {
  */
 esp_err_t CommunicationProcess::Initialize(void) {
     this->_shared_memory_manager.reset(SharedMemoryManager::GetInstance());
+    if (SharedMemoryManager::GetInstance() == nullptr) {
+        ESP_LOGI("Communication Protocol", "Init NULL");
+    }
     return ESP_OK;
 }

@@ -503,7 +503,7 @@ uint16_t TitaniumProtocol::Encode(std::unique_ptr<TitaniumPackage>& package,
         package.get()->Consume(&buffer[Protocol::HEADER_OFFSET]);
 
         this->EncodePayloadLength(buffer, package.get()->size());
-        this->EncodeAddress(buffer, package.get()->size());
+        this->EncodeAddress(buffer, package.get()->address());
         this->EncodeCRC(&buffer[crc_offset], CalculatedCRC32(buffer, crc_offset));
 
         result = expected_size;

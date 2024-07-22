@@ -52,7 +52,9 @@ esp_err_t SharedMemoryManager::SignUpSharedArea(uint8_t index, uint16_t size_in_
  * @return bool True if the data was updated, false otherwise.
  */
 bool SharedMemoryManager::IsAreaDataUpdated(uint8_t area_index) {
-    return this->_shared_memory_array[area_index]->GetAreaHasUpdated();
+    if (this->_shared_memory_array[area_index] != nullptr)
+        return this->_shared_memory_array[area_index]->GetAreaHasUpdated();
+    return false;
 }
 
 /**

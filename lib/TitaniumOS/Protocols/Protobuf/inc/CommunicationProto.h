@@ -6,22 +6,30 @@
 #ifndef COMMUNICATION_PROTO_H
 #define COMMUNICATION_PROTO_H
 
+#include "IProtobuf.h"
+#include "Libraries/JSON/jsmn/jsmn.h"
 #include "stdint.h"
 #include "string.h"
-#include "Libraries/JSON/jsmn/jsmn.h"
-#include "IProtobuf.h"
 
 class CommunicationProtobuf : public IProtobuf {
-public:
-    CommunicationProtobuf() = default;
+   public:
+    CommunicationProtobuf()  = default;
     ~CommunicationProtobuf() = default;
 
     static constexpr uint16_t PAYLOAD_SIZE = 200;
 
-    uint8_t GetCommand(void) const { return this->_command; }
-    uint16_t GetAddress(void) const { return this->_address; }
-    uint8_t GetMemoryArea(void) const { return this->_memory_area; }
-    const char* GetPayload(void) const { return this->_payload; }
+    uint8_t GetCommand(void) const {
+        return this->_command;
+    }
+    uint16_t GetAddress(void) const {
+        return this->_address;
+    }
+    uint8_t GetMemoryArea(void) const {
+        return this->_memory_area;
+    }
+    const char* GetPayload(void) const {
+        return this->_payload;
+    }
 
     int16_t GetSerializedSize(void) const {
         return (sizeof(this->_command) + sizeof(this->_address) + sizeof(this->_memory_area) + (strlen(this->_payload) + 1));
@@ -120,9 +128,8 @@ public:
         }
 
         uint16_t deserialized_min_size = sizeof(this->_command) + sizeof(this->_address) + sizeof(this->_memory_area) + 1;
-        uint16_t deserialized_max_size = sizeof(this->_command) + sizeof(this->_address) + sizeof(this->_memory_area) + sizeof(this->_payload);
 
-        if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
+        if ((in_buffer_size < deserialized_min_size)) {
             return PROTO_INVAL_SIZE;
         }
 
@@ -139,6 +146,7 @@ public:
 
         return PROTO_NO_ERROR;
     }
+
     int32_t SerializeJson(char* out_buffer, uint16_t out_buffer_size) {
         uint32_t response_length = 0;
 
@@ -188,8 +196,8 @@ public:
             jsmntok_t value{};
             uint16_t token_length = 0;
 
-            key   = tokens[this->_COMMAND_TOKEN_ID];
-            value = tokens[this->_COMMAND_TOKEN_ID + 1];
+            key          = tokens[this->_COMMAND_TOKEN_ID];
+            value        = tokens[this->_COMMAND_TOKEN_ID + 1];
             token_length = key.end - key.start;
 
             if (strncmp(in_buffer + key.start, this->_COMMAND_TOKEN_NAME, token_length) != 0) {
@@ -199,8 +207,8 @@ public:
 
             this->UpdateCommand(atoi(in_buffer + value.start));
 
-            key   = tokens[this->_ADDRESS_TOKEN_ID];
-            value = tokens[this->_ADDRESS_TOKEN_ID + 1];
+            key          = tokens[this->_ADDRESS_TOKEN_ID];
+            value        = tokens[this->_ADDRESS_TOKEN_ID + 1];
             token_length = key.end - key.start;
 
             if (strncmp(in_buffer + key.start, this->_ADDRESS_TOKEN_NAME, token_length) != 0) {
@@ -210,8 +218,8 @@ public:
 
             this->UpdateAddress(atoi(in_buffer + value.start));
 
-            key   = tokens[this->_MEMORY_AREA_TOKEN_ID];
-            value = tokens[this->_MEMORY_AREA_TOKEN_ID + 1];
+            key          = tokens[this->_MEMORY_AREA_TOKEN_ID];
+            value        = tokens[this->_MEMORY_AREA_TOKEN_ID + 1];
             token_length = key.end - key.start;
 
             if (strncmp(in_buffer + key.start, this->_MEMORY_AREA_TOKEN_NAME, token_length) != 0) {
@@ -221,8 +229,8 @@ public:
 
             this->UpdateMemoryArea(atoi(in_buffer + value.start));
 
-            key   = tokens[this->_PAYLOAD_TOKEN_ID];
-            value = tokens[this->_PAYLOAD_TOKEN_ID + 1];
+            key          = tokens[this->_PAYLOAD_TOKEN_ID];
+            value        = tokens[this->_PAYLOAD_TOKEN_ID + 1];
             token_length = key.end - key.start;
 
             if (strncmp(in_buffer + key.start, this->_PAYLOAD_TOKEN_NAME, token_length) != 0) {
@@ -234,30 +242,30 @@ public:
 
             result = PROTO_NO_ERROR;
 
-        } while(0);
+        } while (0);
 
         return result;
     }
 
-private:
-    uint8_t _command = 0;
-    uint16_t _address = 0;
-    uint8_t _memory_area = 0;
-    char _payload[200] = {0};
-    const char* _json_string = R"({
+   private:
+    uint8_t _command                    = 0;
+    uint16_t _address                   = 0;
+    uint8_t _memory_area                = 0;
+    char _payload[200]                  = {0};
+    const char* _json_string            = R"({
     "command": %u,
     "address": %u,
     "memory_area": %u,
     "payload": "%s"
-})";  
-    const char* _COMMAND_TOKEN_NAME = "command";
-    const uint8_t _COMMAND_TOKEN_ID = 1;  
-    const char* _ADDRESS_TOKEN_NAME = "address";
-    const uint8_t _ADDRESS_TOKEN_ID = 3;  
+})";
+    const char* _COMMAND_TOKEN_NAME     = "command";
+    const uint8_t _COMMAND_TOKEN_ID     = 1;
+    const char* _ADDRESS_TOKEN_NAME     = "address";
+    const uint8_t _ADDRESS_TOKEN_ID     = 3;
     const char* _MEMORY_AREA_TOKEN_NAME = "memory_area";
-    const uint8_t _MEMORY_AREA_TOKEN_ID = 5;  
-    const char* _PAYLOAD_TOKEN_NAME = "payload";
-    const uint8_t _PAYLOAD_TOKEN_ID = 7;
-    const uint8_t _NUM_TOKENS  = 9;
+    const uint8_t _MEMORY_AREA_TOKEN_ID = 5;
+    const char* _PAYLOAD_TOKEN_NAME     = "payload";
+    const uint8_t _PAYLOAD_TOKEN_ID     = 7;
+    const uint8_t _NUM_TOKENS           = 9;
 };
 #endif /* COMMUNICATION_PROTO_H */

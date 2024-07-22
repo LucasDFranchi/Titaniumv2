@@ -29,6 +29,10 @@ class CommunicationProcess : public ProcessTemplate {
     void InstallDriver(IDriverInterface* driver_interface);
     void Configure(uint16_t address, uint8_t memory_area_transmit);
 
+    IDriverInterface* driver(void) const {
+        return this->_driver.get();
+    }
+
    private:
     void Execute(void);
     esp_err_t Initialize(void);

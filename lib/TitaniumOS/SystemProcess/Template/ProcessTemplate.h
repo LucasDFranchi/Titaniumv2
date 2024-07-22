@@ -46,6 +46,12 @@ class ProcessTemplate {
     void InitializeProcess() {
         xTaskCreate(ProcessTemplate::ExecuteProcess, this->name, this->memory, static_cast<void *>(this->object_pointer), this->priority, this->handle);
     }
+
+    TaskHandle_t task_handle(void) const {
+        return *this->handle;
+    }
+
+   private:
     /**
      * @brief Pure virtual function to be implemented by derived classes to define process execution logic.
      */
