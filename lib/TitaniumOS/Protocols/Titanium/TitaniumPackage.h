@@ -1,13 +1,12 @@
 #ifndef TITANIUM_PACKAGE_H
 #define TITANIUM_PACKAGE_H
 
+#include "esp_err.h"
 #include <memory>
 
-#include "esp_err.h"
-
-#include "TitaniumProtocolEnums.h"
-
 #include "HAL/memory/MemoryHandlers.h"
+#include "Protocols/Protobuf/inc/IProtobuf.h"
+#include "TitaniumProtocolEnums.h"
 
 /**
  * @brief Represents a Titanium package containing data and metadata.
@@ -32,10 +31,28 @@ class TitaniumPackage {
      */
     TitaniumPackage(uint16_t size, uint16_t address, command_e command, uint8_t memory_area, uint8_t* data)
         : _command(command), _memory_area(memory_area) {
-        this->_size = size;
+        this->_size    = size;
         this->_address = address;
-        this->_data = std::make_unique<uint8_t[]>(size);
+        this->_data    = std::make_unique<uint8_t[]>(size);
         memcpy_s<uint8_t>(this->_data.get(), data, size);
+    }
+    /**
+     * @brief Constructs a TitaniumPackage object.
+     *
+     * Constructs a TitaniumPackage object with the specified size, command type, memory area,
+     * and data. The data provided is copied into an internal buffer.
+     *
+     * @param[in] address The address associated with the package.
+     * @param[in] command The command type associated with the package.
+     * @param[in] memory_area The memory area identifier associated with the package.
+     * @param[in] protobuf The protobuf to be transmitted.
+     */
+    TitaniumPackage(uint16_t address, command_e command, uint8_t memory_area, IProtobuf& protobuf)
+        : _command(command), _memory_area(memory_area) {
+        this->_size    = protobuf.GetSerializedSize();
+        this->_address = address;
+        this->_data    = std::make_unique<uint8_t[]>(this->_size);
+        protobuf.Serialize(reinterpret_cast<char*>(this->_data.get()), this->_size);
     }
     /**
      * @brief Retrieves the package data.

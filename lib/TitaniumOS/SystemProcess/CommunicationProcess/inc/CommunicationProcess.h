@@ -27,11 +27,7 @@ class CommunicationProcess : public ProcessTemplate {
         : ProcessTemplate(name, memory, priority, &this->_process_handler){};
 
     void InstallDriver(IDriverInterface* driver_interface);
-    void Configure(uint16_t address, uint8_t memory_area_transmit);
-
-    IDriverInterface* driver(void) const {
-        return this->_driver.get();
-    }
+    void Configure(uint16_t address);
 
    private:
     void Execute(void);
@@ -49,7 +45,6 @@ class CommunicationProcess : public ProcessTemplate {
     std::unique_ptr<SharedMemoryManager> _shared_memory_manager = nullptr;  ///< Shared memory manager.
 
    private:
-    uint8_t _memory_area_transmit = ProtobufIndex::INVALID;  ///< Memory area for transmitting data.
     uint16_t _address             = 0xFFFF;                  ///< Memory Address of this device
 };
 

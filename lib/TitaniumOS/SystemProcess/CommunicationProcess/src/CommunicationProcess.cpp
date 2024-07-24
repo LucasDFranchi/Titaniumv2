@@ -39,11 +39,10 @@
  * @return A unique pointer to the generated TitaniumPackage.
  */
 std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateTransmitPackage(CommunicationProtobuf& communication_proto) {
-    return std::make_unique<TitaniumPackage>(strlen(communication_proto.GetPayload()) + 1,
-                                             this->_address,
+    return std::make_unique<TitaniumPackage>(this->_address,
                                              static_cast<command_e>(communication_proto.GetCommand()),
                                              communication_proto.GetMemoryArea(),
-                                             reinterpret_cast<uint8_t*>(const_cast<char*>((communication_proto.GetPayload()))));
+                                             communication_proto);
 }
 
 /**
@@ -132,7 +131,7 @@ void CommunicationProcess::Execute(void) {
                 }
                 case READ_RESPONSE_COMMAND: {
                     ESP_LOGI("Communication Protocol", "READ_RESPONSE_COMMAND");
-                    // ADD p´rints here
+                    
                     break;
                 }
                 case ACK_COMMAND: {
@@ -188,9 +187,8 @@ void CommunicationProcess::InstallDriver(IDriverInterface* driver_interface) {
     memset_s<uint8_t>(this->_buffer.get(), 0, driver_interface->buffer_size());
 }
 
-void CommunicationProcess::Configure(uint16_t address, uint8_t memory_area_transmit) {
+void CommunicationProcess::Configure(uint16_t address) {
     this->_address              = address;
-    this->_memory_area_transmit = memory_area_transmit;
 }
 
 /**

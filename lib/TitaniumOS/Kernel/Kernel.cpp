@@ -84,7 +84,7 @@ esp_err_t Kernel::EnableUartProcess(uint32_t process_stack, uint8_t process_prio
     this->_uart_communication_process = new CommunicationProcess("UART Communication Proccess", process_stack, process_priority);
     this->_uart_communication_process->InstallDriver(
         new UARTDriver(UART_NUM_0, Baudrate::BaudRate115200, 1024));
-    this->_uart_communication_process->Configure(0x0000, ProtobufIndex::UART_TRANSMIT);
+    this->_uart_communication_process->Configure(0x0000);
 
     result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::UART_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
 
@@ -116,7 +116,7 @@ esp_err_t Kernel::EnableLoraProcess(uint32_t process_stack, uint8_t process_prio
         this->_lora_communication_process = new CommunicationProcess("LoRa Communication Proccess", process_stack, process_priority);
         this->_lora_communication_process->InstallDriver(
             new LoRaDriver(Regions::BRAZIL, CRCMode::DISABLE, 255));
-        this->_lora_communication_process->Configure(0x0000, ProtobufIndex::UART_TRANSMIT);
+        this->_lora_communication_process->Configure(0x0000);
 
         result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::LORA_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
 
