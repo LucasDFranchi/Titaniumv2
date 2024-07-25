@@ -65,7 +65,7 @@ void MQTTClientProcess::Execute(void) {
     while (1) {
         do {
             this->_shared_memory_manager.get()->Read(ProtobufIndex::CONNECTION,
-                                                     &this->_connection_status);
+                                                     this->_connection_status);
 
             auto ap_changed =
                 this->_last_connection_status.GetApStatus() !=
@@ -135,7 +135,7 @@ esp_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
         if (protobuf.get() == nullptr) {
             break;
         }
-        this->_shared_memory_manager->Read(area_index, protobuf.get());
+        this->_shared_memory_manager->Read(area_index, *protobuf);
 
         if (protobuf->SerializeJson(response_buffer, sizeof(response_buffer)) <= 0) {
             break;

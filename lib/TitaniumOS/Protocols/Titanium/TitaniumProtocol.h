@@ -8,7 +8,7 @@
 namespace ProtocolConstants {
     constexpr uint8_t ACK[]              = {0x02, 0x00, 0x03, 0x41, 0x00, 0x41, 0x43, 0x4B, 0xB4, 0x43, 0xBA, 0x3B, 0x03};  // "ACK"
     constexpr uint8_t NAK[]              = {0x02, 0x00, 0x03, 0x41, 0x00, 0x4E, 0x41, 0x4B, 0x8D, 0x29, 0x9F, 0x84, 0x03};  // "NAK"
-    constexpr uint16_t BROADCAST_ADDRESS = 0; // "Address used for broadcast operations"
+    constexpr uint16_t BROADCAST_ADDRESS = 0;                                                                               // "Address used for broadcast operations"
 }  // namespace ProtocolConstants
 
 namespace ProtocolErrors {
@@ -31,7 +31,7 @@ class TitaniumProtocol {
     /**
      * @brief Default constructor for TitaniumProtocol.
      */
-    TitaniumProtocol(){};
+    TitaniumProtocol() {};
 
    public:
     esp_err_t Decode(uint8_t* buffer, size_t size, std::unique_ptr<TitaniumPackage>& package);

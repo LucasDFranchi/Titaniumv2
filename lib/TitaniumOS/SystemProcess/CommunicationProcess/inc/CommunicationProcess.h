@@ -5,6 +5,8 @@
 #include "HAL/memory/SharedMemoryManager.h"
 #include "Protocols/Protobuf/inc/ProtobufFactory.h"
 #include "Protocols/Titanium/TitaniumPackage.h"
+#include "Protocols/Titanium/TitaniumProtocol.h"
+
 #include "SystemProcess/Template/ProcessTemplate.h"
 
 #include <memory>
@@ -24,9 +26,9 @@ class CommunicationProcess : public ProcessTemplate {
      * @param priority The priority of the process.
      */
     CommunicationProcess(const char* name, uint32_t memory, UBaseType_t priority)
-        : ProcessTemplate(name, memory, priority, &this->_process_handler){};
+        : ProcessTemplate(name, memory, priority, &this->_process_handler) {};
 
-    void InstallDriver(IDriverInterface* driver_interface);
+    esp_err_t InstallDriver(IDriverInterface* driver_interface);
     void Configure(uint16_t address);
 
    private:
@@ -37,15 +39,24 @@ class CommunicationProcess : public ProcessTemplate {
     std::unique_ptr<TitaniumPackage> GenerateTransmitPackage(CommunicationProtobuf& communication_proto);
     bool CheckAddressPackage(uint16_t address);
     void Acknowledge(esp_err_t result);
+    esp_err_t ProcessReceivedPackage(std::unique_ptr<TitaniumPackage>& package);
+    esp_err_t ProcessReadPackage(std::unique_ptr<TitaniumPackage>& package);
+    esp_err_t ProcessReadResponsePackage(std::unique_ptr<TitaniumPackage>& package);
+    esp_err_t ProcessAckPackage(std::unique_ptr<TitaniumPackage>& package);
+    esp_err_t ProcessNackPackage(std::unique_ptr<TitaniumPackage>& package);
+    esp_err_t ProcessWritePackage(std::unique_ptr<TitaniumPackage>& package);
 
    private:
     std::unique_ptr<uint8_t[]> _buffer                          = nullptr;  ///< Buffer for communication.
     TaskHandle_t _process_handler                               = NULL;     ///< Handler for the process task.
     std::unique_ptr<IDriverInterface> _driver                   = nullptr;  ///< Communication driver.
     std::unique_ptr<SharedMemoryManager> _shared_memory_manager = nullptr;  ///< Shared memory manager.
+    std::unique_ptr<TitaniumProtocol> _protocol                 = nullptr;  ///< Protocol handler.
+    std::unique_ptr<CommunicationProtobuf> _transmit_proto      = nullptr;  ///< Transmission protobuf.
+    std::unique_ptr<CommunicationProtobuf> _receive_proto       = nullptr;  ///< Reception protobuf.
 
    private:
-    uint16_t _address             = 0xFFFF;                  ///< Memory Address of this device
+    uint16_t _address = 0xFFFF;  ///< Memory Address of this device
 };
 
 #endif /* COMMUNICATION_PROCESS_H */

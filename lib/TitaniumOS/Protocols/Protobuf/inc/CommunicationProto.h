@@ -129,7 +129,7 @@ class CommunicationProtobuf : public IProtobuf {
 
         uint16_t deserialized_min_size = sizeof(this->_command) + sizeof(this->_address) + sizeof(this->_memory_area) + 1;
 
-        if ((in_buffer_size < deserialized_min_size)) {
+        if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
 

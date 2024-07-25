@@ -5,6 +5,8 @@
 
 #include "Kernel.h"
 
+#include <memory>
+
 // Initialize static member variables
 SharedMemoryManager* SharedMemoryManager::singleton_pointer_ = nullptr;
 GPIOManager* GPIOManager::singleton_pointer_                 = nullptr;
@@ -82,8 +84,7 @@ esp_err_t Kernel::EnableHTTPServerProcess(uint32_t process_stack, uint8_t proces
 esp_err_t Kernel::EnableUartProcess(uint32_t process_stack, uint8_t process_priority, bool can_fail) {
     auto result                       = ESP_OK;
     this->_uart_communication_process = new CommunicationProcess("UART Communication Proccess", process_stack, process_priority);
-    this->_uart_communication_process->InstallDriver(
-        new UARTDriver(UART_NUM_0, Baudrate::BaudRate115200, 1024));
+    this->_uart_communication_process->InstallDriver(new UARTDriver(UART_NUM_0, Baudrate::BaudRate115200, 1024));
     this->_uart_communication_process->Configure(0x0000);
 
     result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::UART_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
@@ -114,8 +115,7 @@ esp_err_t Kernel::EnableLoraProcess(uint32_t process_stack, uint8_t process_prio
         }
 
         this->_lora_communication_process = new CommunicationProcess("LoRa Communication Proccess", process_stack, process_priority);
-        this->_lora_communication_process->InstallDriver(
-            new LoRaDriver(Regions::BRAZIL, CRCMode::DISABLE, 255));
+        this->_lora_communication_process->InstallDriver(new LoRaDriver(Regions::BRAZIL,  CRCMode::DISABLE, 255));
         this->_lora_communication_process->Configure(0x0000);
 
         result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::LORA_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
@@ -183,5 +183,5 @@ void Kernel::InjectDebugCredentials(const char* ssid, const char* password) {
     credentials_debug.UpdateSsid(const_cast<char*>(ssid));          // TODO: implement a safe strlen, strcpy and strcmp
     credentials_debug.UpdatePassword(const_cast<char*>(password));  // TODO: implement a safe strlen, strcpy and strcmp
 
-    this->_shared_memory_manager->Write(ProtobufIndex::CREDENTIALS, &credentials_debug);
+    this->_shared_memory_manager->Write(ProtobufIndex::CREDENTIALS, credentials_debug);
 }

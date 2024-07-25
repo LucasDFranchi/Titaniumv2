@@ -147,7 +147,7 @@ static esp_err_t post_uri_wifi_credentials(httpd_req_t* req) {
         credentials_proto.UpdateSsid(ssid);
         credentials_proto.UpdatePassword(password);
 
-        http_server_manager->memory_manager()->Write(ProtobufIndex::CREDENTIALS, &credentials_proto);
+        http_server_manager->memory_manager()->Write(ProtobufIndex::CREDENTIALS, credentials_proto);
         result = ESP_OK;
 
     } while (0);
@@ -183,7 +183,7 @@ static esp_err_t get_area_handler(httpd_req_t* req) {
         }
 
         if (req->method == HTTP_GET) {
-            http_server_process->memory_manager()->Read(area_index, protobuf.get());
+            http_server_process->memory_manager()->Read(area_index, *protobuf);
 
             response_size = protobuf->SerializeJson(&http_server_process->response_buffer[0],
                                                     sizeof(http_server_process->response_buffer));
@@ -207,7 +207,7 @@ static esp_err_t get_area_handler(httpd_req_t* req) {
                 httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid Json Data!");
                 break;
             }
-            result = http_server_process->memory_manager()->Write(area_index, protobuf.get());
+            result = http_server_process->memory_manager()->Write(area_index, *protobuf);
         }
 
         if (result == ESP_OK) {
@@ -234,7 +234,7 @@ void HTTPServerProcess::Execute(void) {
     while (1) {
         do {
             this->_shared_memory_manager->Read(ProtobufIndex::CONNECTION,
-                                               &this->_connection_status);
+                                               this->_connection_status);
             auto ap_changed =
                 this->_last_connection_status.GetApStatus() !=
                 this->_connection_status.GetApStatus();

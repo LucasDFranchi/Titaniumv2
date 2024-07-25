@@ -16,7 +16,7 @@ void tearDown(void) {
     // clean stuff up here
 }
 
-void test_ProcessInitialization() {
+void test_Read() {
     Kernel kernel;
     TitaniumProtocol protocol;
     uint8_t MOCK_AREA_INDEX    = 1;
@@ -29,7 +29,7 @@ void test_ProcessInitialization() {
     connection_status_proto.UpdateApStatus(2);
     connection_status_proto.UpdateStaStatus(3);
 
-    shared_memory_manager->Write(MOCK_AREA_INDEX, &connection_status_proto);
+    shared_memory_manager->Write(MOCK_AREA_INDEX, connection_status_proto);
 
     /* Create a mock driver */
     uint8_t buffer[1024] = {0};
@@ -68,10 +68,10 @@ void test_ProcessInitialization() {
     TEST_ASSERT_EQUAL(ESP_OK, receive_proto.DeSerialize((char*)buffer, buffer_size));
 
     /* Compare */
-    TEST_ASSERT_EQUAL(receive_proto.GetAddress(), 0x1015);
-    TEST_ASSERT_EQUAL(receive_proto.GetCommand(), READ_RESPONSE_COMMAND);
-    TEST_ASSERT_EQUAL(receive_proto.GetMemoryArea(), 4);
-    TEST_ASSERT_EQUAL_STRING(receive_proto.GetPayload(), "{\n    \"ap_status\": 2,\n    \"sta_status\": 3\n}");
+    TEST_ASSERT_EQUAL(0x1015, receive_proto.GetAddress());
+    TEST_ASSERT_EQUAL(READ_RESPONSE_COMMAND, receive_proto.GetCommand());
+    TEST_ASSERT_EQUAL(4, receive_proto.GetMemoryArea());
+    TEST_ASSERT_EQUAL_STRING("{\n    \"ap_status\": 2,\n    \"sta_status\": 3\n}", receive_proto.GetPayload());
 }
 
 void main_test(void) {
@@ -79,7 +79,7 @@ void main_test(void) {
 
     UNITY_BEGIN();
 
-    RUN_TEST(test_ProcessInitialization);
+    RUN_TEST(test_Read);
 
     UNITY_END();
 }

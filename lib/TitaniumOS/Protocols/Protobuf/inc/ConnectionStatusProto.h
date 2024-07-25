@@ -70,7 +70,7 @@ public:
         uint16_t deserialized_min_size = sizeof(this->_ap_status) + sizeof(this->_sta_status) + 0;
         uint16_t deserialized_max_size = sizeof(this->_ap_status) + sizeof(this->_sta_status);
 
-        if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
+        if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
 
@@ -82,6 +82,7 @@ public:
 
         return PROTO_NO_ERROR;
     }
+
     int32_t SerializeJson(char* out_buffer, uint16_t out_buffer_size) {
         uint32_t response_length = 0;
 
