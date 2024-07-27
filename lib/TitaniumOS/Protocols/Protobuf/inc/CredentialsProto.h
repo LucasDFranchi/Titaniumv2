@@ -140,7 +140,6 @@ public:
         }
 
         uint16_t deserialized_min_size =  + 2;
-        uint16_t deserialized_max_size = sizeof(this->_ssid) + sizeof(this->_password);
 
         if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;

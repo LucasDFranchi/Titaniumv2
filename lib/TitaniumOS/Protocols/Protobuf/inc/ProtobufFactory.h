@@ -5,15 +5,12 @@
 #include "esp_log.h"
 #include <memory>
 
-#include "CredentialsProto.h"
-#include "ConnectionStatusProto.h"
-#include "CommunicationProto.h"
-#include "CommunicationProto.h"
-#include "CommunicationProto.h"
-#include "CommunicationProto.h"
+#include "ProtobufIndex.h"
 #include "MQTTUriProto.h"
 #include "WaterLevelProto.h"
-
+#include "CommunicationProto.h"
+#include "ConnectionStatusProto.h"
+#include "CredentialsProto.h"
 
 class ProtobufFactory {
    public:
@@ -27,37 +24,37 @@ class ProtobufFactory {
                 break;
             }
 
-            case ProtobufIndex::CONNECTION: {
+            case ProtobufIndex::CONNECTIONSTATUS: {
                 protobuf = std::make_unique<ConnectionStatusProtobuf>();
                 break;
             }
 
-            case ProtobufIndex::UART_TX: {
+            case ProtobufIndex::UARTTRANSMIT: {
                 protobuf = std::make_unique<CommunicationProtobuf>();
                 break;
             }
 
-            case ProtobufIndex::UART_RX: {
+            case ProtobufIndex::UARTRECEIVE: {
                 protobuf = std::make_unique<CommunicationProtobuf>();
                 break;
             }
 
-            case ProtobufIndex::LORA_TX: {
+            case ProtobufIndex::LORATRANSMIT: {
                 protobuf = std::make_unique<CommunicationProtobuf>();
                 break;
             }
 
-            case ProtobufIndex::LORA_RX: {
+            case ProtobufIndex::LORARECEIVE: {
                 protobuf = std::make_unique<CommunicationProtobuf>();
                 break;
             }
 
-            case ProtobufIndex::MQTT_URI: {
+            case ProtobufIndex::MQTTURI: {
                 protobuf = std::make_unique<MQTTUriProtobuf>();
                 break;
             }
 
-            case ProtobufIndex::WATER_LEVEL: {
+            case ProtobufIndex::WATERLEVEL: {
                 protobuf = std::make_unique<WaterLevelProtobuf>();
                 break;
             }

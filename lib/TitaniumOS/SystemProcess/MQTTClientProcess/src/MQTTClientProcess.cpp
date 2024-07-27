@@ -64,7 +64,7 @@ void MQTTClientProcess::Execute(void) {
 
     while (1) {
         do {
-            this->_shared_memory_manager.get()->Read(ProtobufIndex::CONNECTION,
+            this->_shared_memory_manager.get()->Read(ProtobufIndex::CONNECTIONSTATUS,
                                                      this->_connection_status);
 
             auto ap_changed =

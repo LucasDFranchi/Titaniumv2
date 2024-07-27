@@ -15,7 +15,7 @@ void WaterLevelProcess::Execute(void) {
         water_level_proto.UpdateValue(counter);
         counter += 1;
 
-        this->_shared_memory_manager.get()->Write(ProtobufIndex::WATER_LEVEL, water_level_proto);
+        this->_shared_memory_manager.get()->Write(ProtobufIndex::WATERLEVEL, water_level_proto);
 
         vTaskDelay(pdMS_TO_TICKS(10000));
     }

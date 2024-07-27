@@ -157,7 +157,7 @@ void NetworkProcess::Execute(void) {
         }
 
         if (this->_need_update_network_data) {
-            shared_memory_manager->Write(ProtobufIndex::CONNECTION, this->_connection_proto);
+            shared_memory_manager->Write(ProtobufIndex::CONNECTIONSTATUS, this->_connection_proto);
             this->_need_update_network_data = 0;
         }
         vTaskDelay(pdMS_TO_TICKS(1000));

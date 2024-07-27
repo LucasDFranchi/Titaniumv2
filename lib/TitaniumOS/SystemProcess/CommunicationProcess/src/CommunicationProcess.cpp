@@ -73,8 +73,8 @@ void CommunicationProcess::Execute(void) {
         auto received_bytes = this->_driver.get()->Read(this->_buffer.get());
 
         if (received_bytes == 0) {
-            if (this->_shared_memory_manager->IsAreaDataUpdated(ProtobufIndex::LORA_TRANSMIT)) {
-                this->_shared_memory_manager->Read(ProtobufIndex::LORA_TRANSMIT, *this->_transmit_proto);
+            if (this->_shared_memory_manager->IsAreaDataUpdated(ProtobufIndex::LORATRANSMIT)) {
+                this->_shared_memory_manager->Read(ProtobufIndex::LORATRANSMIT, *this->_transmit_proto);
 
                 auto package              = this->GenerateTransmitPackage(*this->_transmit_proto);
                 auto response_buffer_size = this->_protocol->Encode(package, this->_buffer.get(), this->_driver.get()->buffer_size());
@@ -240,7 +240,7 @@ esp_err_t CommunicationProcess::ProcessReadPackage(std::unique_ptr<TitaniumPacka
 
         this->_transmit_proto->UpdateAddress(this->_address);
         this->_transmit_proto->UpdateCommand(READ_RESPONSE_COMMAND);
-        this->_transmit_proto->UpdateMemoryArea(ProtobufIndex::LORA_RECEIVE);
+        this->_transmit_proto->UpdateMemoryArea(ProtobufIndex::LORARECEIVE);
         this->_transmit_proto->UpdatePayload(response_buffer, response_buffer_size);
 
         auto response_package = this->GenerateTransmitPackage(*this->_transmit_proto);

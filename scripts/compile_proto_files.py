@@ -42,10 +42,10 @@ template_str_protobuf_factory = """
 #include "esp_log.h"
 #include <memory>
 
-{% for memory_area in memory_areas -%}
-#include "{{ memory_area.package_name }}Proto.h"
+#include "ProtobufIndex.h"
+{% for include in include_list -%}
+#include "{{ include }}Proto.h"
 {% endfor %}
-
 class ProtobufFactory {
    public:
     static std::unique_ptr<IProtobuf> CreateProtobuf(uint16_t proto_index) {
@@ -80,7 +80,7 @@ def generate_proto_files(root_dir, memory_area):
         memory_area (dict): The memory area definition containing protobuf details.
     """
     tp = TitaniumFileGenerator()
-    tp.import_and_parse_proto_file(raw_data = memory_area.get("protobuf"))
+    tp.import_and_parse_proto_file(raw_data = memory_area)
     tp.generate_header_file(f"{root_dir}/lib/TitaniumOS/Protocols/Protobuf/inc/", True, "Libraries/JSON/jsmn/")
     
 
@@ -103,20 +103,23 @@ if __name__ == "__main__":
     root_directory = './'
     protobuf_index = {"memory_areas": []}
     last_index = 0
+    includes_list = []
     
     firmware_definition = load_firmware_definitions("firmware_definitions.json")
     
-    for key, value in firmware_definition.get("memory_areas", {}).items():
+    for value in firmware_definition.get("memory_areas", []):
         generate_proto_files(root_directory, value)
         protobuf_index["memory_areas"].append({
-            "name": key,
+            "name": value.get("name"),
             "description": value.get("description"),
             "index": value.get("index"),
-            "package_name": value.get("protobuf").get("package")
+            "package_name": value.get("package")
         })
+        includes_list.append(value.get("package"))
         last_index += 1
     
     protobuf_index["last_index"] = last_index
+    protobuf_index["include_list"] = set(includes_list)
     
     template = Template(template_str_protobuf_index) 
     output_index = template.render(protobuf_index)

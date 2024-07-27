@@ -21,37 +21,37 @@ namespace ProtobufIndex {
     /**
      * @brief Index for connection area.
      */
-    constexpr int8_t CONNECTION = 2;
+    constexpr int8_t CONNECTIONSTATUS = 2;
 
     /**
      * @brief Index for UART transmit area.
      */
-    constexpr int8_t UART_TX = 3;
+    constexpr int8_t UARTTRANSMIT = 3;
 
     /**
      * @brief Index for UART received area.
      */
-    constexpr int8_t UART_RX = 4;
+    constexpr int8_t UARTRECEIVE = 4;
 
     /**
      * @brief Index for LoRa transmit area.
      */
-    constexpr int8_t LORA_TX = 5;
+    constexpr int8_t LORATRANSMIT = 5;
 
     /**
      * @brief Index for LoRa received area.
      */
-    constexpr int8_t LORA_RX = 6;
+    constexpr int8_t LORARECEIVE = 6;
 
     /**
      * @brief Index for MQTT uri area.
      */
-    constexpr int8_t MQTT_URI = 7;
+    constexpr int8_t MQTTURI = 7;
 
     /**
-     * @brief None
+     * @brief Index for Water Level custom process area.
      */
-    constexpr int8_t WATER_LEVEL = 8;
+    constexpr int8_t WATERLEVEL = 8;
 
     /**
     * @brief The index of the last memory area

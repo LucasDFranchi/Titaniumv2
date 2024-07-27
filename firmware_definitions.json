@@ -4,177 +4,170 @@
         "version": "0.0.0",
         "description": "A brief description of what this firmware does.",
         "author": "Titanium",
-        "memory_areas": {
-            "credentials": {
+        "memory_areas": [
+            {
                 "index": 1,
+                "name": "Credentials",
+                "package": "Credentials",
                 "description": "Index for credentials area.",
-                "protobuf": {
-                    "package": "Credentials",
-                    "fields": [
-                        {
-                            "type": "string",
-                            "name": "ssid",
-                            "maximum_size": 32
-                        },
-                        {
-                            "type": "string",
-                            "name": "password",
-                            "maximum_size": 64
-                        }
-                    ]
-                }
+                "fields": [
+                    {
+                        "type": "string",
+                        "name": "ssid",
+                        "maximum_size": 32
+                    },
+                    {
+                        "type": "string",
+                        "name": "password",
+                        "maximum_size": 64
+                    }
+                ]
             },
-            "connection": {
+            {
                 "index": 2,
+                "name": "ConnectionStatus",
+                "package": "ConnectionStatus",
                 "description": "Index for connection area.",
-                "protobuf": {
-                    "package": "ConnectionStatus",
-                    "fields": [
-                        {
-                            "type": "uint8_t",
-                            "name": "ap_status"
-                        },
-                        {
-                            "type": "uint8_t",
-                            "name": "sta_status"
-                        }
-                    ]
-                }
+                "fields": [
+                    {
+                        "type": "uint8_t",
+                        "name": "ap_status"
+                    },
+                    {
+                        "type": "uint8_t",
+                        "name": "sta_status"
+                    }
+                ]
             },
-            "uart_tx": {
+            {
                 "index": 3,
+                "name": "UARTTransmit",
+                "package": "Communication",
                 "description": "Index for UART transmit area.",
-                "protobuf": {
-                    "package": "Communication",
-                    "fields": [
-                        {
-                            "type": "uint8_t",
-                            "name": "command"
-                        },
-                        {
-                            "type": "uint16_t",
-                            "name": "address"
-                        },
-                        {
-                            "type": "uint8_t",
-                            "name": "memory_area"
-                        },
-                        {
-                            "type": "string",
-                            "name": "payload",
-                            "maximum_size": 1024
-                        }
-                    ]
-                }
+                "fields": [
+                    {
+                        "type": "uint8_t",
+                        "name": "command"
+                    },
+                    {
+                        "type": "uint16_t",
+                        "name": "address"
+                    },
+                    {
+                        "type": "uint8_t",
+                        "name": "memory_area"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payload",
+                        "maximum_size": 128
+                    }
+                ]
             },
-            "uart_rx": {
+            {
                 "index": 4,
+                "name": "UARTReceive",
+                "package": "Communication",
                 "description": "Index for UART received area.",
-                "protobuf": {
-                    "package": "Communication",
-                    "fields": [
-                        {
-                            "type": "uint8_t",
-                            "name": "command"
-                        },
-                        {
-                            "type": "uint16_t",
-                            "name": "address"
-                        },
-                        {
-                            "type": "uint8_t",
-                            "name": "memory_area"
-                        },
-                        {
-                            "type": "string",
-                            "name": "payload",
-                            "maximum_size": 1024
-                        }
-                    ]
-                }
+                "fields": [
+                    {
+                        "type": "uint8_t",
+                        "name": "command"
+                    },
+                    {
+                        "type": "uint16_t",
+                        "name": "address"
+                    },
+                    {
+                        "type": "uint8_t",
+                        "name": "memory_area"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payload",
+                        "maximum_size": 128
+                    }
+                ]
             },
-            "lora_tx": {
+            {
                 "index": 5,
+                "name": "LoraTransmit",
+                "package": "Communication",
                 "description": "Index for LoRa transmit area.",
-                "protobuf": {
-                    "package": "Communication",
-                    "fields": [
-                        {
-                            "type": "uint8_t",
-                            "name": "command"
-                        },
-                        {
-                            "type": "uint16_t",
-                            "name": "address"
-                        },
-                        {
-                            "type": "uint8_t",
-                            "name": "memory_area"
-                        },
-                        {
-                            "type": "string",
-                            "name": "payload",
-                            "maximum_size": 256
-                        }
-                    ]
-                }
+                "fields": [
+                    {
+                        "type": "uint8_t",
+                        "name": "command"
+                    },
+                    {
+                        "type": "uint16_t",
+                        "name": "address"
+                    },
+                    {
+                        "type": "uint8_t",
+                        "name": "memory_area"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payload",
+                        "maximum_size": 256
+                    }
+                ]
             },
-            "lora_rx": {
+            {
                 "index": 6,
+                "name": "LoraReceive",
+                "package": "Communication",
                 "description": "Index for LoRa received area.",
-                "protobuf": {
-                    "package": "Communication",
-                    "fields": [
-                        {
-                            "type": "uint8_t",
-                            "name": "command"
-                        },
-                        {
-                            "type": "uint16_t",
-                            "name": "address"
-                        },
-                        {
-                            "type": "uint8_t",
-                            "name": "memory_area"
-                        },
-                        {
-                            "type": "string",
-                            "name": "payload",
-                            "maximum_size": 256
-                        }
-                    ]
-                }
+                "fields": [
+                    {
+                        "type": "uint8_t",
+                        "name": "command"
+                    },
+                    {
+                        "type": "uint16_t",
+                        "name": "address"
+                    },
+                    {
+                        "type": "uint8_t",
+                        "name": "memory_area"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payload",
+                        "maximum_size": 256
+                    }
+                ]
             },
-            "mqtt_uri": {
+            {
                 "index": 7,
+                "name": "MQTTUri",
+                "package": "MQTTUri",
                 "description": "Index for MQTT uri area.",
-                "protobuf": {
-                    "package": "MQTTUri",
-                    "fields": [
-                        {
-                            "type": "string",
-                            "name": "mqtt_uri",
-                            "maximum_size": 256
-                        }
-                    ]
-                }
+                "fields": [
+                    {
+                        "type": "string",
+                        "name": "mqtt_uri",
+                        "maximum_size": 256
+                    }
+                ]
             },
-            "water_level": {
+            {
                 "index": 8,
-                "protobuf": {
-                    "package": "WaterLevel",
-                    "fields": [
-                        {
-                            "type": "uint64_t",
-                            "name": "timestamp"
-                        },
-                        {
-                            "type": "uint32_t",
-                            "name": "value"
-                        }
-                    ]
-                }
-            }       
-        }
+                "name": "WaterLevel",
+                "package": "WaterLevel",
+                "description": "Index for Water Level custom process area.",
+                "fields": [
+                    {
+                        "type": "uint64_t",
+                        "name": "timestamp"
+                    },
+                    {
+                        "type": "uint32_t",
+                        "name": "value"
+                    }
+                ]
+            }
+        ]
     }
 }

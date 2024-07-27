@@ -68,7 +68,6 @@ public:
         }
 
         uint16_t deserialized_min_size = sizeof(this->_ap_status) + sizeof(this->_sta_status) + 0;
-        uint16_t deserialized_max_size = sizeof(this->_ap_status) + sizeof(this->_sta_status);
 
         if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;

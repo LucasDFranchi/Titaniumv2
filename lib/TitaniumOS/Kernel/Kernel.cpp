@@ -45,7 +45,7 @@ esp_err_t Kernel::EnableNetworkProcess(uint32_t process_stack, uint8_t process_p
     this->_network_process = new NetworkProcess("Network Proccess", process_stack, process_priority);  // 10240 4
 
     result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::CREDENTIALS, CredentialsProtobuf::GetStaticMaxSize(), READ_WRITE);
-    result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::CONNECTION, ConnectionStatusProtobuf::GetStaticMaxSize(), READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::CONNECTIONSTATUS, ConnectionStatusProtobuf::GetStaticMaxSize(), READ_WRITE);
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
     }
@@ -87,7 +87,7 @@ esp_err_t Kernel::EnableUartProcess(uint32_t process_stack, uint8_t process_prio
     this->_uart_communication_process->InstallDriver(new UARTDriver(UART_NUM_0, Baudrate::BaudRate115200, 1024));
     this->_uart_communication_process->Configure(0x0000);
 
-    result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::UART_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::UARTTRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
 
     this->_uart_communication_process->InitializeProcess();
 
@@ -118,7 +118,7 @@ esp_err_t Kernel::EnableLoraProcess(uint32_t process_stack, uint8_t process_prio
         this->_lora_communication_process->InstallDriver(new LoRaDriver(Regions::BRAZIL,  CRCMode::DISABLE, 255));
         this->_lora_communication_process->Configure(0x0000);
 
-        result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::LORA_TRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
+        result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::LORATRANSMIT, CommunicationProtobuf::GetStaticMaxSize(), READ_WRITE);
 
         this->_lora_communication_process->InitializeProcess();
 
@@ -143,7 +143,7 @@ esp_err_t Kernel::EnableMQTTClientProcess(uint32_t process_stack, uint8_t proces
 
     do {
         this->_mqtt_client_process = new MQTTClientProcess("MQTT Client Proccess", process_stack, process_priority);
-        result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::MQTT, MQTTClientProtobuf::GetStaticMaxSize(), READ_WRITE);
+        result += this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::MQTTURI, MQTTUriProtobuf::GetStaticMaxSize(), READ_WRITE);
         this->_mqtt_client_process->InitializeProcess();
 
     } while (0);

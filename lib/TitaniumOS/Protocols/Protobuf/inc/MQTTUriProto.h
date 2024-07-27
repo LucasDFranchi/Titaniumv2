@@ -96,7 +96,6 @@ public:
         }
 
         uint16_t deserialized_min_size =  + 1;
-        uint16_t deserialized_max_size = sizeof(this->_mqtt_uri);
 
         if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
