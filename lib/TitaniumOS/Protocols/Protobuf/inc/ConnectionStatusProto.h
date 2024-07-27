@@ -82,7 +82,6 @@ public:
 
         return PROTO_NO_ERROR;
     }
-
     int32_t SerializeJson(char* out_buffer, uint16_t out_buffer_size) {
         uint32_t response_length = 0;
 

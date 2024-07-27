@@ -1,5 +1,6 @@
-#ifndef MANAGERS_AREA_INDEX_H
-#define MANAGERS_AREA_INDEX_H
+
+#ifndef PROTOBUF_INDEX_H
+#define PROTOBUF_INDEX_H
 
 #include "stdint.h"
 
@@ -8,45 +9,55 @@
  */
 namespace ProtobufIndex {
     /**
-     * @brief Invalid index.
-     */
+    * @brief Invalid index.
+    */
     constexpr int8_t INVALID = -1;
 
     /**
      * @brief Index for credentials area.
      */
-    constexpr int8_t CREDENTIALS = 0;
+    constexpr int8_t CREDENTIALS = 1;
 
     /**
      * @brief Index for connection area.
      */
-    constexpr int8_t CONNECTION = 1;
+    constexpr int8_t CONNECTION = 2;
 
     /**
      * @brief Index for UART transmit area.
      */
-    constexpr int8_t UART_TRANSMIT = 2;
+    constexpr int8_t UART_TX = 3;
+
+    /**
+     * @brief Index for UART received area.
+     */
+    constexpr int8_t UART_RX = 4;
 
     /**
      * @brief Index for LoRa transmit area.
      */
-    constexpr int8_t LORA_TRANSMIT = 3;
+    constexpr int8_t LORA_TX = 5;
 
     /**
-     * @brief Index for LoRa receive area.
+     * @brief Index for LoRa received area.
      */
-    constexpr int8_t LORA_RECEIVE = 4;
+    constexpr int8_t LORA_RX = 6;
 
     /**
-     * @brief Index for MQTT area.
+     * @brief Index for MQTT uri area.
      */
-    constexpr int8_t MQTT = 5;
+    constexpr int8_t MQTT_URI = 7;
 
     /**
-     * @brief Invalid index.
+     * @brief None
      */
-    constexpr int8_t WATER_LEVEL = 6;
+    constexpr int8_t WATER_LEVEL = 8;
+
+    /**
+    * @brief The index of the last memory area
+    */
+    constexpr int8_t LAST_MEMORY_AREA_INDEX = 8;
+
 }  // namespace ProtobufIndex
-
 
 #endif /* PROTOBUF_INDEX_H */

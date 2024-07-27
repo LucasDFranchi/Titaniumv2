@@ -70,7 +70,7 @@ public:
         uint16_t deserialized_min_size = sizeof(this->_timestamp) + sizeof(this->_value) + 0;
         uint16_t deserialized_max_size = sizeof(this->_timestamp) + sizeof(this->_value);
 
-        if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
+        if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
 

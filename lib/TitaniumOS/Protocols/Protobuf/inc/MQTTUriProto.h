@@ -1,73 +1,73 @@
 /**
- * @file MQTTClientProtobuf.h
+ * @file MQTTUriProtobuf.h
  * @brief Auto-generated header file generated.
  */
 
-#ifndef MQTTCLIENT_PROTO_H
-#define MQTTCLIENT_PROTO_H
+#ifndef MQTTURI_PROTO_H
+#define MQTTURI_PROTO_H
 
 #include "stdint.h"
 #include "string.h"
 #include "Libraries/JSON/jsmn/jsmn.h"
 #include "IProtobuf.h"
 
-class MQTTClientProtobuf : public IProtobuf {
+class MQTTUriProtobuf : public IProtobuf {
 public:
-    MQTTClientProtobuf() = default;
-    ~MQTTClientProtobuf() = default;
+    MQTTUriProtobuf() = default;
+    ~MQTTUriProtobuf() = default;
 
-    static constexpr uint16_t BROKER_URI_SIZE = 128;
+    static constexpr uint16_t MQTT_URI_SIZE = 256;
 
-    const char* GetBrokerUri(void) const { return this->_broker_uri; }
+    const char* GetMqttUri(void) const { return this->_mqtt_uri; }
 
     int16_t GetSerializedSize(void) const {
-        return ((strlen(this->_broker_uri) + 1));
+        return ((strlen(this->_mqtt_uri) + 1));
     }
 
     int16_t GetMaxSize(void) const {
-        return (sizeof(this->_broker_uri));
+        return (sizeof(this->_mqtt_uri));
     }
 
     static int16_t GetStaticMaxSize(void) {
-        return (BROKER_URI_SIZE);
+        return (MQTT_URI_SIZE);
     }
 
-    int8_t UpdateBrokerUri(const char* value) {
+    int8_t UpdateMqttUri(const char* value) {
         if (value == nullptr) {
             return PROTO_INVAL_PTR;
         }
 
         size_t value_length = strlen(value) + 1;
 
-        if ((value_length == 0) || BROKER_URI_SIZE == 0) {
+        if ((value_length == 0) || MQTT_URI_SIZE == 0) {
             return PROTO_OVERFLOW;
         }
 
-        if (value_length > BROKER_URI_SIZE) {
+        if (value_length > MQTT_URI_SIZE) {
             return PROTO_INVAL_SIZE;
         }
 
-        memset(this->_broker_uri, 0, BROKER_URI_SIZE);
-        memcpy(this->_broker_uri, value, value_length);
+        memset(this->_mqtt_uri, 0, MQTT_URI_SIZE);
+        memcpy(this->_mqtt_uri, value, value_length);
 
         return PROTO_NO_ERROR;
     }
 
-    int8_t UpdateBrokerUri(const char* value, uint16_t string_size) {
+    int8_t UpdateMqttUri(const char* value, uint16_t string_size) {
         if (value == nullptr) {
             return PROTO_INVAL_PTR;
         }
 
-        if (BROKER_URI_SIZE == 0) {
+        if (MQTT_URI_SIZE == 0) {
             return PROTO_OVERFLOW;
         }
 
-        if (string_size > BROKER_URI_SIZE) {
+        if (string_size > MQTT_URI_SIZE) {
             return PROTO_INVAL_SIZE;
         }
 
-        memset(this->_broker_uri, 0, BROKER_URI_SIZE);
-        memcpy(this->_broker_uri, value, string_size);
+        memset(this->_mqtt_uri, 0, MQTT_URI_SIZE);
+        memcpy(this->_mqtt_uri, value, string_size);
 
         return PROTO_NO_ERROR;
     }
@@ -77,7 +77,7 @@ public:
             return 0;
         }
 
-        uint16_t serialized_size = (strlen(this->_broker_uri) + 1);
+        uint16_t serialized_size = (strlen(this->_mqtt_uri) + 1);
 
         if (out_buffer_size < serialized_size) {
             return 0;
@@ -85,7 +85,7 @@ public:
 
         uint16_t offset = 0;
 
-        memcpy(&out_buffer[offset], this->_broker_uri, strlen(this->_broker_uri) + 1);
+        memcpy(&out_buffer[offset], this->_mqtt_uri, strlen(this->_mqtt_uri) + 1);
 
         return serialized_size;
     }
@@ -96,16 +96,16 @@ public:
         }
 
         uint16_t deserialized_min_size =  + 1;
-        uint16_t deserialized_max_size = sizeof(this->_broker_uri);
+        uint16_t deserialized_max_size = sizeof(this->_mqtt_uri);
 
-        if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
+        if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
 
-        memset(this->_broker_uri, 0, BROKER_URI_SIZE);
+        memset(this->_mqtt_uri, 0, MQTT_URI_SIZE);
 
         uint16_t offset = 0;
-        memcpy(this->_broker_uri, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
+        memcpy(this->_mqtt_uri, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
 
         return PROTO_NO_ERROR;
     }
@@ -117,7 +117,7 @@ public:
                 break;
             }
 
-            uint16_t serialized_size = (strlen(this->_broker_uri) + 1);
+            uint16_t serialized_size = (strlen(this->_mqtt_uri) + 1);
 
             if (out_buffer_size < serialized_size) {
                 return 0;
@@ -125,7 +125,7 @@ public:
 
             response_length = snprintf(out_buffer, out_buffer_size,
                                        this->_json_string,
-                                       this->_broker_uri);
+                                       this->_mqtt_uri);
         } while (0);
 
         return response_length;
@@ -155,16 +155,16 @@ public:
             jsmntok_t value{};
             uint16_t token_length = 0;
 
-            key   = tokens[this->_BROKER_URI_TOKEN_ID];
-            value = tokens[this->_BROKER_URI_TOKEN_ID + 1];
+            key   = tokens[this->_MQTT_URI_TOKEN_ID];
+            value = tokens[this->_MQTT_URI_TOKEN_ID + 1];
             token_length = key.end - key.start;
 
-            if (strncmp(in_buffer + key.start, this->_BROKER_URI_TOKEN_NAME, token_length) != 0) {
+            if (strncmp(in_buffer + key.start, this->_MQTT_URI_TOKEN_NAME, token_length) != 0) {
                 result = PROTO_INVAL_JSON_KEY;
                 break;
             }
 
-            this->UpdateBrokerUri(in_buffer + value.start, value.end - value.start);
+            this->UpdateMqttUri(in_buffer + value.start, value.end - value.start);
 
             result = PROTO_NO_ERROR;
 
@@ -174,12 +174,12 @@ public:
     }
 
 private:
-    char _broker_uri[128] = {0};
+    char _mqtt_uri[256] = {0};
     const char* _json_string = R"({
-    "broker_uri": "%s"
+    "mqtt_uri": "%s"
 })";  
-    const char* _BROKER_URI_TOKEN_NAME = "broker_uri";
-    const uint8_t _BROKER_URI_TOKEN_ID = 1;
+    const char* _MQTT_URI_TOKEN_NAME = "mqtt_uri";
+    const uint8_t _MQTT_URI_TOKEN_ID = 1;
     const uint8_t _NUM_TOKENS  = 3;
 };
-#endif /* MQTTCLIENT_PROTO_H */
+#endif /* MQTTURI_PROTO_H */
