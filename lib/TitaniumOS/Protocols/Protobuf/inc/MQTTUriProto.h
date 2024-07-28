@@ -77,15 +77,20 @@ public:
             return 0;
         }
 
-        uint16_t serialized_size = (strlen(this->_mqtt_uri) + 1);
+        uint16_t serialized_size = (strlen(this->_mqtt_uri) + 1) + 1;
 
         if (out_buffer_size < serialized_size) {
             return 0;
         }
 
-        uint16_t offset = 0;
+        auto result = snprintf(out_buffer, out_buffer_size,"%s",this->_mqtt_uri);
 
-        memcpy(&out_buffer[offset], this->_mqtt_uri, strlen(this->_mqtt_uri) + 1);
+        if (result > out_buffer_size) {
+            serialized_size = 0;
+        }
+        else if (result == 0) {
+            serialized_size = 0;
+        }
 
         return serialized_size;
     }
@@ -96,15 +101,16 @@ public:
         }
 
         uint16_t deserialized_min_size =  + 1;
-
+        
         if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
-
+        
         memset(this->_mqtt_uri, 0, MQTT_URI_SIZE);
-
+        
         uint16_t offset = 0;
-        memcpy(this->_mqtt_uri, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
+        char* token = strtok(const_cast<char*>(in_buffer), "|");
+        strncpy(this->_mqtt_uri, token, 256);
 
         return PROTO_NO_ERROR;
     }

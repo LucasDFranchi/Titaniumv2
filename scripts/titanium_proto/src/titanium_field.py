@@ -38,6 +38,7 @@ class TitaniumField:
         field_dict["token_name"] = self.token_name
         field_dict["token_id"] = self._token_id
         field_dict["format_specifier"] = self.format_specifier
+        field_dict["format_raw"] = self.format_specifier_raw
         
         return field_dict   
 
@@ -129,6 +130,24 @@ class TitaniumField:
             "float": "%f",
             "double": "%lf",
             "string": "\"%s\"",
+        }
+        
+        return type_map.get(self.type_name, None)
+        
+    @property
+    def format_specifier_raw(self):
+        type_map = {
+            "uint8_t": "%u",
+            "int8_t": "%d",
+            "uint16_t": "%u",
+            "int16_t": "%d",
+            "uint32_t": "%u",
+            "int32_t": "%d",
+            "uint64_t": "%llu",
+            "int64_t": "%lld",
+            "float": "%f",
+            "double": "%lf",
+            "string": "%s",
         }
     
         return type_map.get(self.type_name, None)

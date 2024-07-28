@@ -119,17 +119,20 @@ public:
             return 0;
         }
 
-        uint16_t serialized_size = (strlen(this->_ssid) + 1) + (strlen(this->_password) + 1);
+        uint16_t serialized_size = (strlen(this->_ssid) + 1) + (strlen(this->_password) + 1) + 2;
 
         if (out_buffer_size < serialized_size) {
             return 0;
         }
 
-        uint16_t offset = 0;
+        auto result = snprintf(out_buffer, out_buffer_size,"%s|%s",this->_ssid, this->_password);
 
-        memcpy(&out_buffer[offset], this->_ssid, strlen(this->_ssid) + 1);
-        offset += strlen(this->_ssid) + 1;
-        memcpy(&out_buffer[offset], this->_password, strlen(this->_password) + 1);
+        if (result > out_buffer_size) {
+            serialized_size = 0;
+        }
+        else if (result == 0) {
+            serialized_size = 0;
+        }
 
         return serialized_size;
     }
@@ -140,18 +143,19 @@ public:
         }
 
         uint16_t deserialized_min_size =  + 2;
-
+        
         if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
-
+        
         memset(this->_ssid, 0, SSID_SIZE);
         memset(this->_password, 0, PASSWORD_SIZE);
-
+        
         uint16_t offset = 0;
-        memcpy(this->_ssid, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
-        offset += strlen(&in_buffer[offset]) + 1;
-        memcpy(this->_password, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
+        char* token = strtok(const_cast<char*>(in_buffer), "|");
+        strncpy(this->_ssid, token, 32);
+        token = strtok(nullptr, "|");
+        strncpy(this->_password, token, 64);
 
         return PROTO_NO_ERROR;
     }

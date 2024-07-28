@@ -29,6 +29,14 @@ void test_Write() {
     connection_status_proto.UpdateApStatus(1);
     connection_status_proto.UpdateStaStatus(1);
 
+    // uint8_t buffer[126] = 
+
+    // CommunicationProtobuf communication_proto{};
+    // communication_proto.UpdateAddress(0x1015);
+    // communication_proto.UpdateCommand('R');
+    // communication_proto.UpdateMemoryArea(MOCK_AREA_INDEX);
+    // communication_proto.UpdatePayload()
+
     // /* I need to do a dummy write to initialize the area */
     // auto result = shared_memory_manager->Write(MOCK_AREA_INDEX, connection_status_proto);
     // TEST_ASSERT_EQUAL(0, result);

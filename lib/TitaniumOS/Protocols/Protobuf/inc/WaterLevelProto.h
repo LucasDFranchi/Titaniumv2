@@ -47,17 +47,20 @@ public:
             return 0;
         }
 
-        uint16_t serialized_size = sizeof(this->_timestamp) + sizeof(this->_value);
+        uint16_t serialized_size = sizeof(this->_timestamp) + sizeof(this->_value) + 2;
 
         if (out_buffer_size < serialized_size) {
             return 0;
         }
 
-        uint16_t offset = 0;
+        auto result = snprintf(out_buffer, out_buffer_size,"%llu|%u",this->_timestamp, this->_value);
 
-        memcpy(&out_buffer[offset], &this->_timestamp, sizeof(this->_timestamp));
-        offset += sizeof(this->_timestamp);
-        memcpy(&out_buffer[offset], &this->_value, sizeof(this->_value));
+        if (result > out_buffer_size) {
+            serialized_size = 0;
+        }
+        else if (result == 0) {
+            serialized_size = 0;
+        }
 
         return serialized_size;
     }
@@ -68,16 +71,17 @@ public:
         }
 
         uint16_t deserialized_min_size = sizeof(this->_timestamp) + sizeof(this->_value) + 0;
-
+        
         if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
-
-
+        
+        
         uint16_t offset = 0;
-        memcpy(&this->_timestamp, &in_buffer[offset], sizeof(this->_timestamp));
-        offset += sizeof(this->_timestamp);
-        memcpy(&this->_value, &in_buffer[offset], sizeof(this->_value));
+        char* token = strtok(const_cast<char*>(in_buffer), "|");
+        this->_timestamp = atoi(token);
+        token = strtok(nullptr, "|");
+        this->_value = atoi(token);
 
         return PROTO_NO_ERROR;
     }

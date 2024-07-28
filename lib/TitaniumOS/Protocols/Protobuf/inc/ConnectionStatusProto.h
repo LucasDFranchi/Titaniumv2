@@ -47,17 +47,20 @@ public:
             return 0;
         }
 
-        uint16_t serialized_size = sizeof(this->_ap_status) + sizeof(this->_sta_status);
+        uint16_t serialized_size = sizeof(this->_ap_status) + sizeof(this->_sta_status) + 2;
 
         if (out_buffer_size < serialized_size) {
             return 0;
         }
 
-        uint16_t offset = 0;
+        auto result = snprintf(out_buffer, out_buffer_size,"%u|%u",this->_ap_status, this->_sta_status);
 
-        memcpy(&out_buffer[offset], &this->_ap_status, sizeof(this->_ap_status));
-        offset += sizeof(this->_ap_status);
-        memcpy(&out_buffer[offset], &this->_sta_status, sizeof(this->_sta_status));
+        if (result > out_buffer_size) {
+            serialized_size = 0;
+        }
+        else if (result == 0) {
+            serialized_size = 0;
+        }
 
         return serialized_size;
     }
@@ -68,16 +71,17 @@ public:
         }
 
         uint16_t deserialized_min_size = sizeof(this->_ap_status) + sizeof(this->_sta_status) + 0;
-
+        
         if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
-
-
+        
+        
         uint16_t offset = 0;
-        memcpy(&this->_ap_status, &in_buffer[offset], sizeof(this->_ap_status));
-        offset += sizeof(this->_ap_status);
-        memcpy(&this->_sta_status, &in_buffer[offset], sizeof(this->_sta_status));
+        char* token = strtok(const_cast<char*>(in_buffer), "|");
+        this->_ap_status = atoi(token);
+        token = strtok(nullptr, "|");
+        this->_sta_status = atoi(token);
 
         return PROTO_NO_ERROR;
     }

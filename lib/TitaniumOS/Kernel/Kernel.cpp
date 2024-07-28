@@ -29,8 +29,6 @@ void Kernel::InitializeHAL(void) {
     if (this->_spi_manager->Initialize(GPIO_NUM_27, GPIO_NUM_19, GPIO_NUM_5) == ESP_OK) {
         this->_spi_initialized = true;
     }
-
-    // ESP_ERROR_CHECK(this->_shared_memory_manager->SignUpSharedArea(ProtobufIndex::SCRATCH, 128, READ_WRITE));
 }
 
 /**

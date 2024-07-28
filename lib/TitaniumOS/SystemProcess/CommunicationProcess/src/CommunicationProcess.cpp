@@ -271,10 +271,19 @@ esp_err_t CommunicationProcess::ProcessWritePackage(std::unique_ptr<TitaniumPack
             break;
         }
 
-        package.get()->Consume(reinterpret_cast<uint8_t*>(response_buffer));
+        auto raw_size = package.get()->Consume(reinterpret_cast<uint8_t*>(response_buffer));
+        for (uint8_t i = 0; i < 200; i++) {
+            ESP_LOGI("Communication Process", "JSON %d: %c", i, response_buffer[i]);
+        }
+        if (raw_size == 0) {
+            ESP_LOGI("Communication Process", "Error");
+            // Add a error for wrong package generation
+            break;
+        }
+
 
         auto response_buffer_size = protobuf->DeSerializeJson(response_buffer, sizeof(response_buffer));
-        if (response_buffer_size > 0) {
+        if (response_buffer_size != ESP_OK) {
             // Add a error for wrong package generation
             break;
         }

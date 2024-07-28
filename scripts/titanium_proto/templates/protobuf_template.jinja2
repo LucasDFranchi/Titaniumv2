@@ -94,26 +94,22 @@ public:
             return 0;
         }
 
-        uint16_t serialized_size = {{ proto.serialized_size }};
+        uint16_t serialized_size = {{ proto.serialized_size }} + {{ proto.num_var }};
 
         if (out_buffer_size < serialized_size) {
             return 0;
         }
 
-        uint16_t offset = 0;
-{% for field in fields -%}
-{%- if field.is_array %}
-        memcpy(&out_buffer[offset], this->{{ field.internal_name }}, strlen(this->{{ field.internal_name }}) + 1);
-{%- if not loop.last %}
-        offset += strlen(this->{{ field.internal_name }}) + 1;
-{%- endif %}
-{%- else %}
-        memcpy(&out_buffer[offset], &this->{{ field.internal_name }}, sizeof(this->{{ field.internal_name }}));
-{%- if not loop.last %}
-        offset += sizeof(this->{{ field.internal_name }});
-{%- endif %}
-{%- endif %}
-{%- endfor %}
+        auto result = snprintf(out_buffer, out_buffer_size,"
+        {%- for field in fields %}{{ field.format_raw }}{% if not loop.last -%}|{% endif -%}{%- endfor %}", 
+        {%- for field in fields %}this->{{ field.internal_name }}{% if not loop.last -%}, {% endif -%}{%- endfor %});
+
+        if (result > out_buffer_size) {
+            serialized_size = 0;
+        }
+        else if (result == 0) {
+            serialized_size = 0;
+        }
 
         return serialized_size;
     }
@@ -124,29 +120,30 @@ public:
         }
 
         uint16_t deserialized_min_size = {{ proto.minimum_size }};
-
+        
         if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
-{% for field in fields -%}
-{%- if field.is_array %}
+        {% for field in fields -%}
+        {%- if field.is_array %}
         memset(this->{{ field.internal_name }}, 0, {{ field.defined_size }});
-{%- endif %}
-{%- endfor %}
-
+        {%- endif %}
+        {%- endfor %}
+        
         uint16_t offset = 0;
+        char* token = strtok(const_cast<char*>(in_buffer), "|");
 
 {%- for field in fields %}
 {%- if field.is_array %}
-        memcpy(this->{{ field.internal_name }}, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
-{%- if not loop.last %}
-        offset += strlen(&in_buffer[offset]) + 1;
+{%- if not loop.first %}
+        token = strtok(nullptr, "|");
 {%- endif %}
+        strncpy(this->{{ field.internal_name }}, token, {{ field.size }});
 {%- else %}
-        memcpy(&this->{{ field.internal_name }}, &in_buffer[offset], sizeof(this->{{ field.internal_name }}));
-{%- if not loop.last %}
-        offset += sizeof(this->{{ field.internal_name }});
+{%- if not loop.first %}
+        token = strtok(nullptr, "|");
 {%- endif %}
+        this->{{ field.internal_name }} = atoi(token);
 {%- endif %}
 {%- endfor %}
 

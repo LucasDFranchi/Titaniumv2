@@ -1,6 +1,6 @@
 import json
 
-from jinja2 import Template
+from jinja2 import Template, Environment, FileSystemLoader
 
 from .titanium_field import TitaniumField
 
@@ -281,7 +281,9 @@ class TitaniumFileGenerator:
         self._package_name = None
         self._fields = []
 
-        self._template = Template(template_string)
+        # self._template = Template(template_string)
+        self._env = Environment(loader=FileSystemLoader("./scripts/titanium_proto/templates/"))
+        self._template = self._env.get_template("protobuf_template.jinja2")
 
     def _read_file(self, filepath: str):
         """
@@ -374,6 +376,7 @@ class TitaniumFileGenerator:
         data["proto"]["num_tokens"] = (len(self._fields) * 2) + 1
         data["proto"]["json_enable"] = enable_json
         data["proto"]["jsmn_path"] = jsmn_path
+        data["proto"]["num_var"] = len(self._fields)
         
         rendered_code = self._template.render(data)
         

@@ -95,21 +95,20 @@ public:
             return 0;
         }
 
-        uint16_t serialized_size = sizeof(this->_command) + sizeof(this->_address) + sizeof(this->_memory_area) + (strlen(this->_payload) + 1);
+        uint16_t serialized_size = sizeof(this->_command) + sizeof(this->_address) + sizeof(this->_memory_area) + (strlen(this->_payload) + 1) + 4;
 
         if (out_buffer_size < serialized_size) {
             return 0;
         }
 
-        uint16_t offset = 0;
+        auto result = snprintf(out_buffer, out_buffer_size,"%u|%u|%u|%s",this->_command, this->_address, this->_memory_area, this->_payload);
 
-        memcpy(&out_buffer[offset], &this->_command, sizeof(this->_command));
-        offset += sizeof(this->_command);
-        memcpy(&out_buffer[offset], &this->_address, sizeof(this->_address));
-        offset += sizeof(this->_address);
-        memcpy(&out_buffer[offset], &this->_memory_area, sizeof(this->_memory_area));
-        offset += sizeof(this->_memory_area);
-        memcpy(&out_buffer[offset], this->_payload, strlen(this->_payload) + 1);
+        if (result > out_buffer_size) {
+            serialized_size = 0;
+        }
+        else if (result == 0) {
+            serialized_size = 0;
+        }
 
         return serialized_size;
     }
@@ -120,21 +119,22 @@ public:
         }
 
         uint16_t deserialized_min_size = sizeof(this->_command) + sizeof(this->_address) + sizeof(this->_memory_area) + 1;
-
+        
         if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
-
+        
         memset(this->_payload, 0, PAYLOAD_SIZE);
-
+        
         uint16_t offset = 0;
-        memcpy(&this->_command, &in_buffer[offset], sizeof(this->_command));
-        offset += sizeof(this->_command);
-        memcpy(&this->_address, &in_buffer[offset], sizeof(this->_address));
-        offset += sizeof(this->_address);
-        memcpy(&this->_memory_area, &in_buffer[offset], sizeof(this->_memory_area));
-        offset += sizeof(this->_memory_area);
-        memcpy(this->_payload, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
+        char* token = strtok(const_cast<char*>(in_buffer), "|");
+        this->_command = atoi(token);
+        token = strtok(nullptr, "|");
+        this->_address = atoi(token);
+        token = strtok(nullptr, "|");
+        this->_memory_area = atoi(token);
+        token = strtok(nullptr, "|");
+        strncpy(this->_payload, token, 256);
 
         return PROTO_NO_ERROR;
     }

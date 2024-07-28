@@ -52,7 +52,7 @@ class TitaniumPackage {
         this->_size    = protobuf.GetSerializedSize();
         this->_address = address;
         this->_data    = std::make_unique<uint8_t[]>(this->_size);
-        protobuf.Serialize(reinterpret_cast<char*>(this->_data.get()), this->_size);
+        protobuf.SerializeJson(reinterpret_cast<char*>(this->_data.get()), this->_size);
     }
     /**
      * @brief Retrieves the package data.
