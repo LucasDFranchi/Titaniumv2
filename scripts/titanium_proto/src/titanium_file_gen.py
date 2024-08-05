@@ -105,6 +105,19 @@ public:
         if (out_buffer_size < serialized_size) {
             return 0;
         }
+        
+{% for member in members %}
+    {% if member.type in ['uint8_t', 'uint16_t', 'uint32_t', 'int8_t', 'int16_t', 'int32_t'] %}
+        buffer[data_position++] = sizeof({{ member.name }});
+        memcpy(&buffer[data_position], &{{ member.name }}, sizeof({{ member.name }}));
+        data_position += sizeof({{ member.name }});
+    {% elif member.type == 'char*' %}
+        uint8_t length = strlen({{ member.name }});
+        buffer[data_position++] = length;
+        memcpy(&buffer[data_position], {{ member.name }}, length);
+        data_position += length;
+    {% endif %}
+{% endfor %}
 
         uint16_t offset = 0;
 {% for field in fields -%}
@@ -139,6 +152,21 @@ public:
         memset(this->{{ field.internal_name }}, 0, {{ field.defined_size }});
 {%- endif %}
 {%- endfor %}
+
+{% for member in members %}
+    {% if member.type in ['uint8_t', 'uint16_t', 'uint32_t', 'int8_t', 'int16_t', 'int32_t'] %}
+        uint8_t size = buffer[data_position++];
+        if (size + data_position > size_buffer) return 0;
+        memcpy(&{{ member.name }}, &buffer[data_position], size);
+        data_position += size;
+    {% elif member.type == 'char*' %}
+        uint8_t length = buffer[data_position++];
+        if (length + data_position > size_buffer) return 0;
+        memcpy({{ member.name }}, &buffer[data_position], length);
+        {{ member.name }}[length] = '\0'; // Null-terminate
+        data_position += length;
+    {% endif %}
+{% endfor %}
 
         uint16_t offset = 0;
 

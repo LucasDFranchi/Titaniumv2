@@ -33,6 +33,7 @@ class CommunicationProcess : public ProcessTemplate {
 
    private:
     void Execute(void);
+    void ProcessState(void);
     esp_err_t Initialize(void);
     esp_err_t StorePackage(std::unique_ptr<TitaniumPackage>& package);
     std::unique_ptr<TitaniumPackage> GenerateResponsePackage(uint8_t memory_area);
@@ -45,6 +46,8 @@ class CommunicationProcess : public ProcessTemplate {
     esp_err_t ProcessAckPackage(std::unique_ptr<TitaniumPackage>& package);
     esp_err_t ProcessNackPackage(std::unique_ptr<TitaniumPackage>& package);
     esp_err_t ProcessWritePackage(std::unique_ptr<TitaniumPackage>& package);
+    bool HasTransmissionPending(void);
+    bool HasReceivedBytes(void);
 
    private:
     std::unique_ptr<uint8_t[]> _buffer                          = nullptr;  ///< Buffer for communication.
@@ -56,7 +59,22 @@ class CommunicationProcess : public ProcessTemplate {
     std::unique_ptr<CommunicationProtobuf> _receive_proto       = nullptr;  ///< Reception protobuf.
 
    private:
-    uint16_t _address = 0xFFFF;  ///< Memory Address of this device
+    enum class State {
+        IDLE,
+        PASSIVE,
+        ACTIVE,
+        WAITING_ACK
+    };
+    State CommunicationProcess::Idle(void);
+    State Passive(void);
+    State Active(void);
+    State WaitingAck(void);
+    State communication_state = State::IDLE;
+
+   private:
+    uint16_t _received_bytes = 0;       ///<
+    uint8_t _ack_retries     = 0;       ///<
+    uint16_t _address        = 0xFFFF;  ///< Memory Address of this device
 };
 
 #endif /* COMMUNICATION_PROCESS_H */

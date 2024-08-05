@@ -6,11 +6,11 @@
 #include <memory>
 
 #include "ProtobufIndex.h"
-#include "CredentialsProto.h"
 #include "CommunicationProto.h"
+#include "CredentialsProto.h"
+#include "ConnectionStatusProto.h"
 #include "MQTTUriProto.h"
 #include "WaterLevelProto.h"
-#include "ConnectionStatusProto.h"
 
 class ProtobufFactory {
    public:

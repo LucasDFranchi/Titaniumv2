@@ -4,33 +4,9 @@
 
 #include "esp_log.h"
 
-// /**
-//  * @brief Stores a TitaniumPackage into the shared memory.
-//  *
-//  * @param[in] package The package to store.
-//  * @return ESP_OK on success, or an error code on failure.
-//  */
-// esp_err_t CommunicationProcess::StorePackage(std::unique_ptr<TitaniumPackage>& package) {
-//     uint8_t payload[package.get()->size()] = {0};
-//     package.get()->Consume(payload);
-
-//     return this->_shared_memory_manager.get()->Write(package.get()->memory_area(), package.get()->size(), payload);
-// }
-
-// /**
-//  * @brief Generates a response package from the shared memory.
-//  *
-//  * @param[in] memory_area The memory area to read the response from.
-//  * @return A unique pointer to the generated TitaniumPackage.
-//  */
-// std::unique_ptr<TitaniumPackage> CommunicationProcess::GenerateResponsePackage(uint8_t memory_area) {
-//     auto response_size    = this->_shared_memory_manager.get()->GetWrittenBytes(memory_area);
-//     auto response_payload = std::make_unique<uint8_t[]>(response_size);
-
-//     this->_shared_memory_manager.get()->Read(memory_area, response_size, response_payload.get());
-
-//     return std::make_unique<TitaniumPackage>(response_size, this->_address, RESPONSE_COMMAND, memory_area, response_payload.get());
-// }
+namespace CommunicationConstants {
+    constexpr uint8_t MAXIMUM_ACK_RETRIES = 3;
+}
 
 /**
  * @brief Generates a transmission package.
@@ -81,8 +57,8 @@ void CommunicationProcess::Execute(void) {
                 this->_driver.get()->Write(this->_buffer.get(), response_buffer_size);
             }
         } else {
-            std::unique_ptr<TitaniumPackage> package = nullptr;
-            auto result                              = this->_protocol->Decode(this->_buffer.get(), received_bytes, package);
+            // std::unique_ptr<TitaniumPackage> package = nullptr;
+            // auto result                              = this->_protocol->Decode(this->_buffer.get(), received_bytes, package);
 
             do {
                 if (result != ESP_OK) {
@@ -93,7 +69,6 @@ void CommunicationProcess::Execute(void) {
                     break;
                 }
 
-                this->ProcessReceivedPackage(package);
             } while (0);
 
             vTaskDelay(pdMS_TO_TICKS(100));
@@ -233,7 +208,7 @@ esp_err_t CommunicationProcess::ProcessReadPackage(std::unique_ptr<TitaniumPacka
         }
         this->_shared_memory_manager->Read(package.get()->memory_area(), *protobuf);
 
-        uint16_t response_buffer_size = protobuf->SerializeJson(response_buffer, sizeof(response_buffer));
+        uint16_t response_buffer_size = protobuf->Serialize(response_buffer, sizeof(response_buffer));
         if (response_buffer_size <= 0) {
             break;
         }
@@ -272,28 +247,21 @@ esp_err_t CommunicationProcess::ProcessWritePackage(std::unique_ptr<TitaniumPack
         }
 
         auto raw_size = package.get()->Consume(reinterpret_cast<uint8_t*>(response_buffer));
-        for (uint8_t i = 0; i < 200; i++) {
-            ESP_LOGI("Communication Process", "JSON %d: %c", i, response_buffer[i]);
-        }
+
         if (raw_size == 0) {
             ESP_LOGI("Communication Process", "Error");
             // Add a error for wrong package generation
             break;
         }
-
-
-        auto response_buffer_size = protobuf->DeSerializeJson(response_buffer, sizeof(response_buffer));
+        auto response_buffer_size = protobuf->DeSerialize(response_buffer, sizeof(response_buffer));
         if (response_buffer_size != ESP_OK) {
             // Add a error for wrong package generation
             break;
         }
 
         result = this->_shared_memory_manager->Write(package.get()->memory_area(), *protobuf);
-        ESP_LOGI("Communication Process", "Result: %d", result);
-        ESP_LOGI("Communication Process", "Memory Area: %d", package.get()->memory_area());
-        for (uint8_t i = 0; i < 2; i++) {
-            ESP_LOGI("Communication Process", "Data: %x", response_buffer[i]);
-        }
+
+        // Send ACK or NACK based in the result
 
     } while (0);
 
@@ -310,24 +278,6 @@ esp_err_t CommunicationProcess::ProcessAckPackage(std::unique_ptr<TitaniumPackag
 
 esp_err_t CommunicationProcess::ProcessNackPackage(std::unique_ptr<TitaniumPackage>& package) {
     return ESP_OK;
-}
-
-/**
- * @brief Check if the received package is destined to this device.
- *
- * @param[in] address Address of the received package.
- *
- * @return The ESP_OK if the address matches or if it's a broadcast package.
- */
-bool CommunicationProcess::CheckAddressPackage(uint16_t address) {
-    auto result = ESP_FAIL;
-
-    if ((address == this->_address) ||
-        (address == ProtocolConstants::BROADCAST_ADDRESS)) {
-        result = ESP_OK;
-    }
-
-    return result;
 }
 
 /**
@@ -349,4 +299,79 @@ esp_err_t CommunicationProcess::Initialize(void) {
     this->_receive_proto.reset(new CommunicationProtobuf());
 
     return ESP_OK;
+}
+
+/**
+ * @brief Check if the received package is destined to this device.
+ *
+ * @param[in] address Address of the received package.
+ *
+ * @return The ESP_OK if the address matches or if it's a broadcast package.
+ */
+bool CommunicationProcess::CheckAddressPackage(uint16_t address) {
+    auto result = ESP_FAIL;
+
+    if ((address == this->_address) ||
+        (address == ProtocolConstants::BROADCAST_ADDRESS)) {
+        result = ESP_OK;
+    }
+
+    return result;
+}
+
+bool CommunicationProcess::HasTransmissionPending(void) {
+    return this->_shared_memory_manager->IsAreaDataUpdated(ProtobufIndex::LORATRANSMIT);
+}
+
+bool CommunicationProcess::HasReceivedBytes(void) {
+    this->_received_bytes = this->_driver.get()->Read(this->_buffer.get());
+    return this->_received_bytes > 0;
+}
+
+void CommunicationProcess::ProcessState(void) {
+}
+
+CommunicationProcess::State CommunicationProcess::Idle(void) {
+    auto next_state = this->communication_state;
+
+    if (this->HasReceivedBytes()) {
+        next_state = State::PASSIVE;
+    } else if (this->HasTransmissionPending()) {
+        next_state = State::ACTIVE;
+    }
+
+    return next_state;
+}
+
+CommunicationProcess::State CommunicationProcess::Passive(void) {
+    std::unique_ptr<TitaniumPackage> package = nullptr;
+    auto next_state                          = this->communication_state;
+    auto result                              = this->_protocol->Decode(this->_buffer.get(), this->_received_bytes, package);
+
+    this->_received_bytes = 0;
+
+    if (result != ESP_OK) {
+        next_state = State::IDLE;
+    }
+
+    if (!this->CheckAddressPackage(package.get()->address())) {
+        this->ProcessReceivedPackage(package);
+    } else {
+        /* Case in the future we support Daisy chain we need to
+         * update this to a forwarding state.
+         */
+    }
+
+    next_state = State::IDLE;
+}
+
+CommunicationProcess::State CommunicationProcess::Active(void) {
+    auto next_state = this->communication_state;
+
+    this->_shared_memory_manager->Read(ProtobufIndex::LORATRANSMIT, *this->_transmit_proto);
+    auto package              = this->GenerateTransmitPackage(*this->_transmit_proto);
+    auto response_buffer_size = this->_protocol->Encode(package, this->_buffer.get(), this->_driver.get()->buffer_size());
+    this->_driver.get()->Write(this->_buffer.get(), response_buffer_size);
+
+    next_state = State::IDLE;
 }
