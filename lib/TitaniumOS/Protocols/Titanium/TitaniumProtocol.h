@@ -20,6 +20,7 @@ namespace ProtocolErrors {
     constexpr esp_err_t INVALID_PAYLOAD_POINTER = -6; /**< Error code indicating invalid payload pointer. */
     constexpr esp_err_t INVALID_CRC             = -7; /**< Error code indicating invalid CRC. */
     constexpr esp_err_t INVALID_END_BYTE        = -8; /**< Error code indicating invalid End Byte. */
+    constexpr esp_err_t INVALID_UUID            = -9; /**< Error code indicating invalid UUID. */
 }  // namespace ProtocolErrors
 
 /**
@@ -38,14 +39,16 @@ class TitaniumProtocol {
     uint16_t Encode(std::unique_ptr<TitaniumPackage>& package, uint8_t* buffer, uint16_t size);
 
    private:
-    std::pair<int16_t, esp_err_t> GetStarByteOffset(uint8_t* buffer, uint16_t buffer_size);
-    std::pair<int16_t, esp_err_t> GetPayloadLength(uint8_t* buffer);
-    std::pair<command_e, esp_err_t> GetCommand(uint8_t* buffer);
-    std::pair<uint8_t, esp_err_t> GetMemoryArea(uint8_t* buffer);
-    std::pair<uint16_t, esp_err_t> GetAddress(uint8_t* buffer);
-    std::pair<uint8_t*, esp_err_t> GetPayload(uint8_t* buffer);
-    std::pair<uint32_t, esp_err_t> GetCRC(uint8_t* buffer, uint16_t payload_size);
-    std::pair<uint8_t, esp_err_t> GetEndByte(uint8_t* buffer, uint16_t payload_size);
+    uint16_t GetStarByteOffset(uint8_t* buffer, uint16_t buffer_size);
+    uint32_t GetUUID(uint8_t* buffer, uint16_t remaining_bytes);
+    uint16_t GetPayloadLength(uint8_t* buffer, uint16_t remaining_bytes);
+    command_e GetCommand(uint8_t* buffer, uint16_t remaining_bytes);
+    uint8_t GetMemoryArea(uint8_t* buffer, uint16_t remaining_bytes);
+    uint16_t GetAddress(uint8_t* buffer, uint16_t remaining_bytes);
+    uint8_t* GetPayload(uint8_t* buffer, uint16_t remaining_bytes);
+    uint32_t GetCRC(uint8_t* buffer, uint16_t payload_size, uint16_t remaining_bytes);
+    uint8_t GetEndByte(uint8_t* buffer, uint16_t payload_size, uint16_t remaining_bytes);
+    esp_err_t ValidateUUID(uint32_t uuid);
     esp_err_t ValidatePayloadLength(uint16_t data_length);
     esp_err_t ValidateCommand(command_e command);
     esp_err_t ValidateEndByte(uint8_t end_byte);
@@ -53,9 +56,10 @@ class TitaniumProtocol {
     esp_err_t ValidateAddress(uint16_t address);
     esp_err_t ValidatePayload(uint8_t* payload);
     esp_err_t ValidateCRC(uint32_t crc, uint8_t* buffer, uint16_t size);
-    void EncodePayloadLength(uint8_t* buffer, uint16_t payload_length);
-    void EncodeAddress(uint8_t* buffer, uint16_t address);
-    void EncodeCRC(uint8_t* buffer, uint32_t crc);
+    esp_err_t EncodeUUID(uint8_t* buffer, uint32_t uuid);
+    esp_err_t EncodePayloadLength(uint8_t* buffer, uint16_t payload_length);
+    esp_err_t EncodeAddress(uint8_t* buffer, uint16_t address);
+    esp_err_t EncodeCRC(uint8_t* buffer, uint16_t offset, uint32_t crc);
 };
 
 #endif /* TITANIUM_PROTOCOL_H */

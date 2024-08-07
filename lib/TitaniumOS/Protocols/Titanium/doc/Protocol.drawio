@@ -1,11 +1,11 @@
 <mxfile host="65bd71144e">
     <diagram name="Page-1" id="2UVJwezaMy-HFesn9aP-">
-        <mxGraphModel dx="1076" dy="344" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2412" dy="823" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
                 <mxCell id="0ZeKftdlAWQwIlu2NuAj-3" value="Start Byte" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;" parent="1" vertex="1">
-                    <mxGeometry x="120" y="80" width="160" height="40" as="geometry"/>
+                    <mxGeometry x="-40" y="80" width="160" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="0ZeKftdlAWQwIlu2NuAj-4" value="DataLength" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;" parent="1" vertex="1">
                     <mxGeometry x="280" y="80" width="160" height="40" as="geometry"/>
@@ -20,7 +20,7 @@
                     <mxGeometry x="1079" y="80" width="160" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="0ZeKftdlAWQwIlu2NuAj-11" value="&lt;h1&gt;Start Byte&lt;br&gt;&lt;/h1&gt;&lt;p&gt;Always '02,' denoting the initiation of a new message.&lt;/p&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
-                    <mxGeometry x="120" y="120" width="160" height="120" as="geometry"/>
+                    <mxGeometry x="-40" y="120" width="160" height="120" as="geometry"/>
                 </mxCell>
                 <mxCell id="0ZeKftdlAWQwIlu2NuAj-12" value="End Byte" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#000000;" parent="1" vertex="1">
                     <mxGeometry x="1239" y="80" width="160" height="40" as="geometry"/>
@@ -46,11 +46,17 @@
                 <mxCell id="0ZeKftdlAWQwIlu2NuAj-21" value="&lt;h1&gt;End Byte&lt;br&gt;&lt;/h1&gt;&lt;div&gt;Always '03,' signifying the conclusion of a message.&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="1239" y="120" width="160" height="120" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="Address" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;gradientColor=#b3b3b3;strokeColor=#666666;fontColor=#000000;" vertex="1" parent="1">
+                <mxCell id="3" value="Address" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;gradientColor=#b3b3b3;strokeColor=#666666;fontColor=#000000;" parent="1" vertex="1">
                     <mxGeometry x="759" y="80" width="160" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" value="&lt;h1&gt;Address&lt;br&gt;&lt;/h1&gt;&lt;div&gt;End Device address, should use 0 to broadcast.&lt;br&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="1">
+                <mxCell id="4" value="&lt;h1&gt;Address&lt;br&gt;&lt;/h1&gt;&lt;div&gt;End Device address, should use 0 to broadcast.&lt;br&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="759" y="120" width="160" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="UUID" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;fontColor=#000000;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="80" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="&lt;h1&gt;UUID&lt;/h1&gt;&lt;p&gt;Message unique identifier.&lt;/p&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="120" width="160" height="120" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
