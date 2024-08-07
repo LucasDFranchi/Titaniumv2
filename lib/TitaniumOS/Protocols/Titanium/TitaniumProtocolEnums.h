@@ -8,12 +8,14 @@
  * @brief Enum for defining command types in the Titanium protocol.
  */
 enum command_e : uint8_t {
-    INVALID_OPERATION     = 0,   /**< Invalid command. */
-    ACK_COMMAND           = 'A', /**< Ack command. */
-    NACK_COMMAND          = 'N', /**< Ack command. */
-    READ_COMMAND          = 'R', /**< Read command. */
-    READ_RESPONSE_COMMAND = 'E', /**< Response command. */
-    WRITE_COMMAND         = 'W', /**< Write command. */
+    INVALID_OPERATION            = 0, /**< Invalid command. */
+    ACK_COMMAND                  = 1, /**< Ack command. */
+    NACK_COMMAND                 = 2, /**< Ack command. */
+    READ_COMMAND                 = 3, /**< Read command. */
+    READ_RESPONSE_COMMAND        = 4, /**< Response command. */
+    WRITE_COMMAND                = 5, /**< Write command. */
+    READ_RESPONSE_SECURE_COMMAND = 101, /**< Response command and ask for ack. */
+    WRITE_SECURE_COMMAND         = 102, /**< Write command and ask for ack. */
 };
 
 #endif /* TITANIUM_PROTOCOL_ENUMS_H */

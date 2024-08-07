@@ -42,10 +42,10 @@ class CommunicationProcess : public ProcessTemplate {
     void Acknowledge(esp_err_t result);
     esp_err_t ProcessReceivedPackage(std::unique_ptr<TitaniumPackage>& package);
     esp_err_t ProcessReadPackage(std::unique_ptr<TitaniumPackage>& package);
-    esp_err_t ProcessReadResponsePackage(std::unique_ptr<TitaniumPackage>& package);
+    esp_err_t ProcessReadResponsePackage(std::unique_ptr<TitaniumPackage>& package, bool should_ack);
     esp_err_t ProcessAckPackage(std::unique_ptr<TitaniumPackage>& package);
     esp_err_t ProcessNackPackage(std::unique_ptr<TitaniumPackage>& package);
-    esp_err_t ProcessWritePackage(std::unique_ptr<TitaniumPackage>& package);
+    esp_err_t ProcessWritePackage(std::unique_ptr<TitaniumPackage>& package, bool should_ack);
     bool HasTransmissionPending(void);
     bool HasReceivedBytes(void);
 

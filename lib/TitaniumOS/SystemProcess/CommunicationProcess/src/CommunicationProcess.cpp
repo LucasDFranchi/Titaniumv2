@@ -169,7 +169,7 @@ esp_err_t CommunicationProcess::ProcessReceivedPackage(std::unique_ptr<TitaniumP
         }
         case READ_RESPONSE_COMMAND: {
             ESP_LOGI("Communication Process", "READ_RESPONSE_COMMAND");
-            result = this->ProcessReadResponsePackage(package);
+            result = this->ProcessReadResponsePackage(package, false);
 
             break;
         }
@@ -185,7 +185,17 @@ esp_err_t CommunicationProcess::ProcessReceivedPackage(std::unique_ptr<TitaniumP
         }
         case WRITE_COMMAND: {
             ESP_LOGI("Communication Process", "WRITE_COMMAND");
-            result = this->ProcessWritePackage(package);
+            result = this->ProcessWritePackage(package, false);
+            break;
+        }
+        case READ_RESPONSE_SECURE_COMMAND: {
+            ESP_LOGI("Communication Process", "READ_RESPONSE_SECURE_COMMAND");
+            result = this->ProcessWritePackage(package, true);
+            break;
+        }
+        case WRITE_SECURE_COMMAND: {
+            ESP_LOGI("Communication Process", "WRITE_SECURE_COMMAND");
+            result = this->ProcessWritePackage(package, true);
             break;
         }
         default: {
@@ -236,7 +246,7 @@ esp_err_t CommunicationProcess::ProcessReadPackage(std::unique_ptr<TitaniumPacka
     return result;
 }
 
-esp_err_t CommunicationProcess::ProcessWritePackage(std::unique_ptr<TitaniumPackage>& package) {
+esp_err_t CommunicationProcess::ProcessWritePackage(std::unique_ptr<TitaniumPackage>& package, bool should_ack) {
     char response_buffer[200] = {0};  // Add something in the proto to get the string maximum size;
     auto protobuf             = ProtobufFactory::CreateProtobuf(package.get()->memory_area());
     auto result               = ESP_FAIL;
@@ -261,14 +271,22 @@ esp_err_t CommunicationProcess::ProcessWritePackage(std::unique_ptr<TitaniumPack
 
         result = this->_shared_memory_manager->Write(package.get()->memory_area(), *protobuf);
 
-        // Send ACK or NACK based in the result
+        if (result != ESP_OK) {
+            // Add a error for package write
+            break;
+        }
+
+        // if (should_ack) {
+        //     this->package->uuid
+        // }
+
 
     } while (0);
 
     return result;
 }
 
-esp_err_t CommunicationProcess::ProcessReadResponsePackage(std::unique_ptr<TitaniumPackage>& package) {
+esp_err_t CommunicationProcess::ProcessReadResponsePackage(std::unique_ptr<TitaniumPackage>& package, bool should_ack) {
     return ESP_OK;
 }
 
