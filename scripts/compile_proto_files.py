@@ -79,9 +79,9 @@ def generate_proto_files(root_dir, memory_area):
         root_dir (str): The root directory where files will be generated.
         memory_area (dict): The memory area definition containing protobuf details.
     """
-    tp = TitaniumFileGenerator()
+    tp = TitaniumFileGenerator("h")
     tp.import_and_parse_proto_file(raw_data = memory_area)
-    tp.generate_header_file(f"{root_dir}/lib/TitaniumOS/Protocols/Protobuf/inc/", True, "Libraries/JSON/jsmn/")
+    tp.generate_header_file(f"{root_dir}/lib/TitaniumOS/Protocols/Protobuf/inc/", True)
     
 
 def load_firmware_definitions(file_path):
