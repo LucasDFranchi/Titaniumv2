@@ -64,8 +64,8 @@ void MQTTClientProcess::Execute(void) {
 
     while (1) {
         do {
-            this->_shared_memory_manager.get()->Read(ProtobufIndex::CONNECTION,
-                                                     &this->_connection_status);
+            this->_shared_memory_manager.get()->Read(ProtobufIndex::CONNECTIONSTATUS,
+                                                     this->_connection_status);
 
             auto ap_changed =
                 this->_last_connection_status.GetApStatus() !=
@@ -135,7 +135,7 @@ esp_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
         if (protobuf.get() == nullptr) {
             break;
         }
-        this->_shared_memory_manager->Read(area_index, protobuf.get());
+        this->_shared_memory_manager->Read(area_index, *protobuf);
 
         if (protobuf->SerializeJson(response_buffer, sizeof(response_buffer)) <= 0) {
             break;
@@ -153,7 +153,6 @@ esp_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
 }
 
 esp_err_t MQTTClientProcess::SubscribeMemoryArea(void) {
-    // char response_buffer[512] = {0};
     char topic_area[64]       = {0};
     esp_err_t result          = ESP_FAIL;
 

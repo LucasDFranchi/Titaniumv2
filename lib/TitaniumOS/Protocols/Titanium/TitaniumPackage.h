@@ -1,13 +1,13 @@
 #ifndef TITANIUM_PACKAGE_H
 #define TITANIUM_PACKAGE_H
 
+#include "esp_err.h"
+#include "esp_random.h"
 #include <memory>
 
-#include "esp_err.h"
-
-#include "TitaniumProtocolEnums.h"
-
 #include "HAL/memory/MemoryHandlers.h"
+#include "Protocols/Protobuf/inc/IProtobuf.h"
+#include "TitaniumProtocolEnums.h"
 
 /**
  * @brief Represents a Titanium package containing data and metadata.
@@ -32,10 +32,30 @@ class TitaniumPackage {
      */
     TitaniumPackage(uint16_t size, uint16_t address, command_e command, uint8_t memory_area, uint8_t* data)
         : _command(command), _memory_area(memory_area) {
-        this->_size = size;
+        this->_size    = size;
         this->_address = address;
-        this->_data = std::make_unique<uint8_t[]>(size);
+        this->_data    = std::make_unique<uint8_t[]>(size);
+        this->_uuid    = this->GenerateUUID();
         memcpy_s<uint8_t>(this->_data.get(), data, size);
+    }
+    /**
+     * @brief Constructs a TitaniumPackage object.
+     *
+     * Constructs a TitaniumPackage object with the specified size, command type, memory area,
+     * and data. The data provided is copied into an internal buffer.
+     *
+     * @param[in] address The address associated with the package.
+     * @param[in] command The command type associated with the package.
+     * @param[in] memory_area The memory area identifier associated with the package.
+     * @param[in] protobuf The protobuf to be transmitted.
+     */
+    TitaniumPackage(uint16_t address, command_e command, uint8_t memory_area, IProtobuf& protobuf)
+        : _command(command), _memory_area(memory_area) {
+        this->_size    = protobuf.GetSerializedSize();
+        this->_address = address;
+        this->_data    = std::make_unique<uint8_t[]>(this->_size);
+        this->_uuid    = this->GenerateUUID();
+        protobuf.SerializeJson(reinterpret_cast<char*>(this->_data.get()), this->_size);
     }
     /**
      * @brief Retrieves the package data.
@@ -53,6 +73,10 @@ class TitaniumPackage {
         }
 
         return 0;
+    }
+
+    uint32_t GenerateUUID() {
+        return esp_random();
     }
 
     /**
@@ -91,11 +115,22 @@ class TitaniumPackage {
         return _memory_area;
     }
 
+    /**
+     * @brief Get the UUID the package, to make the protocol robust and
+     *        compact we re-use the crc32 as UUID.
+     *
+     * @return The UUID associated with the package.
+     */
+    uint32_t uuid() const {
+        return _uuid;
+    }
+
    private:
     uint16_t _size       = 0;                  ///< The size of the package data.
     uint16_t _address    = 0;                  ///< The address of the transmitted package.
     command_e _command   = INVALID_OPERATION;  ///< The command type associated with the package.
     uint8_t _memory_area = -1;                 ///< The memory area identifier associated with the package.
+    uint32_t _uuid       = -1;                 ///< The UUID associated with the package.
     std::unique_ptr<uint8_t[]> _data;          ///< The buffer storing the package data.
 };
 

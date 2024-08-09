@@ -10,6 +10,8 @@ enum protobufs_errors {
   PROTO_INVAL_SIZE = -3,
   PROTO_INVAL_NUM_TOKEN = -4,
   PROTO_INVAL_JSON_KEY = -5,
+  PROTO_INVAL_JSON_VALUE = -6,
+  PROTO_INVAL_JSON_PARSE = -7,
 };
 
 class IProtobuf {

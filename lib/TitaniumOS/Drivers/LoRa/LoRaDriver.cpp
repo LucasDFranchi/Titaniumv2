@@ -149,8 +149,6 @@ esp_err_t LoRaDriver::Initialize(void) {
 
     this->SetIdleMode();
 
-    ESP_ERROR_CHECK(result);
-
     return result;
 }
 
