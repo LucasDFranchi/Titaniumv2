@@ -3,7 +3,7 @@
 
 namespace ProtocolAttributes {
     constexpr uint8_t START_BYTE_OFFSET     = 0;
-    constexpr uint8_t START_BYTE_SIZE       = 0;
+    constexpr uint8_t START_BYTE_SIZE       = 1;
     constexpr uint8_t UUID_OFFSET           = START_BYTE_OFFSET + START_BYTE_SIZE;
     constexpr uint8_t UUID_SIZE             = 4;
     constexpr uint8_t PAYLOAD_LENGTH_OFFSET = UUID_OFFSET + UUID_SIZE;
@@ -59,6 +59,7 @@ uint16_t TitaniumProtocol::GetStarByteOffset(uint8_t* buffer, uint16_t buffer_si
         for (uint16_t index = 0; index < buffer_size; index++) {
             if (buffer[index] == Protocol::START_BYTE) {
                 result = index;
+                break;
             }
         }
     } while (0);
@@ -516,7 +517,7 @@ esp_err_t TitaniumProtocol::Decode(uint8_t* buffer, size_t size, std::unique_ptr
 
         remaining_bytes -= ProtocolAttributes::END_BYTE_SIZE;
         auto end_byte = this->GetEndByte(start_message_pointer, payload_length, remaining_bytes);
-        if (this->ValidateEndByte(end_byte) == ESP_OK) {
+        if (this->ValidateEndByte(end_byte) != ESP_OK) {
             result = ProtocolErrors::INVALID_END_BYTE;
             break;
         }
