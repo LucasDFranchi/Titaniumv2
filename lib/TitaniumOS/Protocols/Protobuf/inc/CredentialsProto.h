@@ -8,7 +8,7 @@
 
 #include "stdint.h"
 #include "string.h"
-#include "ArduinoJson.h"
+#include "Libraries/JSON/ArduinoJson/ArduinoJson.h"
 #include "IProtobuf.h"
 
 class CredentialsProtobuf : public IProtobuf {
@@ -131,7 +131,7 @@ public:
         memcpy(&out_buffer[data_position], this->_ssid, length);
         data_position += length;
 
-        uint8_t length = strlen(this->_password);
+        length = strlen(this->_password);
         out_buffer[data_position++] = length;
         memcpy(&out_buffer[data_position], this->_password, length);
         data_position += length;
@@ -141,7 +141,7 @@ public:
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
         uint16_t data_position = 0;
-        uint8_t size = 0;
+        // uint8_t size = 0;
                 
         if (in_buffer == nullptr) {
             return PROTO_INVAL_PTR;
@@ -161,7 +161,7 @@ public:
         memcpy(this->_ssid, &in_buffer[data_position], length);
         this->_ssid[length] = '\0';
         data_position += length;
-        uint8_t length = in_buffer[data_position++];
+        length = in_buffer[data_position++];
         if (length + data_position > in_buffer_size) return 0;
         memcpy(this->_password, &in_buffer[data_position], length);
         this->_password[length] = '\0';

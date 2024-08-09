@@ -65,7 +65,7 @@ class CommunicationProcess : public ProcessTemplate {
         ACTIVE,
         WAITING_ACK
     };
-    State CommunicationProcess::Idle(void);
+    State Idle(void);
     State Passive(void);
     State Active(void);
     State WaitingAck(void);

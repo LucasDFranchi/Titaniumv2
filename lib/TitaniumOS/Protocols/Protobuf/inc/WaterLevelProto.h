@@ -8,7 +8,7 @@
 
 #include "stdint.h"
 #include "string.h"
-#include "ArduinoJson.h"
+#include "Libraries/JSON/ArduinoJson/ArduinoJson.h"
 #include "IProtobuf.h"
 
 class WaterLevelProtobuf : public IProtobuf {

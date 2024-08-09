@@ -60,16 +60,16 @@ void CommunicationProcess::Execute(void) {
             // std::unique_ptr<TitaniumPackage> package = nullptr;
             // auto result                              = this->_protocol->Decode(this->_buffer.get(), received_bytes, package);
 
-            do {
-                if (result != ESP_OK) {
-                    break;
-                }
+            // do {
+            //     if (result != ESP_OK) {
+            //         break;
+            //     }
 
-                if (this->CheckAddressPackage(package.get()->address())) {
-                    break;
-                }
+            //     if (this->CheckAddressPackage(package.get()->address())) {
+            //         break;
+            //     }
 
-            } while (0);
+            // } while (0);
 
             vTaskDelay(pdMS_TO_TICKS(100));
 
@@ -280,7 +280,6 @@ esp_err_t CommunicationProcess::ProcessWritePackage(std::unique_ptr<TitaniumPack
         //     this->package->uuid
         // }
 
-
     } while (0);
 
     return result;
@@ -381,6 +380,7 @@ CommunicationProcess::State CommunicationProcess::Passive(void) {
     }
 
     next_state = State::IDLE;
+    return next_state;
 }
 
 CommunicationProcess::State CommunicationProcess::Active(void) {
@@ -392,4 +392,5 @@ CommunicationProcess::State CommunicationProcess::Active(void) {
     this->_driver.get()->Write(this->_buffer.get(), response_buffer_size);
 
     next_state = State::IDLE;
+    return next_state;
 }

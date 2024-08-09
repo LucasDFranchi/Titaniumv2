@@ -8,7 +8,7 @@
 
 #include "stdint.h"
 #include "string.h"
-#include "ArduinoJson.h"
+#include "Libraries/JSON/ArduinoJson/ArduinoJson.h"
 #include "IProtobuf.h"
 
 class MQTTUriProtobuf : public IProtobuf {
@@ -94,7 +94,7 @@ public:
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
         uint16_t data_position = 0;
-        uint8_t size = 0;
+        // uint8_t size = 0;
                 
         if (in_buffer == nullptr) {
             return PROTO_INVAL_PTR;
