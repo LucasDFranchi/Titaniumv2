@@ -1,10 +1,10 @@
 #ifndef COMMUNICATION_PROCESS_H
 #define COMMUNICATION_PROCESS_H
 
+#include "Application/error/error_enum.h"
 #include "Drivers/DriverInterface/ICommunicationDriver.h"
 #include "HAL/memory/SharedMemoryManager.h"
-#include "Kernel/error/error_enum.h"
-#include "Protocols/Protobuf/inc/ProtobufFactory.h"
+#include "Protocols/Protobuf/inc/titanium.pb.h"
 #include "Protocols/Titanium/TitaniumPackage.h"
 #include "Protocols/Titanium/TitaniumProtocol.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
@@ -27,52 +27,48 @@ class CommunicationProcess : public ProcessTemplate {
         : ProcessTemplate(name, memory, priority, &this->_process_handler) {};
 
     titan_err_t InstallDriver(IDriverInterface* driver_interface,
-                              uint16_t transmit_area,
-                              uint16_t received_area);
+                              memory_areas_t single_packet,
+                              memory_areas_t continuos_packet);
     void Configure(uint16_t address);
 
    public:
     uint32_t ack_list[32] = {0};
 
    private:
-    void Execute(void);
-    void ProcessState(void);
     titan_err_t Initialize(void);
-    titan_err_t StorePackage(std::unique_ptr<TitaniumPackage>& package);
-    std::unique_ptr<TitaniumPackage> GenerateResponsePackage(uint8_t memory_area);
-    std::unique_ptr<TitaniumPackage> GenerateTransmitPackage(CommunicationProtobuf& communication_proto);
+    void Execute(void);
+
+    void ProcessState(void);
+    bool IsReadyToRead(void);
+    bool IsReadyToTransmitSingle(void);
+
     bool CheckAddressPackage(uint16_t address);
-    void Acknowledge(titan_err_t result);
+
     titan_err_t ProcessReceivedPackage(std::unique_ptr<TitaniumPackage>& package);
-    titan_err_t ProcessReadPackage(std::unique_ptr<TitaniumPackage>& package, bool should_ack);
-    titan_err_t ProcessReadResponsePackage(std::unique_ptr<TitaniumPackage>& package, bool should_ack);
-    titan_err_t ProcessAckPackage(std::unique_ptr<TitaniumPackage>& package);
-    titan_err_t ProcessWritePackage(std::unique_ptr<TitaniumPackage>& package, bool should_ack);
-    bool HasTransmissionPending(void);
-    bool HasReceivedBytes(void);
 
    private:
-    std::unique_ptr<uint8_t[]> _buffer                          = nullptr;  ///< Buffer for communication.
+    uint8_t* _buffer_in                                         = nullptr;  ///< Buffer for communication RX.
+    uint8_t* _buffer_out                                        = nullptr;  ///< Buffer for communication TX.
     TaskHandle_t _process_handler                               = nullptr;  ///< Handler for the process task.
-    std::unique_ptr<IDriverInterface> _driver                   = nullptr;  ///< Communication driver.
+    IDriverInterface* _driver                                   = nullptr;  ///< Communication driver.
     std::unique_ptr<SharedMemoryManager> _shared_memory_manager = nullptr;  ///< Shared memory manager.
-    std::unique_ptr<TitaniumProtocol> _protocol                 = nullptr;  ///< Protocol handler.
-    std::unique_ptr<CommunicationProtobuf> _transmit_proto      = nullptr;  ///< Transmission protobuf.
-    std::unique_ptr<CommunicationProtobuf> _receive_proto       = nullptr;  ///< Reception protobuf.
+    TitaniumProtocol* _protocol                                 = nullptr;  ///< Protocol handler.
     uint8_t _ack_size_list                                      = 32;
-    uint16_t _transmit_area                                     = ProtobufIndex::INVALID;
-    uint16_t _receive_area                                      = ProtobufIndex::INVALID;
+    memory_areas_t _single_packet;
+    memory_areas_t _continuos_packet;
+    continuos_packet_list_t _cp_list{};
 
    private:
     enum class State {
         IDLE,
-        REACTIVE,
-        ACTIVE,
-        WAITING_ACK
+        READ,
+        SINGLE,
+        CONTINUOS,
     };
     State Idle(void);
-    State Reactive(void);
-    State Active(void);
+    State Read(void);
+    State Single(void);
+    State Continuos(void);
     State communication_state = State::IDLE;
 
    private:

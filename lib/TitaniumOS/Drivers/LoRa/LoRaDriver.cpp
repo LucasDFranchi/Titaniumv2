@@ -6,6 +6,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "esp_log.h"
+
 namespace Registers {
     constexpr uint8_t FIFO                 = 0x00;
     constexpr uint8_t OP_MODE              = 0x01;
@@ -231,10 +233,10 @@ void LoRaDriver::SetIdleMode(void) {
  * @see SetIdleMode
  */
 void LoRaDriver::SetReceiverMode(void) {
-    this->WriteRegister(
-        Registers::OP_MODE,
-        TransceiverModes::LONG_RANGE_MODE | TransceiverModes::RX_CONTINUOUS);
     if (!this->_reciever_mode) {
+        this->WriteRegister(
+            Registers::OP_MODE,
+            TransceiverModes::LONG_RANGE_MODE | TransceiverModes::RX_CONTINUOUS);
         this->_reciever_mode = true;
     }
 }
@@ -416,18 +418,19 @@ void LoRaDriver::SendPacket(uint8_t *pOut, uint8_t size) {
     this->SetIdleMode();
     this->WriteRegister(Registers::FIFO_ADDR_PTR, 0);
 
-    for (uint8_t i = 0; i < size; i++)
+    for (uint8_t i = 0; i < size; i++) {
         this->WriteRegister(Registers::FIFO, pOut[i]);
+    }
 
     this->WriteRegister(Registers::PAYLOAD_LENGTH, size);
     this->WriteRegister(Registers::OP_MODE, TransceiverModes::LONG_RANGE_MODE |
                                                 TransceiverModes::TX);
-    while ((this->ReadRegister(Registers::IRQ_FLAGS) & IRQ::TX_DONE_MASK) ==
-           ESP_OK)
-        vTaskDelay(2);
     this->_reciever_mode = false;
+    while ((this->ReadRegister(Registers::IRQ_FLAGS) & IRQ::TX_DONE_MASK) == Error::NO_ERROR)
+        vTaskDelay(2);
 
     this->WriteRegister(Registers::IRQ_FLAGS, IRQ::TX_DONE_MASK);
+    this->SetReceiverMode();
 }
 
 /**
@@ -446,20 +449,25 @@ uint8_t LoRaDriver::ReceivePacket(uint8_t *pIn, uint8_t size) {
     uint8_t irq = this->ReadRegister(Registers::IRQ_FLAGS);
     this->WriteRegister(Registers::IRQ_FLAGS, irq);
 
+    this->SetIdleMode();
+    this->WriteRegister(Registers::FIFO_ADDR_PTR, this->ReadRegister(Registers::FIFO_RX_CURRENT_ADDR));
+
     do {
         uint8_t length_register = this->_implicit ? Registers::PAYLOAD_LENGTH
-                                               : Registers::RX_NB_BYTES;
-        received_bytes = this->ReadRegister(length_register);
+                                                  : Registers::RX_NB_BYTES;
+        received_bytes          = this->ReadRegister(length_register);
         if (received_bytes > size) {
             received_bytes = 0;
             break;
         }
-
         for (uint8_t i = 0; i < received_bytes; i++) {
-            pIn[i] = this->ReadRegister(Registers::FIFO);
+            auto foo = this->ReadRegister(Registers::FIFO);
+            pIn[i] = foo;
         }
 
     } while (0);
+
+    this->SetReceiverMode();
 
     return received_bytes;
 }
@@ -474,7 +482,7 @@ uint8_t LoRaDriver::ReceivePacket(uint8_t *pIn, uint8_t size) {
  */
 bool LoRaDriver::isDataInReceiver(void) {
     auto result = false;
-    auto irq = this->ReadRegister(Registers::IRQ_FLAGS);
+    auto irq    = this->ReadRegister(Registers::IRQ_FLAGS);
 
     do {
         if ((irq & IRQ::RX_DONE_MASK) == 0) {
@@ -524,7 +532,7 @@ uint8_t LoRaDriver::GetLastPacket4TSNR(void) {
  * @return ESP_OK if the write operation is successful, otherwise an error code.
  */
 titan_err_t LoRaDriver::WriteRegister(uint8_t register_address,
-                                    uint8_t register_value) {
+                                      uint8_t register_value) {
     uint8_t write_address = Driver::WRITE_COMMAND | register_address;
     uint8_t out[2]        = {write_address, register_value};
     uint8_t in[2];
@@ -540,7 +548,7 @@ titan_err_t LoRaDriver::WriteRegister(uint8_t register_address,
  * @param[in] register_address Address of the register to read from.
  * @return The value read from the register.
  */
-uint32_t LoRaDriver::ReadRegister(uint8_t register_address) {
+uint8_t LoRaDriver::ReadRegister(uint8_t register_address) {
     uint8_t out[2] = {register_address, 0xff};
     uint8_t in[2]  = {0};
 

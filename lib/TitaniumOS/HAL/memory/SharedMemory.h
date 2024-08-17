@@ -5,11 +5,12 @@
 #include "freertos/semphr.h"
 #include <freertos/task.h>
 
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 #include "MemoryHandlers.h"
 #include "MemoryTypes.h"
 
-#include <memory>
+#include "pb_decode.h"
+#include "pb_encode.h"
 
 #include "esp_log.h"
 
@@ -32,7 +33,7 @@ class SharedMemory {
         this->_has_update    = false;
         this->_mutex         = xSemaphoreCreateMutex();
         this->_written_bytes = 0;
-        this->_data.reset(new uint8_t[size]);
+        this->_data          = new uint8_t[size];
 
         this->Clear();
     }
@@ -42,7 +43,7 @@ class SharedMemory {
      * @return titan_err_t Error code indicating the result of the operation.
      */
     titan_err_t Clear(void) {
-        return memset_s(this->_data.get(), 0, this->_size);
+        return memset_s(this->_data, 0, this->_size);
     }
     /**
      * @brief Retrieves the size of the memory area.
@@ -89,28 +90,49 @@ class SharedMemory {
         return this->_has_update;
     }
 
-    titan_err_t Write(IProtobuf& protobuf) {
-        auto serialized_size = 0;
-
+    template <typename T>
+    titan_err_t Write(T& protobuf, const pb_msgdesc_t& msg_desc) {
         if (this->_access_type == READ_ONLY) {
             return Error::UNKNOW_FAIL;
         }
 
         if (this->_mutex != NULL) {
             if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
-                memset_s(this->_data.get(), 0, this->_size);
-                serialized_size = protobuf.Serialize(reinterpret_cast<char*>(this->_data.get()), this->_size);
-
+                memset_s(this->_data, 0, this->_size);
+                pb_ostream_t ostream = pb_ostream_from_buffer(this->_data, this->_size);
+                auto ret = pb_encode(&ostream, ((pb_msgdesc_t*)&msg_desc), &protobuf);
+                
                 this->_has_update    = true;
-                this->_written_bytes = serialized_size;
+                this->_written_bytes = ret ? ostream.bytes_written : 0;
 
                 xSemaphoreGive(this->_mutex);
             }
         }
-        return serialized_size != 0 ? ESP_OK : Error::UNKNOW_FAIL;
+        return this->_written_bytes > 0 ? Error::NO_ERROR : Error::WRITTEN_LESS_THAN_ZERO;
+    }
+ 
+    titan_err_t Write(char* buffer, uint16_t written_bytes) {
+
+        if ((this->_access_type == READ_ONLY) || (buffer == nullptr)) {
+            return Error::UNKNOW_FAIL;
+        }
+
+        if (this->_mutex != NULL) {
+            if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
+                memset_s(this->_data, 0, this->_size);
+                memcpy(this->_data, buffer, written_bytes);
+
+                this->_has_update    = true;
+                this->_written_bytes = written_bytes;
+
+                xSemaphoreGive(this->_mutex);
+            }
+        }
+        return this->_written_bytes > 0 ? Error::NO_ERROR : Error::UNKNOW_FAIL;
     }
 
-    titan_err_t Read(IProtobuf& protobuf) {
+    template <typename T>
+    titan_err_t Read(T& protobuf, const pb_msgdesc_t& msg_desc, bool silent) {
         auto result = Error::UNKNOW_FAIL;
 
         if (this->_access_type == WRITE_ONLY) {
@@ -119,9 +141,33 @@ class SharedMemory {
 
         if (this->_mutex != NULL) {
             if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
-                result = protobuf.DeSerialize(reinterpret_cast<char*>(this->_data.get()), this->_written_bytes);
+                pb_istream_t istream = pb_istream_from_buffer(this->_data, this->_written_bytes);
+                result               = pb_decode(&istream, ((pb_msgdesc_t*)&msg_desc), &protobuf);
 
-                this->_has_update = false;
+                if (!silent) {
+                    this->_has_update = false;
+                }
+                xSemaphoreGive(this->_mutex);
+            }
+        }
+
+        return result ? Error::NO_ERROR : Error::DESERIALIZE_ERROR;
+    }
+
+    titan_err_t Read(char* buffer, bool silent) {
+        auto result = Error::UNKNOW_FAIL;
+
+        if ((this->_access_type == WRITE_ONLY) || (buffer == nullptr)) {
+            return result;
+        }
+
+        if (this->_mutex != nullptr) {
+            if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
+                result = memcpy_s(buffer, this->_data, this->_written_bytes);
+
+                if (!silent) {
+                    this->_has_update = false;
+                }
                 xSemaphoreGive(this->_mutex);
             }
         }
@@ -132,7 +178,7 @@ class SharedMemory {
    protected:
     uint8_t _index;                     /**< Index of the memory area. */
     AccessType _access_type;            /**< Access type of the memory area. */
-    std::unique_ptr<uint8_t[]> _data;   /**< Pointer to the data buffer. */
+    uint8_t* _data;                     /**< Pointer to the data buffer. */
     uint8_t _has_update;                /**< Flag indicating if the area has been updated. */
     uint8_t _written_bytes;             /**< Number of valid bytes written in that area. */
     uint16_t _size;                     /**< Size of the memory area. */

@@ -1,7 +1,7 @@
 #ifndef GRAPHIC_DRIVER_INTERFACE_H
 #define GRAPHIC_DRIVER_INTERFACE_H
 
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 
 /**
  * @brief Interface for a graphic driver.

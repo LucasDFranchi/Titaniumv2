@@ -71,23 +71,23 @@ static void WiFiAppEventHandler(void* arg, esp_event_base_t event_base,
                 break;
             case WIFI_EVENT_AP_STACONNECTED:
                 ESP_LOGI(TAG, "WIFI_EVENT_AP_STACONNECTED");
-                network_manager->SetAPConnection(NetworkStatus::CONNECTED);
+                network_manager->SetAPConnection(NETWORK_STATUS_CONNECTED);
                 break;
             case WIFI_EVENT_AP_STADISCONNECTED:
                 ESP_LOGI(TAG, "WIFI_EVENT_AP_STADISCONNECTED");
-                network_manager->SetAPConnection(NetworkStatus::NOT_CONNECTED);
+                network_manager->SetAPConnection(NETWORK_STATUS_DISCONNECTED);
                 break;
             case WIFI_EVENT_STA_START:
                 ESP_LOGI(TAG, "WIFI_EVENT_STA_START");
                 break;
             case WIFI_EVENT_STA_CONNECTED:
                 ESP_LOGI(TAG, "WIFI_EVENT_STA_CONNECTED");
-                network_manager->SetSTAConnection(NetworkStatus::CONNECTED);
+                network_manager->SetSTAConnection(NETWORK_STATUS_CONNECTED);
                 break;
             case WIFI_EVENT_STA_DISCONNECTED:
                 ESP_LOGI(TAG, "WIFI_EVENT_STA_DISCONNECTED");
                 esp_wifi_connect();
-                network_manager->SetSTAConnection(NetworkStatus::CONNECTED);
+                network_manager->SetSTAConnection(NETWORK_STATUS_CONNECTED);
                 break;
         }
     } else if (event_base == IP_EVENT) {
@@ -109,8 +109,8 @@ titan_err_t NetworkProcess::Initialize(void) {
     this->_shared_memory_manager    = SharedMemoryManager::GetInstance();
     this->_need_update_network_data = 0;
     auto wifi_mode                  = WIFI_MODE_APSTA;
-    this->_connection_proto.UpdateApStatus(NetworkStatus::NOT_CONNECTED);
-    this->_connection_proto.UpdateStaStatus(NetworkStatus::NOT_CONNECTED);
+    this->_connection_proto.ap_connected = NETWORK_STATUS_DISCONNECTED;
+    this->_connection_proto.sta_connected = NETWORK_STATUS_DISCONNECTED;
 
     result += this->RegisterWiFiEvents();
     result += esp_netif_init();
@@ -151,13 +151,13 @@ void NetworkProcess::Execute(void) {
     esp_wifi_connect();
 
     while (1) {
-        if (shared_memory_manager->IsAreaDataUpdated(ProtobufIndex::CREDENTIALS)) {
+        if (shared_memory_manager->IsAreaDataUpdated(MEMORY_AREAS_NETWORK_CREDENTIALS)) {
             this->SetStationMode(&this->_sta_config);
             esp_wifi_connect();
         }
 
         if (this->_need_update_network_data) {
-            shared_memory_manager->Write(ProtobufIndex::CONNECTIONSTATUS, this->_connection_proto);
+            shared_memory_manager->Write(MEMORY_AREAS_NETWORK_INFORMATION, this->_connection_proto, network_information_t_msg);
             this->_need_update_network_data = 0;
         }
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -246,18 +246,18 @@ titan_err_t NetworkProcess::SetAccessPointMode(wifi_config_t* ap_config) {
  * @param[in] wifi_config Pointer to the Wi-Fi configuration structure.
  */
 void NetworkProcess::SetCredentials(wifi_config_t* wifi_config) {
-    this->_shared_memory_manager->Read(ProtobufIndex::CREDENTIALS, this->_cred_proto);
+    this->_shared_memory_manager->Read(MEMORY_AREAS_NETWORK_CREDENTIALS, this->_cred_proto, network_credentials_t_msg);
 
-    memcpy(wifi_config->sta.ssid, this->_cred_proto.GetSsid(), strlen(this->_cred_proto.GetSsid()) + 1);
-    memcpy(wifi_config->sta.password, this->_cred_proto.GetPassword(), strlen(this->_cred_proto.GetSsid()) + 1);
+    memcpy(wifi_config->sta.ssid, this->_cred_proto.ssid, strlen(this->_cred_proto.ssid) + 1);
+    memcpy(wifi_config->sta.password, this->_cred_proto.password, strlen(this->_cred_proto.password) + 1);
 }
 
 /**
  * @brief Sets the connection status for the Access Point (AP).
  * @param[in] status The connection status to set.
  */
-void NetworkProcess::SetAPConnection(uint8_t status) {
-    this->_connection_proto.UpdateStaStatus(status);
+void NetworkProcess::SetAPConnection(network_status_t status) {
+    this->_connection_proto.ap_connected = status;
     this->_need_update_network_data = 1;
 }
 
@@ -265,7 +265,7 @@ void NetworkProcess::SetAPConnection(uint8_t status) {
  * @brief Sets the connection status for the Station (STA).
  * @param[in] status The connection status to set.
  */
-void NetworkProcess::SetSTAConnection(uint8_t status) {
-    this->_connection_proto.UpdateStaStatus(status);
+void NetworkProcess::SetSTAConnection(network_status_t status) {
+    this->_connection_proto.sta_connected = status;
     this->_need_update_network_data = 1;
 }

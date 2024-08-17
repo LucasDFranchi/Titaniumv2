@@ -2,7 +2,7 @@
 #define TITANIUM_PROTOCOL_H
 
 #include "TitaniumPackage.h"
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 
 namespace ProtocolConstants {
     constexpr uint8_t ACK[]              = {0x02, 0x00, 0x03, 0x41, 0x00, 0x41, 0x43, 0x4B, 0xB4, 0x43, 0xBA, 0x3B, 0x03};  // "ACK"
@@ -41,7 +41,6 @@ class TitaniumProtocol {
     uint16_t GetStarByteOffset(uint8_t* buffer, uint16_t buffer_size);
     uint32_t GetUUID(uint8_t* buffer, uint16_t remaining_bytes);
     uint16_t GetPayloadLength(uint8_t* buffer, uint16_t remaining_bytes);
-    command_e GetCommand(uint8_t* buffer, uint16_t remaining_bytes);
     uint8_t GetMemoryArea(uint8_t* buffer, uint16_t remaining_bytes);
     uint16_t GetAddress(uint8_t* buffer, uint16_t remaining_bytes);
     uint8_t* GetPayload(uint8_t* buffer, uint16_t remaining_bytes);
@@ -49,7 +48,6 @@ class TitaniumProtocol {
     uint8_t GetEndByte(uint8_t* buffer, uint16_t payload_size, uint16_t remaining_bytes);
     titan_err_t ValidateUUID(uint32_t uuid);
     titan_err_t ValidatePayloadLength(uint16_t data_length);
-    titan_err_t ValidateCommand(command_e command);
     titan_err_t ValidateEndByte(uint8_t end_byte);
     titan_err_t ValidateMemoryArea(uint8_t memory_area);
     titan_err_t ValidateAddress(uint16_t address);

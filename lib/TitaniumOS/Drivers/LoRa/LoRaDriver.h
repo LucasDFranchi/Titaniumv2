@@ -3,7 +3,7 @@
 
 #include "Drivers/DriverInterface/ICommunicationDriver.h"
 #include "HAL/spi/SPIManager.h"
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 
 namespace CRCMode {
     constexpr uint8_t ENABLE  = 0x00; /**< CRC enable mode. */
@@ -82,7 +82,7 @@ class LoRaDriver : public IDriverInterface {
     void SendPacket(uint8_t* pOut, uint8_t size);
     uint8_t ReceivePacket(uint8_t* pIn, uint8_t size);
     titan_err_t WriteRegister(uint8_t register_address, uint8_t register_value);
-    uint32_t ReadRegister(uint8_t register_address);
+    uint8_t ReadRegister(uint8_t register_address);
     titan_err_t ValidateVersion(void);
 
     SPIManager* spi_manager   = nullptr; /**< Pointer to the SPI manager instance. */

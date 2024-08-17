@@ -1,5 +1,5 @@
 #include "Drivers/DriverInterface/IGraphicDriver.h"
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 #include "driver/i2c.h"
 #include "driver/gpio.h"
 

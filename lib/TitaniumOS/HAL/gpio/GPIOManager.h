@@ -2,7 +2,7 @@
 #define GPIO_MANAGER_H
 
 #include "GPIOInternal.h"
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 #include "driver/gpio.h"
 
 /**

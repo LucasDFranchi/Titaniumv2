@@ -6,7 +6,7 @@
 typedef int titan_err_t;
 
 namespace Error {
-    constexpr titan_err_t SUCCESS                  = 0;
+    constexpr titan_err_t NO_ERROR                 = 0;
     constexpr titan_err_t INVALID_START_BYTE       = -1; /**< Error code indicating invalid Start Byte. */
     constexpr titan_err_t INVALID_PAYLOAD_SIZE     = -2; /**< Error code indicating invalid payload size. */
     constexpr titan_err_t INVALID_COMMAND          = -3; /**< Error code indicating invalid command. */
@@ -23,10 +23,12 @@ namespace Error {
     constexpr titan_err_t PACKAGE_DECODE_ERROR     = -14;
     constexpr titan_err_t PACKAGE_ENCODE_ERROR     = -15;
     constexpr titan_err_t READ_FAIL                = -16;
-    constexpr titan_err_t SERIALIZE_JSON_ERROR     = -17;
-    constexpr titan_err_t CONSUME_ERROR            = -18;
-    constexpr titan_err_t SERIALIZE_ERROR          = -19;
-    constexpr titan_err_t DESERIALIZE_ERROR        = -20;
+    constexpr titan_err_t WRITE_FAIL               = -17;
+    constexpr titan_err_t SERIALIZE_JSON_ERROR     = -18;
+    constexpr titan_err_t CONSUME_ERROR            = -19;
+    constexpr titan_err_t SERIALIZE_ERROR          = -20;
+    constexpr titan_err_t DESERIALIZE_ERROR        = -21;
+    constexpr titan_err_t WRITTEN_LESS_THAN_ZERO   = -22;
 }  // namespace Error
 
 #endif /* ERROR_H */

@@ -44,7 +44,12 @@ class ProcessTemplate {
      * @brief Initializes the process by creating a FreeRTOS task.
      */
     void InitializeProcess() {
-        xTaskCreate(ProcessTemplate::ExecuteProcess, this->name, this->memory, static_cast<void *>(this->object_pointer), this->priority, this->handle);
+        xTaskCreatePinnedToCore(ProcessTemplate::ExecuteProcess,
+                                this->name, this->memory,
+                                static_cast<void *>(this->object_pointer),
+                                this->priority,
+                                this->handle,
+                                0);
     }
 
     TaskHandle_t task_handle(void) const {

@@ -1,5 +1,5 @@
 #include "TitaniumProtocol.h"
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 #include "Protocols/Titanium/Utils/CRCUtils.h"
 
 namespace ProtocolAttributes {
@@ -9,9 +9,7 @@ namespace ProtocolAttributes {
     constexpr uint8_t UUID_SIZE             = 4;
     constexpr uint8_t PAYLOAD_LENGTH_OFFSET = UUID_OFFSET + UUID_SIZE;
     constexpr uint8_t PAYLOAD_LENGTH_SIZE   = 2;
-    constexpr uint8_t COMMAND_OFFSET        = PAYLOAD_LENGTH_OFFSET + PAYLOAD_LENGTH_SIZE;
-    constexpr uint8_t COMMAND_SIZE          = 1;
-    constexpr uint8_t MEMORY_AREA_OFFSET    = COMMAND_OFFSET + COMMAND_SIZE;
+    constexpr uint8_t MEMORY_AREA_OFFSET    = PAYLOAD_LENGTH_OFFSET + PAYLOAD_LENGTH_SIZE;
     constexpr uint8_t MEMORY_AREA_SIZE      = 1;
     constexpr uint8_t ADDRESS_OFFSET        = MEMORY_AREA_OFFSET + MEMORY_AREA_SIZE;
     constexpr uint8_t ADDRESS_SIZE          = 2;
@@ -108,22 +106,6 @@ uint16_t TitaniumProtocol::GetPayloadLength(uint8_t* buffer, uint16_t remaining_
     uint8_t payload_length_msb = buffer[offset + 1];
 
     return (payload_length_msb << 8) | payload_length_lsb;
-}
-
-/**
- * @brief Retrieve the command from the buffer.
- *
- * This function extracts the command from the buffer at the predefined offset.
- *
- * @param[in] buffer Pointer to the buffer containing the message.
- * @param[in] remaining_bytes Number of remaining bytes in the buffer.
- * @return The command if extraction is successful, otherwise `INVALID_COMMAND`.
- */
-command_e TitaniumProtocol::GetCommand(uint8_t* buffer, uint16_t remaining_bytes) {
-    if (remaining_bytes <= 0) {
-        return static_cast<command_e>(ProtocolErrors::INVALID_COMMAND);
-    }
-    return static_cast<command_e>(buffer[ProtocolAttributes::COMMAND_OFFSET]);
 }
 
 /**
@@ -260,38 +242,6 @@ titan_err_t TitaniumProtocol::ValidateAddress(uint16_t address) {
 }
 
 /**
- * @brief Validate the command.
- *
- * This function checks if the provided command is valid.
- *
- * @param[in] command Command to be validated.
- * @return `ESP_OK` if the command is valid, otherwise an error code.
- */
-titan_err_t TitaniumProtocol::ValidateCommand(command_e command) {
-    titan_err_t result = ProtocolErrors::INVALID_COMMAND;
-
-    do {
-        switch (command) {
-            case READ_COMMAND:
-            case READ_SECURE_COMMAND:
-            case WRITE_COMMAND:
-            case READ_RESPONSE_COMMAND:
-            case WRITE_SECURE_COMMAND:
-            case READ_RESPONSE_SECURE_COMMAND:
-            case ACK_COMMAND: {
-                result = ESP_OK;
-                break;
-            }
-            default: {
-                result = ProtocolErrors::INVALID_COMMAND;
-            }
-        }
-    } while (0);
-
-    return result;
-}
-
-/**
  * @brief Validate the memory area.
  *
  * This function checks if the provided memory area is valid.
@@ -327,7 +277,7 @@ titan_err_t TitaniumProtocol::ValidatePayload(uint8_t* payload) {
  */
 titan_err_t TitaniumProtocol::ValidateCRC(uint32_t crc, uint8_t* buffer, uint16_t size) {
     auto calculated_crc = CalculatedCRC32(buffer, size);
-
+    ESP_LOGI("TEST", "Calculatted CRC: %lu", calculated_crc);
     return calculated_crc == crc ? ESP_OK : ProtocolErrors::INVALID_CRC;
 }
 
@@ -450,7 +400,7 @@ titan_err_t TitaniumProtocol::Decode(uint8_t* buffer, size_t size, std::unique_p
 
     do {
         auto start_message_index = this->GetStarByteOffset(buffer, size);
-
+        
         if (start_message_index == ProtocolInvalid::INVALID_START_BYTE_OFFSET) {
             result = ProtocolErrors::INVALID_START_BYTE;
             break;
@@ -475,13 +425,6 @@ titan_err_t TitaniumProtocol::Decode(uint8_t* buffer, size_t size, std::unique_p
         auto payload_length = this->GetPayloadLength(start_message_pointer, remaining_bytes);
         if (this->ValidatePayloadLength(payload_length) != ESP_OK) {
             result = ProtocolErrors::INVALID_PAYLOAD_SIZE;
-            break;
-        }
-
-        remaining_bytes -= ProtocolAttributes::COMMAND_SIZE;
-        auto command = this->GetCommand(start_message_pointer, remaining_bytes);
-        if (this->ValidateCommand(command) != ESP_OK) {
-            result = ProtocolErrors::INVALID_COMMAND;
             break;
         }
 
@@ -523,7 +466,7 @@ titan_err_t TitaniumProtocol::Decode(uint8_t* buffer, size_t size, std::unique_p
 
         if (result == ESP_OK) {
             package.reset(
-                new TitaniumPackage(payload_length, uuid, address, command, memory_area, payload));
+                new TitaniumPackage(payload_length, address, memory_area, payload));
         }
     } while (0);
 
@@ -559,7 +502,6 @@ uint16_t TitaniumProtocol::Encode(std::unique_ptr<TitaniumPackage>& package, uin
         }
 
         buffer[ProtocolAttributes::START_BYTE_OFFSET]  = Protocol::START_BYTE;
-        buffer[ProtocolAttributes::COMMAND_OFFSET]     = package.get()->command();
         buffer[ProtocolAttributes::MEMORY_AREA_OFFSET] = package.get()->memory_area();
 
         auto end_byte_position    = package.get()->size() + ProtocolAttributes::STATIC_MESSAGE_SIZE;

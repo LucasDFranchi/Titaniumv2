@@ -5,7 +5,7 @@
 
 #include "HAL/gpio/GPIOManager.h"
 
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 #include "driver/spi_master.h"
 
 /**

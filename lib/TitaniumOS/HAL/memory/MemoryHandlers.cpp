@@ -18,7 +18,7 @@
  *         - ESP_ERR_NO_MEM if either pOut or pIn is nullptr.
  */
 titan_err_t memcpy_s(void* pOut, void* pIn, uint32_t size_in_bytes) {
-    titan_err_t result = ESP_OK;
+    titan_err_t result = Error::NO_ERROR;
 
     do {
         if (size_in_bytes == 0) {

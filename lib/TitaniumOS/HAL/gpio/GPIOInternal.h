@@ -9,7 +9,7 @@
 
 #include "stdint.h"
 
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 
 /**
  * @brief Task-safe GPIO class.

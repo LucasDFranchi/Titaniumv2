@@ -5,7 +5,7 @@
 #include "SystemProcess/NetworkProcess/inc/NetworkProcess.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
 #include "Protocols/Web/inc/RequestHandler.h"
-
+#include "Protocols/Protobuf/inc/titanium.pb.h"
 #include "esp_err.h"
 #include "esp_http_server.h"
 
@@ -58,9 +58,9 @@ class HTTPServerProcess : public ProcessTemplate {
     httpd_handle_t _server                      = nullptr;       /**< HTTP server handle. */
     TaskHandle_t _process_handler               = nullptr;       /**< Handle for the HTTP server process task. */
     SharedMemoryManager* _shared_memory_manager = nullptr;       /**< Pointer to shared memory manager instance. */
-    ConnectionStatusProtobuf _connection_status{};               /**< Current connection status. */
-    ConnectionStatusProtobuf _last_connection_status{};          /**< Last recorded connection status. */
-    uint8_t _server_status = NetworkStatus::NOT_CONNECTED;       /**< Status of the HTTP server connection. */
+    network_information _connection_status{};               /**< Current connection status. */
+    network_information _last_connection_status{};          /**< Last recorded connection status. */
+    uint8_t _server_status = NETWORK_STATUS_DISCONNECTED;       /**< Status of the HTTP server connection. */
 };
 
 #endif /* HTTP_SERVER_MANAGER_H */

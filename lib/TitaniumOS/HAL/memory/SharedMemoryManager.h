@@ -4,8 +4,7 @@
 #include <stdint.h>
 #include <memory>
 
-#include "Kernel/error/error_enum.h"
-#include "Protocols/Protobuf/inc/IProtobuf.h"
+#include "Application/error/error_enum.h"
 #include "SharedMemory.h"
 
 /**
@@ -31,7 +30,6 @@ class SharedMemoryManager {
    private:
     static constexpr uint16_t _maximum_shared_memory = 32;
     uint16_t _num_areas                              = 0;
-    // std::unique_ptr<std::unique_ptr<SharedMemory>[]> _shared_memory_array;
     std::unique_ptr<SharedMemory> _shared_memory_array[SharedMemoryManager::_maximum_shared_memory];
 
    public:
@@ -46,61 +44,104 @@ class SharedMemoryManager {
      *          - ESP_OK if the write operation was successful.
      *          - Error::UNKNOW_FAIL if an error occurred during the write operation.
      */
-    titan_err_t Write(uint8_t area_index, IProtobuf& protobuf) {
+    template <typename T>
+    titan_err_t Write(uint8_t area_index, T& protobuf, const pb_msgdesc_t& msg_desc) {
         titan_err_t result = Error::UNKNOW_FAIL;
 
         do {
             if (area_index > this->_maximum_shared_memory) {
-                result = ESP_ERR_INVALID_ARG;
+                result = Error::INVALID_MEMORY_AREA;
                 break;
             }
 
             if (this->_shared_memory_array[area_index] == nullptr) {
-                result = ESP_ERR_NO_MEM;
+                result = Error::NULL_PTR;
                 break;
             }
 
-            auto memory_size =
-                this->_shared_memory_array[area_index]->GetSize();
-
-            if (memory_size < protobuf.GetSerializedSize()) {
-                result = ESP_ERR_INVALID_SIZE;
-                break;
-            }
-
-            result = this->_shared_memory_array[area_index]->Write(protobuf);
+            result = this->_shared_memory_array[area_index]->Write(protobuf, msg_desc);
 
         } while (0);
 
         return result;
     }
 
-    uint16_t Read(uint8_t area_index, IProtobuf& protobuf) {
-        uint16_t result = 0;
+    titan_err_t Write(uint8_t area_index, char* buffer, uint16_t written_bytes) {
+        titan_err_t result = Error::UNKNOW_FAIL;
 
         do {
             if (area_index > this->_maximum_shared_memory) {
-                result = ESP_ERR_INVALID_ARG;
+                result = Error::INVALID_MEMORY_AREA;
                 break;
             }
 
             if (this->_shared_memory_array[area_index] == nullptr) {
-                result = ESP_ERR_NO_MEM;
+                result = Error::NULL_PTR;
                 break;
             }
 
             auto memory_size =
                 this->_shared_memory_array[area_index]->GetSize();
-            if (memory_size > protobuf.GetMaxSize()) {
-                result = ESP_ERR_INVALID_SIZE;
+
+            if (memory_size < written_bytes) {
+                result = Error::BUFFER_OUT_OF_SPACE;
                 break;
             }
 
-            if (this->_shared_memory_array[area_index]->Read(protobuf) != ESP_OK) {
+            result = this->_shared_memory_array[area_index]->Write(buffer, written_bytes);
+
+        } while (0);
+
+        return result;
+    }
+    
+    template <typename T>
+    uint16_t Read(uint8_t area_index, T& protobuf, const pb_msgdesc_t& msg_desc, bool silent = false) {
+        uint16_t result = 0;
+
+        do {
+            if (area_index > this->_maximum_shared_memory) {
                 break;
             }
 
-            result = ESP_OK;
+            if (this->_shared_memory_array[area_index] == nullptr) {
+                break;
+            }
+
+            if (this->_shared_memory_array[area_index]->Read(protobuf, msg_desc, silent) != Error::NO_ERROR) {
+                break;
+            }
+
+            result = this->_shared_memory_array[area_index]->GetWrittenBytes();
+
+        } while (0);
+
+        return result;
+    }
+    
+    uint16_t Read(uint8_t area_index, char* buffer, uint16_t buffer_size, bool silent = false) {
+        uint16_t result = 0;
+
+        do {
+            if (area_index > this->_maximum_shared_memory) {
+                break;
+            }
+
+            if (this->_shared_memory_array[area_index] == nullptr) {
+                break;
+            }
+
+            auto memory_size =
+                this->_shared_memory_array[area_index]->GetSize();
+            if (memory_size > buffer_size) {
+                break;
+            }
+
+            if (this->_shared_memory_array[area_index]->Read(buffer, silent) != Error::NO_ERROR) {
+                break;
+            }
+
+            result = this->_shared_memory_array[area_index]->GetWrittenBytes();
 
         } while (0);
 

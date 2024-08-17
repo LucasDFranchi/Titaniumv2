@@ -1,7 +1,7 @@
 #ifndef REQUEST_HANDLER_H
 #define REQUEST_HANDLER_H
 
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 #include "esp_err.h"
 #include "esp_http_server.h"
 

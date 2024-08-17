@@ -1,7 +1,7 @@
 #ifndef COMMUNICATION_DRIVER_INTERFACE_H
 #define COMMUNICATION_DRIVER_INTERFACE_H
 
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 
 /**
  * @brief Interface for communication driver.

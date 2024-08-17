@@ -58,6 +58,10 @@
                         "name": "memory_area"
                     },
                     {
+                        "type": "uint8_t",
+                        "name": "recv_memory_area"
+                    },
+                    {
                         "type": "string",
                         "name": "payload",
                         "maximum_size": 128
@@ -81,6 +85,10 @@
                     {
                         "type": "uint8_t",
                         "name": "memory_area"
+                    },
+                    {
+                        "type": "uint8_t",
+                        "name": "recv_memory_area"
                     },
                     {
                         "type": "string",
@@ -108,6 +116,10 @@
                         "name": "memory_area"
                     },
                     {
+                        "type": "uint8_t",
+                        "name": "recv_memory_area"
+                    },
+                    {
                         "type": "string",
                         "name": "payload",
                         "maximum_size": 256
@@ -131,6 +143,10 @@
                     {
                         "type": "uint8_t",
                         "name": "memory_area"
+                    },
+                    {
+                        "type": "uint8_t",
+                        "name": "recv_memory_area"
                     },
                     {
                         "type": "string",

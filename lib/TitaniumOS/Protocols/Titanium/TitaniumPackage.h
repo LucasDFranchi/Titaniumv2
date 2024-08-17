@@ -7,8 +7,6 @@
 #include <memory>
 
 #include "HAL/memory/MemoryHandlers.h"
-#include "Protocols/Protobuf/inc/IProtobuf.h"
-#include "TitaniumProtocolEnums.h"
 
 /**
  * @brief Represents a Titanium package containing data and metadata.
@@ -27,12 +25,11 @@ class TitaniumPackage {
      *
      * @param[in] size The size of the package data.
      * @param[in] address The address associated with the package.
-     * @param[in] command The command type associated with the package.
      * @param[in] memory_area The memory area identifier associated with the package.
      * @param[in] data A pointer to the data to be copied into the package.
      */
-    TitaniumPackage(uint16_t size, uint16_t address, command_e command, uint8_t memory_area, uint8_t* data)
-        : _command(command), _memory_area(memory_area) {
+    TitaniumPackage(uint16_t size, uint16_t address, uint8_t memory_area, uint8_t* data)
+        : _memory_area(memory_area) {
         this->_size    = size;
         this->_address = address;
         this->_data    = std::make_unique<uint8_t[]>(size);
@@ -47,35 +44,16 @@ class TitaniumPackage {
      *
      * @param[in] size The size of the package data.
      * @param[in] address The address associated with the package.
-     * @param[in] command The command type associated with the package.
      * @param[in] memory_area The memory area identifier associated with the package.
      * @param[in] data A pointer to the data to be copied into the package.
      */
-    TitaniumPackage(uint16_t size, uint32_t uuid, uint16_t address, command_e command, uint8_t memory_area, uint8_t* data)
-        : _uuid(uuid), _command(command), _memory_area(memory_area) {
+    TitaniumPackage(uint16_t size, uint16_t address, uint8_t memory_area, char* data)
+        : _memory_area(memory_area) {
         this->_size    = size;
         this->_address = address;
         this->_data    = std::make_unique<uint8_t[]>(size);
-        memcpy_s(this->_data.get(), data, size);
-    }
-    /**
-     * @brief Constructs a TitaniumPackage object.
-     *
-     * Constructs a TitaniumPackage object with the specified size, command type, memory area,
-     * and data. The data provided is copied into an internal buffer.
-     *
-     * @param[in] address The address associated with the package.
-     * @param[in] command The command type associated with the package.
-     * @param[in] memory_area The memory area identifier associated with the package.
-     * @param[in] protobuf The protobuf to be transmitted.
-     */
-    TitaniumPackage(uint16_t address, command_e command, uint8_t memory_area, IProtobuf& protobuf)
-        : _command(command), _memory_area(memory_area) {
-        this->_size    = protobuf.GetSerializedSize();
-        this->_address = address;
-        this->_data    = std::make_unique<uint8_t[]>(this->_size);
         this->_uuid    = this->GenerateUUID();
-        protobuf.Serialize(reinterpret_cast<char*>(this->_data.get()), this->_size);
+        memcpy_s(this->_data.get(), data, size);
     }
     /**
      * @brief Retrieves the package data.
@@ -128,15 +106,6 @@ class TitaniumPackage {
     }
 
     /**
-     * @brief Get the command type associated with the package.
-     *
-     * @return The command type associated with the package.
-     */
-    command_e command() const {
-        return _command;
-    }
-
-    /**
      * @brief Get the memory area identifier associated with the package.
      *
      * @return The memory area identifier associated with the package.
@@ -159,7 +128,6 @@ class TitaniumPackage {
     uint16_t _size       = 0;                  ///< The size of the package data.
     uint32_t _uuid       = -1;                 ///< The UUID associated with the package.
     uint16_t _address    = 0;                  ///< The address of the transmitted package.
-    command_e _command   = INVALID_OPERATION;  ///< The command type associated with the package.
     uint8_t _memory_area = -1;                 ///< The memory area identifier associated with the package.
     std::unique_ptr<uint8_t[]> _data;          ///< The buffer storing the package data.
 };

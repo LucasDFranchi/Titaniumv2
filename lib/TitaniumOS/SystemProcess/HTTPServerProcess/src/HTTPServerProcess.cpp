@@ -5,7 +5,6 @@
 
 #include "SystemProcess/HTTPServerProcess/inc/HTTPServerProcess.h"
 #include "HAL/memory/MemoryHandlers.h"
-#include "Protocols/Protobuf/inc/ProtobufFactory.h"
 
 #include "esp_log.h"
 
@@ -106,7 +105,7 @@ static titan_err_t get_uri_favicon_icon(httpd_req_t* req) {
  * @return ESP_OK on success, or an error code on failure.
  */
 static titan_err_t post_uri_wifi_credentials(httpd_req_t* req) {
-    CredentialsProtobuf credentials_proto;
+    network_credentials credentials_proto;
     char ssid[32]     = {0};
     char password[64] = {0};
     titan_err_t result  = Error::UNKNOW_FAIL;
@@ -144,10 +143,10 @@ static titan_err_t post_uri_wifi_credentials(httpd_req_t* req) {
                                 "Error reading Password!");
             return Error::UNKNOW_FAIL;
         }
-        credentials_proto.UpdateSsid(ssid);
-        credentials_proto.UpdatePassword(password);
+        strcpy(credentials_proto.ssid, ssid);
+        strcpy(credentials_proto.password, password);
 
-        http_server_manager->memory_manager()->Write(ProtobufIndex::CREDENTIALS, credentials_proto);
+        http_server_manager->memory_manager()->Write(MEMORY_AREAS_NETWORK_CREDENTIALS, credentials_proto, network_credentials_t_msg);
         result = ESP_OK;
 
     } while (0);
@@ -175,18 +174,11 @@ static titan_err_t get_area_handler(httpd_req_t* req) {
         HTTPServerProcess* http_server_process =
             reinterpret_cast<HTTPServerProcess*>(req->user_ctx);
 
-        auto protobuf = ProtobufFactory::CreateProtobuf(area_index);
-
-        if (protobuf.get() == nullptr) {
-            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid Memory Area");
-            break;
-        }
-
         if (req->method == HTTP_GET) {
-            http_server_process->memory_manager()->Read(area_index, *protobuf);
-
-            response_size = protobuf->SerializeJson(&http_server_process->response_buffer[0],
-                                                    sizeof(http_server_process->response_buffer));
+            response_size = http_server_process->memory_manager()->Read(area_index,
+                                                        &http_server_process->response_buffer[0],
+                                                        sizeof(http_server_process->response_buffer),
+                                                        true);
 
             if (response_size > 0) {
                 httpd_resp_send(req, http_server_process->response_buffer,
@@ -200,14 +192,9 @@ static titan_err_t get_area_handler(httpd_req_t* req) {
                 break;
             }
 
-            result = protobuf->DeSerializeJson(http_server_process->read_buffer,
-                                               sizeof(http_server_process->read_buffer));
-
-            if (result != ESP_OK) {
-                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid Json Data!");
-                break;
-            }
-            result = http_server_process->memory_manager()->Write(area_index, *protobuf);
+            result = http_server_process->memory_manager()->Write(area_index,
+                                                                  http_server_process->read_buffer, 
+                                                                  strlen(http_server_process->read_buffer));
         }
 
         if (result == ESP_OK) {
@@ -233,32 +220,33 @@ void HTTPServerProcess::Execute(void) {
 
     while (1) {
         do {
-            this->_shared_memory_manager->Read(ProtobufIndex::CONNECTIONSTATUS,
-                                               this->_connection_status);
+            this->_shared_memory_manager->Read(MEMORY_AREAS_NETWORK_INFORMATION,
+                                               this->_connection_status,
+                                               network_information_t_msg);
             auto ap_changed =
-                this->_last_connection_status.GetApStatus() !=
-                this->_connection_status.GetApStatus();
+                this->_last_connection_status.ap_connected !=
+                this->_connection_status.ap_connected;
             auto sta_changed =
-                this->_last_connection_status.GetStaStatus() !=
-                this->_connection_status.GetStaStatus();
+                this->_last_connection_status.sta_connected !=
+                this->_connection_status.sta_connected;
 
             if (!ap_changed && !sta_changed) {
                 break;
             }
 
-            auto ap_status  = this->_connection_status.GetApStatus();
-            auto sta_status = this->_connection_status.GetStaStatus();
+            auto ap_status  = this->_connection_status.ap_connected;
+            auto sta_status = this->_connection_status.sta_connected;
 
-            if ((ap_status == NetworkStatus::CONNECTED) || (sta_status == NetworkStatus::CONNECTED)) {
-                if (this->_server_status != NetworkStatus::CONNECTED) {
+            if ((ap_status == NETWORK_STATUS_CONNECTED) || (sta_status == NETWORK_STATUS_CONNECTED)) {
+                if (this->_server_status != NETWORK_STATUS_CONNECTED) {
                     this->StartHTTPServer();
-                    this->_server_status = NetworkStatus::CONNECTED;
+                    this->_server_status = NETWORK_STATUS_CONNECTED;
                     ESP_LOGI(TAG, "HTTP SERVER STARTED");
                 }
-            } else if ((ap_status == NetworkStatus::NOT_CONNECTED) && (sta_status == NetworkStatus::NOT_CONNECTED)) {
-                if (this->_server_status != NetworkStatus::CONNECTED) {
+            } else if ((ap_status == NETWORK_STATUS_DISCONNECTED) && (sta_status == NETWORK_STATUS_DISCONNECTED)) {
+                if (this->_server_status != NETWORK_STATUS_CONNECTED) {
                     this->StopHTTPServer();
-                    this->_server_status = NetworkStatus::NOT_CONNECTED;
+                    this->_server_status = NETWORK_STATUS_DISCONNECTED;
                     ESP_LOGI(TAG, "HTTP SERVER STOPED");
                 }
             }

@@ -1,24 +1,37 @@
-#include "Kernel/Kernel.h"
+#include "Application/Application.h"
 
-#include "CustomProcess/WaterLevelProcess/inc/WaterLevelProcess.h"
+#include "CustomProcess/TimeProcess/inc/TimeProcess.h"
 
 int main(void) {
-    Kernel kernel;
+    Application app;
 
-    kernel.EnableNetworkProcess(10240, 4);
-    kernel.EnableHTTPServerProcess(20480, 2);
-    kernel.EnableUartProcess(10240, 5);
-    kernel.EnableLoraProcess(10240, 5, true);
-    kernel.EnableMQTTClientProcess(10240, 5);
+    app.EnableNetworkProcess(10240, 4);
+    app.EnableHTTPServerProcess(10240, 2);
+    app.EnableUartProcess(10240, 5);
+    app.EnableLoraProcess(20240, 5, true);
+    app.EnableMQTTClientProcess(10240, 5);
 
-    // auto water_level_process = new WaterLevelProcess("Water Level Process", 10240, 2);
-    // water_level_process->InitializeProcess();
-    
-    // kernel.SignUpSharedArea(ProtobufIndex::WATER_LEVEL, WaterLevelProtobuf::GetStaticMaxSize(), READ_WRITE);
+    app.InjectDebugCredentials("NETPARQUE_PAOLA", "NPQ196253");
 
-    // kernel.InjectDebugCredentials("NETPARQUE_PAOLA", "NPQ196253");
+    app.SignUpSharedArea(MEMORY_AREAS_TIME_PROCESS, sizeof(time_process_t), READ_WRITE);
+    auto time_process = new TimeProcess("Time Proccess", 2048, 5);
+    time_process->InitializeProcess();
 
-    return 0;   
+    continuos_packet_list_t continuos_packet_list{};
+    continuos_packet_list.packet_configs_count = 1;
+    continuos_packet_list.packet_configs[0] = {
+        .destination_address = 0x0000,
+        .destination_area    = MEMORY_AREAS_TIME_PROCESS,
+        .requested_area      = MEMORY_AREAS_TIME_PROCESS,
+        .packet_interval     = 5000000,
+        .last_transmission   = 0,
+    };
+
+    app.InjectMemoryAreaData(MEMORY_AREAS_LORA_CONTINUOS_PACKET,
+                             continuos_packet_list,
+                             continuos_packet_list_t_msg);
+
+    return 0;
 }
 
 extern "C" void app_main(void) {

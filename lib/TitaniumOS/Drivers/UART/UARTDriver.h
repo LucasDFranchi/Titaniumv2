@@ -2,7 +2,7 @@
 #define UART_DRIVER_GUARD
 
 #include "Drivers/DriverInterface/ICommunicationDriver.h"
-#include "Kernel/error/error_enum.h"
+#include "Application/error/error_enum.h"
 #include "driver/uart.h"
 
 namespace Baudrate {
