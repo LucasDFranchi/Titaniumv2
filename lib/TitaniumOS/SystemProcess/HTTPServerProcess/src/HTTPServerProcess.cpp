@@ -21,6 +21,8 @@ namespace BinaryData {
     extern const uint8_t jquery3_js_end[] asm("_binary_jquery_3_3_1_min_js_end");     /**< End of jquery-3.3.1.min.js binary data. */
     extern const uint8_t favicon_ico_start[] asm("_binary_favicon_ico_start");        /**< Start of favicon.ico binary data. */
     extern const uint8_t favicon_ico_end[] asm("_binary_favicon_ico_end");            /**< End of favicon.ico binary data. */
+    extern const uint8_t titanium_proto_start[] asm("_binary_titanium_proto_start");  /**< Start of titanium.proto binary data. */
+    extern const uint8_t titanium_proto_end[] asm("_binary_titanium_proto_end");      /**< End of titanium.proto binary data. */
 }  // namespace BinaryData
 
 /**
@@ -99,6 +101,24 @@ static titan_err_t get_uri_favicon_icon(httpd_req_t* req) {
 }
 
 /**
+ * @brief HTTP GET handler for serving a .proto file.
+ *
+ * @param[in] req HTTP request object.
+ * @return ESP_OK on success, or an error code on failure.
+ */
+static titan_err_t get_uri_proto_file(httpd_req_t* req) {
+    // Set the response content type to text/protobuf
+    httpd_resp_set_type(req, "text/protobuf");
+    
+    // Send the .proto file content
+    httpd_resp_send(
+        req, reinterpret_cast<const char*>(BinaryData::titanium_proto_start),
+        BinaryData::titanium_proto_end - BinaryData::titanium_proto_start);
+    
+    return ESP_OK;
+}
+
+/**
  * @brief HTTP POST handler for processing WiFi credentials.
  *
  * @param[in] req HTTP request object.
@@ -155,68 +175,14 @@ static titan_err_t post_uri_wifi_credentials(httpd_req_t* req) {
 }
 
 /**
- * @brief HTTP GET/POST handler for retrieving/posting data from/to different memory areas.
- *
- * @param[in] req HTTP request object.
- * @return ESP_OK on success, or an error code on failure.
- */
-static titan_err_t get_area_handler(httpd_req_t* req) {
-    uint32_t response_size = 0;
-    uint16_t area_index    = 0;
-    auto result            = Error::UNKNOW_FAIL;
-
-    do {
-        if (GetRequestKey(req, "/get_area?id=", &area_index) != ESP_OK) {
-            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Index out of range!");
-            break;
-        }
-
-        HTTPServerProcess* http_server_process =
-            reinterpret_cast<HTTPServerProcess*>(req->user_ctx);
-
-        if (req->method == HTTP_GET) {
-            response_size = http_server_process->memory_manager()->Read(area_index,
-                                                        &http_server_process->response_buffer[0],
-                                                        sizeof(http_server_process->response_buffer),
-                                                        true);
-
-            if (response_size > 0) {
-                httpd_resp_send(req, http_server_process->response_buffer,
-                                response_size);
-                result = ESP_OK;
-            }
-        } else if ((req->method == HTTP_POST)) {
-            if (GetRequestData(req, http_server_process->read_buffer,
-                               sizeof(http_server_process->read_buffer)) != ESP_OK) {
-                httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid receive data!");
-                break;
-            }
-
-            result = http_server_process->memory_manager()->Write(area_index,
-                                                                  http_server_process->read_buffer, 
-                                                                  strlen(http_server_process->read_buffer));
-        }
-
-        if (result == ESP_OK) {
-            httpd_resp_sendstr_chunk(req, "OK");
-        } else {
-            httpd_resp_sendstr_chunk(req, "NOK");
-        }
-
-        httpd_resp_sendstr_chunk(req, NULL);
-
-    } while (0);
-
-    return result;
-}
-
-/**
  * @brief Main execution loop for HTTPServerProcess.
  *
  * This function runs an infinite loop with a delay of 1000 milliseconds.
  */
 void HTTPServerProcess::Execute(void) {
-    this->Initialize();
+    if (this->Initialize() != Error::NO_ERROR) {
+        vTaskDelete(this->_process_handler);
+    }
 
     while (1) {
         do {
@@ -262,7 +228,7 @@ void HTTPServerProcess::Execute(void) {
  * @return ESP_OK on success, or an error code on failure.
  */
 titan_err_t HTTPServerProcess::Initialize(void) {
-    auto result = ESP_OK;
+    auto result = Error::UNKNOW_FAIL;
 
     this->_config                   = HTTPD_DEFAULT_CONFIG();
     this->_config.send_wait_timeout = 10;
@@ -270,7 +236,7 @@ titan_err_t HTTPServerProcess::Initialize(void) {
     this->_config.max_uri_handlers  = 20;
     this->_shared_memory_manager    = SharedMemoryManager::GetInstance();
 
-    this->InitializeRequestList();
+    result = this->InitializeRequestList();
 
     return result;
 }
@@ -281,13 +247,7 @@ titan_err_t HTTPServerProcess::Initialize(void) {
  * @return ESP_OK on success, or an error code on failure.
  */
 titan_err_t HTTPServerProcess::StartHTTPServer(void) {
-    auto result = ESP_OK;
-
-    if (httpd_start(&this->_server, &this->_config) == ESP_OK) {
-        result += RegisterHandlers();
-    }
-
-    return result;
+    return httpd_start(&this->_server, &this->_config);
 }
 
 /**
@@ -302,21 +262,7 @@ titan_err_t HTTPServerProcess::StopHTTPServer(void) {
 /**
  * @brief Initializes the list of HTTP request URIs and their corresponding handlers.
  */
-void HTTPServerProcess::InitializeRequestList(void) {
-    static const httpd_uri_t uri_get_area_get = {
-        .uri      = "/get_area",
-        .method   = HTTP_GET,
-        .handler  = get_area_handler,
-        .user_ctx = this,
-    };
-
-    static const httpd_uri_t uri_get_area_post = {
-        .uri      = "/get_area",
-        .method   = HTTP_POST,
-        .handler  = get_area_handler,
-        .user_ctx = this,
-    };
-
+titan_err_t HTTPServerProcess::InitializeRequestList(void) {
     static const httpd_uri_t uri_index_html = {
         .uri      = "/",
         .method   = HTTP_GET,
@@ -359,28 +305,21 @@ void HTTPServerProcess::InitializeRequestList(void) {
         .user_ctx = this,
     };
 
-    this->_http_requests_list[0] = uri_get_area_get;
-    this->_http_requests_list[1] = uri_get_area_post;
-    this->_http_requests_list[2] = uri_index_html;
-    this->_http_requests_list[3] = uri_get_styles_css;
-    this->_http_requests_list[4] = uri_get_app_js;
-    this->_http_requests_list[5] = uri_get_jquery_js;
-    this->_http_requests_list[6] = uri_get_favicon_ico;
-    this->_http_requests_list[7] = uri_post_credentials;
-}
+    static const httpd_uri_t uri_get_proto = {
+        .uri      = "/titanium.proto",
+        .method   = HTTP_GET,
+        .handler  = get_uri_proto_file,
+        .user_ctx = this,
+    };
 
-/**
- * @brief Registers HTTP request handlers with the HTTP server.
- *
- * @return ESP_OK on success, or an error code on failure.
- */
-titan_err_t HTTPServerProcess::RegisterHandlers(void) {
-    auto result = ESP_OK;
-
-    for (int i = 0; i < this->maximum_requests_list_size; i++) {
-        result += httpd_register_uri_handler(this->_server,
-                                             &this->_http_requests_list[i]);
-    }
+    auto result = Error::NO_ERROR;
+    result += httpd_register_uri_handler(this->_server, &uri_index_html);
+    result += httpd_register_uri_handler(this->_server, &uri_get_styles_css);
+    result += httpd_register_uri_handler(this->_server, &uri_get_app_js);
+    result += httpd_register_uri_handler(this->_server, &uri_get_jquery_js);
+    result += httpd_register_uri_handler(this->_server, &uri_get_favicon_ico);
+    result += httpd_register_uri_handler(this->_server, &uri_post_credentials);
+    result += httpd_register_uri_handler(this->_server, &uri_get_proto);
 
     return result;
 }
