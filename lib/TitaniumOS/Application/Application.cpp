@@ -23,11 +23,18 @@ void Application::InitializeHAL(void) {
 
     ESP_ERROR_CHECK(this->_shared_memory_manager->Initialize());
 
-    if (this->_gpio_manager->Initialize() == ESP_OK) {
+    auto result = this->_gpio_manager->Initialize();
+    if (result == Error::NO_ERROR) {
         this->_gpio_initialized = true;
+    } else {
+        ESP_LOGE("Application", "GPIO Manager Failed with error: %d", result);
     }
-    if (this->_spi_manager->Initialize(GPIO_NUM_27, GPIO_NUM_19, GPIO_NUM_5) == ESP_OK) {
+
+    result = this->_spi_manager->Initialize();
+    if (result == Error::NO_ERROR) {
         this->_spi_initialized = true;
+    } else {
+        ESP_LOGE("Application", "SPI Manager Failed with error: %d", result);
     }
 }
 
@@ -53,7 +60,7 @@ titan_err_t Application::EnableNetworkProcess(uint32_t process_stack, uint8_t pr
     }
 
     this->_network_process->InitializeProcess();
-
+    ESP_LOGE("Application", "Network Process Initialization Successfully");
     return result;
 }
 
@@ -74,6 +81,7 @@ titan_err_t Application::EnableHTTPServerProcess(uint32_t process_stack, uint8_t
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
     }
+    ESP_LOGE("Application", "HTTP Server Process Initialization Successfully");
 
     return result;
 }
@@ -101,14 +109,14 @@ titan_err_t Application::EnableUartProcess(uint32_t process_stack, uint8_t proce
     this->_uart_communication_process->InstallDriver(new UARTDriver(UART_NUM_0, Baudrate::BaudRate115200, 256),
                                                      MEMORY_AREAS_UART_SINGLE_PACKET,
                                                      MEMORY_AREAS_UART_CONTINUOS_PACKET);
-    this->_uart_communication_process->Configure(0x1015); // this should be in the memory area
-
+    this->_uart_communication_process->Configure(0x1015);  // this should be in the memory area
 
     this->_uart_communication_process->InitializeProcess();
 
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
     }
+    ESP_LOGE("Application", "UART Process Initialization Successfully");
 
     return result;
 }
@@ -126,6 +134,7 @@ titan_err_t Application::EnableLoraProcess(uint32_t process_stack, uint8_t proce
     do {
         if ((!this->_spi_initialized) || (!this->_gpio_initialized)) {
             result = Error::UNKNOW_FAIL;
+            ESP_LOGE("Application", "Lora Process Initialization failed with error: %d", result);
             break;
         }
         result += this->_shared_memory_manager->SignUpSharedArea(MEMORY_AREAS_LORA_SINGLE_PACKET,
@@ -139,9 +148,10 @@ titan_err_t Application::EnableLoraProcess(uint32_t process_stack, uint8_t proce
         this->_lora_communication_process->InstallDriver(new LoRaDriver(Regions::BRAZIL, CRCMode::ENABLE, 255),
                                                          MEMORY_AREAS_LORA_SINGLE_PACKET,
                                                          MEMORY_AREAS_LORA_CONTINUOS_PACKET);
-        this->_lora_communication_process->Configure(0x1015); // this should be in the memory area
+        this->_lora_communication_process->Configure(0x1015);  // this should be in the memory area
 
         this->_lora_communication_process->InitializeProcess();
+        ESP_LOGE("Application", "Lora Process Initialization Successfully");
 
     } while (0);
 
@@ -172,6 +182,7 @@ titan_err_t Application::EnableMQTTClientProcess(uint32_t process_stack, uint8_t
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
     }
+    ESP_LOGE("Application", "MQTT Process Initialization Successfully");
 
     return result;
 }

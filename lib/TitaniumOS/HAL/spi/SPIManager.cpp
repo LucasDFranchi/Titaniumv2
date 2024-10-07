@@ -1,4 +1,5 @@
 #include "SPIManager.h"
+#include "HAL/inc/BoardHeader.hpp"
 
 /**
  * @brief Initializes the SPIManager and configures the SPI bus and device.
@@ -11,26 +12,25 @@
  * @param[in] sclk GPIO number for SCLK line.
  * @return ESP_OK if initialization is successful, otherwise an error code.
  */
-titan_err_t SPIManager::Initialize(gpio_num_t mosi, gpio_num_t miso, gpio_num_t sclk) {
+titan_err_t SPIManager::Initialize() {
     auto result = ESP_OK;
-    this->_gpio_manager = GPIOManager::GetInstance();
 
-    this->_bus.mosi_io_num = mosi;
-    this->_bus.miso_io_num = miso;
-    this->_bus.sclk_io_num = sclk;
+    this->_bus.mosi_io_num = BoardConfig::SPI_MOSI;
+    this->_bus.miso_io_num = BoardConfig::SPI_MISO;
+    this->_bus.sclk_io_num = BoardConfig::SPI_SCK;
     this->_bus.quadwp_io_num = -1;
     this->_bus.quadhd_io_num = -1;
     this->_bus.max_transfer_sz = 1024;
 
-    result = spi_bus_initialize(SPI2_HOST, &this->_bus, 0);
+    result = spi_bus_initialize(BoardConfig::SPI_HOST_DEVICE, &this->_bus, 0);
 
     this->_dev.mode = 0;
-    this->_dev.clock_speed_hz = SPI_MASTER_FREQ_9M,
-    this->_dev.spics_io_num = -1;
+    this->_dev.clock_speed_hz = (SPI_MASTER_FREQ_80M / 200),
+    this->_dev.spics_io_num = SPI_CS;
     this->_dev.flags = 0;
     this->_dev.queue_size = 1;
     this->_dev.pre_cb = nullptr;
-    result += spi_bus_add_device(SPI2_HOST, &this->_dev, &this->_spi_device);
+    result += spi_bus_add_device(BoardConfig::SPI_HOST_DEVICE, &this->_dev, &this->_spi_device);
     
     return result;
 }
@@ -56,9 +56,7 @@ titan_err_t SPIManager::DeviceTransmit(uint8_t* transmission_packet,
     transaction_command.tx_buffer = transmission_packet;
     transaction_command.rx_buffer = receive_packet;
 
-    this->_gpio_manager->WriteGPIO(SPI_CS, LOW);
     result = spi_device_transmit(this->_spi_device, &transaction_command);
-    this->_gpio_manager->WriteGPIO(SPI_CS, HIGH);
     ESP_ERROR_CHECK(result);
     return result;
 }

@@ -1,15 +1,5 @@
 #include "GPIOManager.h"
 
-// TODO: Find a better place for this struct, should be in a config file.
-/**
- * @brief Internal structure to store GPIO configuration.
- */
-GPIOInternal gpio_internal_list[] = {
-    GPIOInternal(LED_WHITE, GPIO_MODE_OUTPUT),
-    GPIOInternal(SPI_CS, GPIO_MODE_OUTPUT),
-    GPIOInternal(LORA_RST, GPIO_MODE_OUTPUT),
-};
-
 /**
  * @brief Initializes the GPIOManager.
  *
@@ -21,8 +11,11 @@ GPIOInternal gpio_internal_list[] = {
 titan_err_t GPIOManager::Initialize(void) {
     auto result = ESP_OK;
 
-    this->_gpio_array_list_size =
-        sizeof(gpio_internal_list) / sizeof(gpio_internal_list[0]);
+    this->_gpio_array_list_size = BoardConfig::CONFIGURED_PINS;
+
+    for (uint8_t i = 0; i < this->_gpio_array_list_size; i++) {
+        this->_gpio_internal_list[i] = new GPIOInternal(BoardConfig::PINS_NAME[i], BoardConfig::PINS_MODE[i]);
+    }
 
     return result;
 }
@@ -108,8 +101,8 @@ GPIOManager *GPIOManager::GetInstance(void) {
  */
 GPIOInternal *GPIOManager::GetGPIO(gpio_id_et id) {
     for (uint8_t i = 0; i < this->_gpio_array_list_size; i++) {
-        if (gpio_internal_list[i].id() == id) {
-            return &gpio_internal_list[i];
+        if (this->_gpio_internal_list[i]->id() == id) {
+            return this->_gpio_internal_list[i];
         }
     }
 

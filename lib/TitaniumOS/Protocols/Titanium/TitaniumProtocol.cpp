@@ -277,7 +277,7 @@ titan_err_t TitaniumProtocol::ValidatePayload(uint8_t* payload) {
  */
 titan_err_t TitaniumProtocol::ValidateCRC(uint32_t crc, uint8_t* buffer, uint16_t size) {
     auto calculated_crc = CalculatedCRC32(buffer, size);
-    ESP_LOGI("TEST", "Calculatted CRC: %lu", calculated_crc);
+
     return calculated_crc == crc ? ESP_OK : ProtocolErrors::INVALID_CRC;
 }
 
