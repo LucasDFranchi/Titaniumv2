@@ -41,26 +41,21 @@ class HTTPServerProcess : public ProcessTemplate {
     titan_err_t Initialize(void);
     titan_err_t StartHTTPServer(void);
     titan_err_t StopHTTPServer(void);
-    titan_err_t RegisterHandlers(void);
     titan_err_t HandleAreaRequests(uint8_t area_index);
-    void InitializeRequestList(void);
-
-   private:
-    static constexpr uint8_t maximum_requests_list_size = 8;
+    titan_err_t InitializeRequestList(void);
 
    public:
     char response_buffer[Request::MAXIMUM_REQUEST_REPLY]; /**< Buffer for HTTP response data. */
     char read_buffer[Request::MAXIMUM_REQUEST_REPLY];     /**< Buffer for reading HTTP request data. */
 
    private:
-    httpd_uri_t _http_requests_list[maximum_requests_list_size]; /**< List of HTTP request handlers. */
     httpd_config_t _config;                                      /**< Configuration for HTTP server. */
     httpd_handle_t _server                      = nullptr;       /**< HTTP server handle. */
     TaskHandle_t _process_handler               = nullptr;       /**< Handle for the HTTP server process task. */
     SharedMemoryManager* _shared_memory_manager = nullptr;       /**< Pointer to shared memory manager instance. */
-    network_information _connection_status{};               /**< Current connection status. */
-    network_information _last_connection_status{};          /**< Last recorded connection status. */
-    uint8_t _server_status = NETWORK_STATUS_DISCONNECTED;       /**< Status of the HTTP server connection. */
+    network_information _connection_status{};                    /**< Current connection status. */
+    network_information _last_connection_status{};               /**< Last recorded connection status. */
+    uint8_t _server_status = NETWORK_STATUS_DISCONNECTED;        /**< Status of the HTTP server connection. */
 };
 
 #endif /* HTTP_SERVER_MANAGER_H */

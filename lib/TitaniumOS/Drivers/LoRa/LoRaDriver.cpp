@@ -22,6 +22,7 @@ namespace Registers {
     constexpr uint8_t FIFO_RX_CURRENT_ADDR = 0x10;
     constexpr uint8_t IRQ_FLAGS            = 0x12;
     constexpr uint8_t RX_NB_BYTES          = 0x13;
+    constexpr uint8_t MODEM_STATUS         = 0x13;
     constexpr uint8_t PKT_SNR_VALUE        = 0x19;
     constexpr uint8_t PKT_RSSI_VALUE       = 0x1a;
     constexpr uint8_t MODEM_CONFIG_1       = 0x1d;
@@ -54,9 +55,14 @@ namespace PAConfiguration {
 }  // namespace PAConfiguration
 
 namespace IRQ {
+    constexpr uint8_t CAD_DETECTED           = 0x01;
+    constexpr uint8_t FHSS_CHANGE_CHANNEL    = 0x02;
+    constexpr uint8_t CAD_DONE               = 0x04;
     constexpr uint8_t TX_DONE_MASK           = 0x08;
+    constexpr uint8_t VALID_HEADER           = 0x10;
     constexpr uint8_t PAYLOAD_CRC_ERROR_MASK = 0x20;
     constexpr uint8_t RX_DONE_MASK           = 0x40;
+    constexpr uint8_t RX_TIMEOUT             = 0x80;
 }  // namespace IRQ
 
 namespace Driver {
@@ -140,6 +146,7 @@ titan_err_t LoRaDriver::Initialize(void) {
     this->Reset();
 
     result += this->ValidateVersion();
+    ESP_ERROR_CHECK(result);
 
     this->SetSleepMode();
     result += this->WriteRegister(Registers::FIFO_RX_BASE_ADDR, 0);
@@ -208,6 +215,8 @@ void LoRaDriver::SetImplicitHeaderMode(uint8_t size) {
 void LoRaDriver::SetSleepMode(void) {
     this->WriteRegister(Registers::OP_MODE, TransceiverModes::LONG_RANGE_MODE |
                                                 TransceiverModes::SLEEP);
+
+    this->_reciever_mode = false;
 }
 
 /**
@@ -221,6 +230,7 @@ void LoRaDriver::SetSleepMode(void) {
 void LoRaDriver::SetIdleMode(void) {
     this->WriteRegister(Registers::OP_MODE, TransceiverModes::LONG_RANGE_MODE |
                                                 TransceiverModes::STDBY);
+    this->_reciever_mode = false;
 }
 
 /**
@@ -426,8 +436,22 @@ void LoRaDriver::SendPacket(uint8_t *pOut, uint8_t size) {
     this->WriteRegister(Registers::OP_MODE, TransceiverModes::LONG_RANGE_MODE |
                                                 TransceiverModes::TX);
     this->_reciever_mode = false;
-    while ((this->ReadRegister(Registers::IRQ_FLAGS) & IRQ::TX_DONE_MASK) == Error::NO_ERROR)
+    uint8_t max_retries = 5;
+    uint8_t retries     = 0;
+    while (1) {
+        uint8_t reg = this->ReadRegister(Registers::IRQ_FLAGS);
+
+        if ((reg & IRQ::TX_DONE_MASK) == IRQ::TX_DONE_MASK)
+            break;
+
+        if (retries == max_retries) {
+            ESP_LOGE("LoRa Driver", "Error sending the package!");
+            break;
+        }
         vTaskDelay(2);
+
+        retries++;
+    }
 
     this->WriteRegister(Registers::IRQ_FLAGS, IRQ::TX_DONE_MASK);
     this->SetReceiverMode();
@@ -462,7 +486,7 @@ uint8_t LoRaDriver::ReceivePacket(uint8_t *pIn, uint8_t size) {
         }
         for (uint8_t i = 0; i < received_bytes; i++) {
             auto foo = this->ReadRegister(Registers::FIFO);
-            pIn[i] = foo;
+            pIn[i]   = foo;
         }
 
     } while (0);
@@ -488,7 +512,33 @@ bool LoRaDriver::isDataInReceiver(void) {
         if ((irq & IRQ::RX_DONE_MASK) == 0) {
             break;
         }
+        
+        if (irq & IRQ::CAD_DETECTED) {
+            ESP_LOGD("LoRa Driver", "CAD_DETECTED");
+        }
+        if (irq & IRQ::FHSS_CHANGE_CHANNEL) {
+            ESP_LOGD("LoRa Driver", "FHSS_CHANGE_CHANNEL");
+        }
+        if (irq & IRQ::CAD_DONE) {
+            ESP_LOGD("LoRa Driver", "CAD_DONE");
+        }
+        if (irq & IRQ::TX_DONE_MASK) {
+            ESP_LOGD("LoRa Driver", "TX_DONE_MASK");
+        }
+        if (irq & IRQ::VALID_HEADER) {
+            ESP_LOGD("LoRa Driver", "VALID_HEADER");
+        }
         if (irq & IRQ::PAYLOAD_CRC_ERROR_MASK) {
+            this->ClearIRQFlag(IRQ::PAYLOAD_CRC_ERROR_MASK);
+            ESP_LOGD("LoRa Driver", "PAYLOAD_CRC_ERROR_MASK");
+            break;
+        }
+        if (irq & IRQ::RX_DONE_MASK) {
+            ESP_LOGD("LoRa Driver", "RX_DONE_MASK");
+        }
+        if ((irq & IRQ::RX_TIMEOUT) == IRQ::RX_TIMEOUT) {
+            this->ClearIRQFlag(IRQ::RX_TIMEOUT);
+            ESP_LOGD("LoRa Driver", "RX_TIMEOUT");
             break;
         }
 
@@ -573,10 +623,27 @@ titan_err_t LoRaDriver::ValidateVersion(void) {
         uint8_t read_value = this->ReadRegister(Registers::VERSION);
 
         if (read_value == Driver::VERSION) {
-            result = ESP_OK;
+            result = Error::NO_ERROR;
             break;
         }
     }
 
     return result;
+}
+
+/**
+ * @brief Clears the specified IRQ (Interrupt Request) flag(s) in the LoRa module.
+ *
+ * This function reads the current IRQ flags from the specified register, 
+ * clears the bits specified by the `irq_flag_mask`, and writes the updated value 
+ * back to the IRQ flags register.
+ *
+ * @param irq_flag_mask A bitmask specifying which IRQ flags to clear. 
+ *                      Each bit in the mask corresponds to an IRQ flag in the LoRa module.
+ */
+void LoRaDriver::ClearIRQFlag(uint8_t irq_flag_mask) {
+        uint8_t irq = this->ReadRegister(Registers::IRQ_FLAGS);
+        irq &= ~irq_flag_mask;
+
+        this->WriteRegister(Registers::IRQ_FLAGS, irq);
 }

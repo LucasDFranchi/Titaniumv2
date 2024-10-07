@@ -79,6 +79,7 @@ class LoRaDriver : public IDriverInterface {
     uint8_t GetLastPacket4TSNR(void);
 
     bool isDataInReceiver(void);
+    void ClearIRQFlag(uint8_t irq_flag_mask) ;
     void SendPacket(uint8_t* pOut, uint8_t size);
     uint8_t ReceivePacket(uint8_t* pIn, uint8_t size);
     titan_err_t WriteRegister(uint8_t register_address, uint8_t register_value);
