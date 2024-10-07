@@ -26,7 +26,7 @@ void Application::InitializeHAL(void) {
     if (this->_gpio_manager->Initialize() == ESP_OK) {
         this->_gpio_initialized = true;
     }
-    if (this->_spi_manager->Initialize(GPIO_NUM_27, GPIO_NUM_19, GPIO_NUM_5) == ESP_OK) {
+    if (this->_spi_manager->Initialize() == ESP_OK) {
         this->_spi_initialized = true;
     }
 }

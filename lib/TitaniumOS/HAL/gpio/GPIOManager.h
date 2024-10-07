@@ -1,9 +1,9 @@
 #ifndef GPIO_MANAGER_H
 #define GPIO_MANAGER_H
 
-#include "GPIOInternal.h"
 #include "Application/error/error_enum.h"
-#include "driver/gpio.h"
+#include "GPIOInternal.h"
+#include "HAL/inc/BoardHeader.hpp"
 
 /**
  * @brief Manages GPIO interfaces.
@@ -19,7 +19,7 @@ class GPIOManager {
     uint8_t ReadGPIO(gpio_id_et id);
 
    private:
-    GPIOManager() {}
+    GPIOManager() {};
     static GPIOManager* singleton_pointer_;
 
    private:
@@ -27,6 +27,7 @@ class GPIOManager {
 
    private:
     uint8_t _gpio_array_list_size;
+    GPIOInternal *_gpio_internal_list[BoardConfig::CONFIGURED_PINS];
 };
 
 #endif /* GPIO_MANAGER_H */
