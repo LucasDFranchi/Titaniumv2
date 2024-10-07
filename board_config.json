@@ -1,0 +1,67 @@
+{
+    "boards": [
+      {
+        "name": "HELTEC",
+        "gpio_pins": {
+          "pin_1": {
+            "name": "LORA_RST",
+            "number": 14,
+            "direction": "output"
+          },
+          "pin_2": {
+            "name": "LED_WHITE",
+            "number": 25,
+            "direction": "output"
+          },
+          "pin_3": {
+            "name": "SPI_CS",
+            "number": 18,
+            "direction": "output"
+          }
+        },
+        "spi_pins": {
+          "spi_host": 2,
+          "mosi": 23,
+          "miso": 19,
+          "sck": 18,
+          "cs": 5
+        },
+        "i2c_pins": {
+          "sda": 21,
+          "scl": 22
+        }
+      },
+      {
+        "name": "TITANIUM",
+        "gpio_pins": {
+          "pin_1": {
+            "name": "LORA_RST",
+            "number": 14,
+            "direction": "output"
+          },
+          "pin_2": {
+            "name": "LED_WHITE",
+            "number": 25,
+            "direction": "output"
+          },
+          "pin_3": {
+            "name": "SPI_CS",
+            "number": 18,
+            "direction": "output"
+          }
+        },
+        "spi_pins": {
+          "spi_host": 1,
+          "mosi": 32,
+          "miso": 35,
+          "sck": 36,
+          "cs": 39
+        },
+        "i2c_pins": {
+          "sda": 25,
+          "scl": 26
+        }
+      }
+    ]
+  }
+  

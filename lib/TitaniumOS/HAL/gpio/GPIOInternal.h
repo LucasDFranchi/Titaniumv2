@@ -5,11 +5,18 @@
 #include "freertos/semphr.h"
 #include <freertos/task.h>
 
-#include "GPIOEnums.h"
-
-#include "stdint.h"
+#include "HAL/inc/BoardHeader.hpp"
 
 #include "Application/error/error_enum.h"
+
+/**
+ * @brief Enumeration of GPIO states.
+ */
+typedef enum state_gpio_et {
+    LOW       = 0, /**< Low state for GPIO. */
+    HIGH      = 1, /**< High state for GPIO. */
+    UNDEFINED = -1 /**< Undefined state for GPIO. */
+} state_gpio_et;
 
 /**
  * @brief Task-safe GPIO class.
