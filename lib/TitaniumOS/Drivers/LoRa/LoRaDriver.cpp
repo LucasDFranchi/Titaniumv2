@@ -140,6 +140,7 @@ titan_err_t LoRaDriver::Initialize(void) {
     this->Reset();
 
     result += this->ValidateVersion();
+    ESP_ERROR_CHECK(result);
 
     this->SetSleepMode();
     result += this->WriteRegister(Registers::FIFO_RX_BASE_ADDR, 0);
@@ -573,7 +574,7 @@ titan_err_t LoRaDriver::ValidateVersion(void) {
         uint8_t read_value = this->ReadRegister(Registers::VERSION);
 
         if (read_value == Driver::VERSION) {
-            result = ESP_OK;
+            result = Error::NO_ERROR;
             break;
         }
     }
