@@ -32,7 +32,7 @@ namespace BoardConfig {
 
     // SPI Pins
     static constexpr bool CONFIGURED_SPI = true;
-    static constexpr spi_host_device_t SPI_HOST_DEVICE = SPI1_HOST;
+    static constexpr spi_host_device_t SPI_HOST_DEVICE = SPI2_HOST;
     static constexpr gpio_num_t SPI_MOSI = GPIO_NUM_23;
     static constexpr gpio_num_t SPI_MISO = GPIO_NUM_19;
     static constexpr gpio_num_t SPI_SCK = GPIO_NUM_18;

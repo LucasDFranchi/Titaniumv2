@@ -50,7 +50,7 @@
           }
         },
         "spi_pins": {
-          "spi_host": 1,
+          "spi_host": 2,
           "mosi": 23,
           "miso": 19,
           "sck": 18
