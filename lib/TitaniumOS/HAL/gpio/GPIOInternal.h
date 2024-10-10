@@ -78,13 +78,12 @@ class GPIOInternal {
      * @return ESP_OK if the operation was successful, an error code otherwise.
      */
     titan_err_t SetGPIOState(state_gpio_et state) {
-        auto result = ESP_OK;
+        auto result = Error::UNKNOW_FAIL;
 
-        if (xSemaphoreTake(this->_mutex, portMAX_DELAY)) {
-            gpio_set_level(static_cast<gpio_num_t>(this->_id), state);
-            result = ESP_OK;
-            xSemaphoreGive(this->_mutex);
+        if (gpio_set_level(static_cast<gpio_num_t>(this->_id), state) == ESP_OK) {
+            result = Error::NO_ERROR;
         }
+
 
         return result;
     }
@@ -99,10 +98,7 @@ class GPIOInternal {
     state_gpio_et GetGPIOState(void) {
         int result = UNDEFINED;
 
-        if (xSemaphoreTake(this->_mutex, portMAX_DELAY)) {
-            result = gpio_get_level(static_cast<gpio_num_t>(this->_id));
-            xSemaphoreGive(this->_mutex);
-        }
+        result = gpio_get_level(static_cast<gpio_num_t>(this->_id));
 
         return static_cast<state_gpio_et>(result);
     }
