@@ -28,7 +28,6 @@ class SPIManager {
     spi_device_handle_t _spi_device{};    /**< SPI device handle. */
     spi_bus_config_t _bus{};              /**< SPI bus configuration. */
     spi_device_interface_config_t _dev{}; /**< SPI device configuration. */
-    GPIOManager* _gpio_manager;           /**< Pointer to GPIOManager instance. */
 };
 
 #endif /* SPI_MANAGER_H */

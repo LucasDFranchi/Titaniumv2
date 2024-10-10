@@ -14,7 +14,6 @@
  */
 titan_err_t SPIManager::Initialize() {
     auto result = ESP_OK;
-    this->_gpio_manager = GPIOManager::GetInstance();
 
     this->_bus.mosi_io_num = BoardConfig::SPI_MOSI;
     this->_bus.miso_io_num = BoardConfig::SPI_MISO;
@@ -26,8 +25,8 @@ titan_err_t SPIManager::Initialize() {
     result = spi_bus_initialize(BoardConfig::SPI_HOST_DEVICE, &this->_bus, 0);
 
     this->_dev.mode = 0;
-    this->_dev.clock_speed_hz = SPI_MASTER_FREQ_9M,
-    this->_dev.spics_io_num = -1;
+    this->_dev.clock_speed_hz = (SPI_MASTER_FREQ_80M / 200),
+    this->_dev.spics_io_num = SPI_CS;
     this->_dev.flags = 0;
     this->_dev.queue_size = 1;
     this->_dev.pre_cb = nullptr;
@@ -57,9 +56,7 @@ titan_err_t SPIManager::DeviceTransmit(uint8_t* transmission_packet,
     transaction_command.tx_buffer = transmission_packet;
     transaction_command.rx_buffer = receive_packet;
 
-    this->_gpio_manager->WriteGPIO(SPI_CS, LOW);
     result = spi_device_transmit(this->_spi_device, &transaction_command);
-    this->_gpio_manager->WriteGPIO(SPI_CS, HIGH);
     ESP_ERROR_CHECK(result);
     return result;
 }
