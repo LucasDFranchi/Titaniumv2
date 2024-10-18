@@ -17,11 +17,15 @@ class SharedMemoryManager {
 
    public:
     titan_err_t Initialize(void);
-    titan_err_t SignUpSharedArea(uint8_t index, uint16_t size_in_bytes, AccessType access_type);
     bool IsAreaDataUpdated(uint8_t area_index);
+    bool ShouldTransmitArea(uint8_t area_index);
     uint16_t GetAreaSize(uint8_t area_index);
     uint16_t GetWrittenBytes(uint8_t area_index);
     uint16_t GetNumAreas(void);
+    titan_err_t SignUpSharedArea(uint8_t index,
+                                 uint16_t size_in_bytes,
+                                 AccessType access_type,
+                                 bool should_transmit = true);
 
    private:
     SharedMemoryManager() {};
@@ -94,7 +98,7 @@ class SharedMemoryManager {
 
         return result;
     }
-    
+
     template <typename T>
     uint16_t Read(uint8_t area_index, T& protobuf, const pb_msgdesc_t& msg_desc, bool silent = false) {
         uint16_t result = 0;
@@ -118,7 +122,7 @@ class SharedMemoryManager {
 
         return result;
     }
-    
+
     uint16_t Read(uint8_t area_index, char* buffer, uint16_t buffer_size, bool silent = false) {
         uint16_t result = 0;
 

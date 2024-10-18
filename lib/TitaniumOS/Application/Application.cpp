@@ -101,10 +101,12 @@ titan_err_t Application::EnableUartProcess(uint32_t process_stack, uint8_t proce
 
     result += this->_shared_memory_manager->SignUpSharedArea(MEMORY_AREAS_UART_SINGLE_PACKET,
                                                              PACKET_REQUEST_SIZE,
-                                                             READ_WRITE);
+                                                             READ_WRITE,
+                                                             false);
     result += this->_shared_memory_manager->SignUpSharedArea(MEMORY_AREAS_UART_CONTINUOS_PACKET,
                                                              CONTINUOS_PACKET_LIST_SIZE,
-                                                             READ_WRITE);
+                                                             READ_WRITE,
+                                                             false);
 
     this->_uart_communication_process->InstallDriver(new UARTDriver(UART_NUM_0, Baudrate::BaudRate115200, 256),
                                                      MEMORY_AREAS_UART_SINGLE_PACKET,
@@ -139,10 +141,12 @@ titan_err_t Application::EnableLoraProcess(uint32_t process_stack, uint8_t proce
         }
         result += this->_shared_memory_manager->SignUpSharedArea(MEMORY_AREAS_LORA_SINGLE_PACKET,
                                                                  PACKET_REQUEST_SIZE,
-                                                                 READ_WRITE);
+                                                                 READ_WRITE,
+                                                                 false);
         result += this->_shared_memory_manager->SignUpSharedArea(MEMORY_AREAS_LORA_CONTINUOS_PACKET,
                                                                  CONTINUOS_PACKET_LIST_SIZE,
-                                                                 READ_WRITE);
+                                                                 READ_WRITE,
+                                                                 false);
 
         this->_lora_communication_process = new CommunicationProcess("LoRa Communication Proccess", process_stack, process_priority);
         this->_lora_communication_process->InstallDriver(new LoRaDriver(Regions::BRAZIL, CRCMode::ENABLE, 255),

@@ -25,15 +25,17 @@ class SharedMemory {
      * @param index Index of the memory area.
      * @param size Size of the memory area.
      * @param access_type Access type of the memory area.
+     * @param should_transmit Indicates if this area should be transmitted trough IoT.
      */
-    SharedMemory(uint8_t index, uint16_t size, AccessType access_type) {
-        this->_index         = index;
-        this->_size          = size;
-        this->_access_type   = access_type;
-        this->_has_update    = false;
-        this->_mutex         = xSemaphoreCreateMutex();
-        this->_written_bytes = 0;
-        this->_data          = new uint8_t[size];
+    SharedMemory(uint8_t index, uint16_t size, AccessType access_type, bool should_transmit) {
+        this->_index           = index;
+        this->_size            = size;
+        this->_access_type     = access_type;
+        this->_should_transmit = should_transmit;
+        this->_has_update      = false;
+        this->_mutex           = xSemaphoreCreateMutex();
+        this->_written_bytes   = 0;
+        this->_data            = new uint8_t[size];
 
         this->Clear();
     }
@@ -73,6 +75,15 @@ class SharedMemory {
     }
 
     /**
+     * @brief Retrieves the flag that indicates if this area should be transmitted over IoT.
+     *
+     * @return true if the area should be transmitted over IoT, otherwise false.
+     */
+    bool GetShouldTransmit(void) {
+        return this->_should_transmit;
+    }
+
+    /**
      * @brief Retrieves the index of the memory area.
      *
      * @return uint8_t The index of the memory area.
@@ -100,8 +111,8 @@ class SharedMemory {
             if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
                 memset_s(this->_data, 0, this->_size);
                 pb_ostream_t ostream = pb_ostream_from_buffer(this->_data, this->_size);
-                auto ret = pb_encode(&ostream, ((pb_msgdesc_t*)&msg_desc), &protobuf);
-                
+                auto ret             = pb_encode(&ostream, ((pb_msgdesc_t*)&msg_desc), &protobuf);
+
                 this->_has_update    = true;
                 this->_written_bytes = ret ? ostream.bytes_written : 0;
 
@@ -110,9 +121,8 @@ class SharedMemory {
         }
         return this->_written_bytes > 0 ? Error::NO_ERROR : Error::WRITTEN_LESS_THAN_ZERO;
     }
- 
-    titan_err_t Write(char* buffer, uint16_t written_bytes) {
 
+    titan_err_t Write(char* buffer, uint16_t written_bytes) {
         if ((this->_access_type == READ_ONLY) || (buffer == nullptr)) {
             return Error::UNKNOW_FAIL;
         }
@@ -178,6 +188,7 @@ class SharedMemory {
    protected:
     uint8_t _index;                     /**< Index of the memory area. */
     AccessType _access_type;            /**< Access type of the memory area. */
+    bool _should_transmit;              /**< Flag that indicates if this area should be transmitted. */
     uint8_t* _data;                     /**< Pointer to the data buffer. */
     uint8_t _has_update;                /**< Flag indicating if the area has been updated. */
     uint8_t _written_bytes;             /**< Number of valid bytes written in that area. */
