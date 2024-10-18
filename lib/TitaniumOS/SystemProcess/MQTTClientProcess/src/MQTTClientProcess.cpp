@@ -1,4 +1,5 @@
 #include "SystemProcess/MQTTClientProcess/inc/MQTTClientProcess.h"
+#include "Libraries/JSON/ArduinoJson/ArduinoJson.h"
 
 #include "esp_log.h"
 #include "mbedtls/base64.h"
@@ -148,6 +149,22 @@ titan_err_t MQTTClientProcess::StopMQTTClient(void) {
     return result;
 }
 
+/**
+ * Publishes the data from a specified memory area to an MQTT topic.
+ *
+ * This function checks if the specified memory area should be transmitted
+ * and whether its data has been updated. If so, it reads the data from the
+ * shared memory, encodes it in Base64, and publishes it to the MQTT topic
+ * corresponding to the memory area.
+ *
+ * @param area_index The index of the memory area to publish.
+ * @return titan_err_t An error code indicating the result of the operation:
+ *         - Error::NO_ERROR if the data was successfully published,
+ *         - Error::UNKNOW_FAIL if an unknown error occurred,
+ *         - Error::READ_FAIL if there was an error reading from shared memory,
+ *         - Error::TOPIC_MQTT_WRITE_FAIL if there was an error writing the topic,
+ *         - Error::ENCODE_BASE64_FAIL if there was an error encoding data in Base64.
+ */
 titan_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
     char response_buffer[512] = {0};
     char topic_area[64]       = {0};
@@ -186,20 +203,13 @@ titan_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
                                                    &outlen,
                                                    reinterpret_cast<uint8_t *>(raw_response_buffer),
                                                    read_bytes);
-        
+
         if (encode_result != Error::NO_ERROR) {
             result = Error::ENCODE_BASE64_FAIL;
             break;
         }
 
-        auto publish_result = esp_mqtt_client_publish(this->_client, topic_area, response_buffer, 0, 1, 0);
-
-        if (publish_result != Error::NO_ERROR) {
-            result = Error::MQTT_PUBLISH_FAIL;
-            break;
-        }
-
-        result = Error::NO_ERROR;
+        result = this->PublishPackage(topic_area, response_buffer);
 
     } while (0);
 
@@ -229,4 +239,43 @@ titan_err_t MQTTClientProcess::SubscribeMemoryArea(void) {
     } while (0);
 
     return result;
+}
+
+/**
+ * @brief Publishes raw data to an MQTT topic by encoding it into a JSON package.
+ *
+ * This function takes raw data, encodes it into a JSON object, and publishes the resulting
+ * JSON string to the specified MQTT topic. The `raw_data` is stored under the key `"raw_data"`
+ * in the JSON object. If serialization or MQTT publishing fails, appropriate error codes
+ * are returned.
+ *
+ * @param[in] topic     The MQTT topic to which the message will be published.
+ * @param[in] raw_data  The raw data to be packaged into the JSON object and transmitted.
+ *
+ * @return titan_err_t  Error code indicating the result of the operation:
+ *                      - Error::NO_ERROR: The package was successfully published.
+ *                      - Error::SERIALIZE_JSON_ERROR: JSON serialization failed.
+ *                      - Error::MQTT_PUBLISH_FAIL: MQTT publish operation failed.
+ */
+titan_err_t MQTTClientProcess::PublishPackage(const char *topic, const char *raw_data) {
+    StaticJsonDocument<512> json_document;
+    char response_buffer_json[512] = {0};
+
+    json_document["id"] = 1;
+    json_document["raw_data"] = raw_data;
+
+    size_t bytes_written = serializeJson(json_document, response_buffer_json, sizeof(response_buffer_json));
+
+    if (bytes_written == 0) {
+        ESP_LOGE("MQTT Client", "Failed to serialize JSON");
+        return Error::SERIALIZE_JSON_ERROR;
+    }
+
+    auto publish_result = esp_mqtt_client_publish(this->_client, topic, response_buffer_json, 0, 1, 0);
+
+    if (publish_result != Error::NO_ERROR) {
+        return Error::MQTT_PUBLISH_FAIL;
+    }
+
+    return Error::NO_ERROR;
 }

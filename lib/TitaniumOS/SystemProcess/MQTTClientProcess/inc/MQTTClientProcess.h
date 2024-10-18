@@ -1,8 +1,8 @@
 #ifndef MQTT_CLIENT_PROCESS_H
 #define MQTT_CLIENT_PROCESS_H
 
-#include "HAL/memory/SharedMemoryManager.h"
 #include "Application/error/error_enum.h"
+#include "HAL/memory/SharedMemoryManager.h"
 #include "Protocols/Protobuf/inc/titanium.pb.h"
 #include "SystemProcess/NetworkProcess/inc/NetworkProcess.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
@@ -39,6 +39,7 @@ class MQTTClientProcess : public ProcessTemplate {
     titan_err_t Initialize(void);
     titan_err_t StartMQTTClient(void);
     titan_err_t StopMQTTClient(void);
+    titan_err_t PublishPackage(const char* topic, const char* raw_data);
 
    private:
     esp_mqtt_client_handle_t _client{};
@@ -47,7 +48,7 @@ class MQTTClientProcess : public ProcessTemplate {
     network_information _connection_status{};      /**< Current connection status. */
     network_information _last_connection_status{}; /**< Last recorded connection status. */
     broker_config _mqtt_client_proto{};
-    bool _is_mqtt_started = false;
+    bool _is_mqtt_started  = false;
     uint8_t _client_status = NETWORK_STATUS_DISCONNECTED; /**< Status of the HTTP server connection. */
 };
 
