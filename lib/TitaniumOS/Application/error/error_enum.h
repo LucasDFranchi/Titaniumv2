@@ -29,6 +29,11 @@ namespace Error {
     constexpr titan_err_t SERIALIZE_ERROR          = -20;
     constexpr titan_err_t DESERIALIZE_ERROR        = -21;
     constexpr titan_err_t WRITTEN_LESS_THAN_ZERO   = -22;
+    constexpr titan_err_t TOPIC_MQTT_WRITE_FAIL    = -23;
+    constexpr titan_err_t ENCODE_BASE64_FAIL       = -24;
+    constexpr titan_err_t DECODE_BASE64_FAIL       = -25;
+    constexpr titan_err_t MQTT_PUBLISH_FAIL       = -26;
+    constexpr titan_err_t MQTT_SUBSCRIBE_FAIL       = -27;
 }  // namespace Error
 
 #endif /* ERROR_H */

@@ -154,6 +154,16 @@ titan_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
     titan_err_t result        = Error::UNKNOW_FAIL;
 
     do {
+        if (!this->_shared_memory_manager->ShouldTransmitArea(area_index)) {
+            result = Error::NO_ERROR;
+            break;
+        }
+
+        if (!this->_shared_memory_manager->IsAreaDataUpdated(area_index)) {
+            result = Error::NO_ERROR;
+            break;
+        }
+
         char raw_response_buffer[this->_shared_memory_manager->GetAreaSize(area_index)] = {0};
 
         auto read_bytes = this->_shared_memory_manager->Read(area_index,
@@ -162,20 +172,33 @@ titan_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
                                                              true);
 
         if (read_bytes == 0) {
-            return result;
+            result = Error::READ_FAIL;
+            break;
         }
 
         if (snprintf(topic_area, sizeof(topic_area), "titanium_area/%d", area_index) < 0) {
+            result = Error::TOPIC_MQTT_WRITE_FAIL;
             break;
         }
-        size_t outlen = 0;
-        mbedtls_base64_encode(reinterpret_cast<uint8_t *>(response_buffer),
-                              sizeof(response_buffer),
-                              &outlen,
-                              reinterpret_cast<uint8_t *>(raw_response_buffer),
-                              read_bytes);
+        size_t outlen      = 0;
+        auto encode_result = mbedtls_base64_encode(reinterpret_cast<uint8_t *>(response_buffer),
+                                                   sizeof(response_buffer),
+                                                   &outlen,
+                                                   reinterpret_cast<uint8_t *>(raw_response_buffer),
+                                                   read_bytes);
+        
+        if (encode_result != Error::NO_ERROR) {
+            result = Error::ENCODE_BASE64_FAIL;
+            break;
+        }
 
-        esp_mqtt_client_publish(this->_client, topic_area, response_buffer, 0, 1, 0);
+        auto publish_result = esp_mqtt_client_publish(this->_client, topic_area, response_buffer, 0, 1, 0);
+
+        if (publish_result != Error::NO_ERROR) {
+            result = Error::MQTT_PUBLISH_FAIL;
+            break;
+        }
+
         result = Error::NO_ERROR;
 
     } while (0);
