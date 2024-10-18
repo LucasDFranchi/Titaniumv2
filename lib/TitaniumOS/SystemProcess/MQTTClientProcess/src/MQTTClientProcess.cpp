@@ -1,6 +1,7 @@
 #include "SystemProcess/MQTTClientProcess/inc/MQTTClientProcess.h"
 
 #include "esp_log.h"
+#include "mbedtls/base64.h"
 #include "mqtt_client.h"
 
 static const char *TAG = "mqtt_example";
@@ -48,9 +49,9 @@ titan_err_t MQTTClientProcess::Initialize(void) {
     result += esp_mqtt_client_set_uri(this->_client, "mqtt://mqtt.eclipseprojects.io");
     result += esp_mqtt_set_config(this->_client, &mqtt_cfg);
 
-    this->_connection_status.ap_connected = NETWORK_STATUS_DISCONNECTED;
-    this->_connection_status.sta_connected = NETWORK_STATUS_DISCONNECTED;
-    this->_last_connection_status.ap_connected = NETWORK_STATUS_DISCONNECTED;
+    this->_connection_status.ap_connected       = NETWORK_STATUS_DISCONNECTED;
+    this->_connection_status.sta_connected      = NETWORK_STATUS_DISCONNECTED;
+    this->_last_connection_status.ap_connected  = NETWORK_STATUS_DISCONNECTED;
     this->_last_connection_status.sta_connected = NETWORK_STATUS_DISCONNECTED;
 
     return result;
@@ -90,7 +91,7 @@ void MQTTClientProcess::Execute(void) {
                 break;
             }
 
-            this->_last_connection_status.ap_connected = this->_connection_status.ap_connected;
+            this->_last_connection_status.ap_connected  = this->_connection_status.ap_connected;
             this->_last_connection_status.sta_connected = this->_connection_status.sta_connected;
 
             auto ap_status  = this->_connection_status.ap_connected;
@@ -153,11 +154,12 @@ titan_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
     titan_err_t result        = Error::UNKNOW_FAIL;
 
     do {
+        char raw_response_buffer[this->_shared_memory_manager->GetAreaSize(area_index)] = {0};
 
         auto read_bytes = this->_shared_memory_manager->Read(area_index,
-                                                    response_buffer, 
-                                                    sizeof(response_buffer),
-                                                    true);
+                                                             raw_response_buffer,
+                                                             sizeof(raw_response_buffer),
+                                                             true);
 
         if (read_bytes == 0) {
             return result;
@@ -166,6 +168,12 @@ titan_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
         if (snprintf(topic_area, sizeof(topic_area), "titanium_area/%d", area_index) < 0) {
             break;
         }
+        size_t outlen = 0;
+        mbedtls_base64_encode(reinterpret_cast<uint8_t *>(response_buffer),
+                              sizeof(response_buffer),
+                              &outlen,
+                              reinterpret_cast<uint8_t *>(raw_response_buffer),
+                              read_bytes);
 
         esp_mqtt_client_publish(this->_client, topic_area, response_buffer, 0, 1, 0);
         result = Error::NO_ERROR;
