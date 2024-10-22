@@ -6,9 +6,7 @@
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
 
-#include <freertos/FreeRTOS.h>
-#include "freertos/semphr.h"
-#include <freertos/task.h>
+#include "SystemProcess/Template/TaskIncludeHelper.h"
 
 /**
  * @brief A simple singly linked list template.

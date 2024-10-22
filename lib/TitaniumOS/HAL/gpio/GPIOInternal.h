@@ -1,10 +1,6 @@
 #ifndef GPIO_INTERNAL_H
 #define GPIO_INTERNAL_H
 
-#include <freertos/FreeRTOS.h>
-#include "freertos/semphr.h"
-#include <freertos/task.h>
-
 #include "HAL/inc/BoardHeader.hpp"
 
 #include "Application/error/error_enum.h"

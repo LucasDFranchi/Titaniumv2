@@ -1,13 +1,10 @@
 #ifndef SHARED_MEMORY_H
 #define SHARED_MEMORY_H
 
-#include <freertos/FreeRTOS.h>
-#include "freertos/semphr.h"
-#include <freertos/task.h>
-
 #include "Application/error/error_enum.h"
 #include "MemoryHandlers.h"
 #include "MemoryTypes.h"
+#include "Libraries/TaskHelpers/inc/TaskIncludeHelper.h"
 
 #include "pb_decode.h"
 #include "pb_encode.h"
