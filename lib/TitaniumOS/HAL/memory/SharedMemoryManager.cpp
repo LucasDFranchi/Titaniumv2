@@ -31,12 +31,12 @@ titan_err_t SharedMemoryManager::SignUpSharedArea(uint8_t index,
 
     do {
         if (index >= this->_maximum_shared_memory) {
-            result = ESP_ERR_INVALID_ARG;
+            result = Error::INVALID_MEMORY_AREA;
             break;
         }
 
         if (this->_shared_memory_array[index] != nullptr) {
-            result = ESP_ERR_INVALID_STATE;
+            result = Error::NULL_PTR;
             break;
         }
 
@@ -44,8 +44,10 @@ titan_err_t SharedMemoryManager::SignUpSharedArea(uint8_t index,
                                                                            size_in_bytes,
                                                                            access_type,
                                                                            should_transmit);
-        result                            = ESP_OK;
+        result                            = Error::NO_ERROR;
         this->_num_areas++;
+
+        this->UpdateMaximumAreaSize(size_in_bytes);
 
     } while (0);
 
@@ -121,6 +123,31 @@ bool SharedMemoryManager::ShouldTransmitArea(uint8_t area_index) {
  */
 uint16_t SharedMemoryManager::GetNumAreas(void) {
     return this->_num_areas;
+}
+
+/**
+ * @brief Updates the maximum memory area size.
+ *
+ * This function updates the maximum allowed size of a memory area if the given size
+ * exceeds the current maximum. It ensures that the size is only increased.
+ *
+ * @param[in] size_in_bytes The new size in bytes to compare with the current maximum.
+ */
+void SharedMemoryManager::UpdateMaximumAreaSize(uint16_t size_in_bytes) {
+    if (size_in_bytes > this->maximum_area_size) {
+        this->maximum_area_size = size_in_bytes;
+    }
+}
+
+/**
+ * @brief Retrieves the maximum memory area size.
+ *
+ * This function returns the maximum allowed size of a memory area.
+ *
+ * @return uint16_t The current maximum size of the memory area in bytes.
+ */
+uint16_t SharedMemoryManager::GetMaximumAreaSize(void) {
+    return this->maximum_area_size;
 }
 
 /**
