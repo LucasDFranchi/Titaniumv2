@@ -2,10 +2,10 @@
 #define HTTP_SERVER_MANAGER_H
 
 #include "HAL/memory/SharedMemoryManager.h"
+#include "Protocols/Protobuf/inc/titanium.pb.h"
+#include "Protocols/Web/inc/RequestHandler.h"
 #include "SystemProcess/NetworkProcess/inc/NetworkProcess.h"
 #include "SystemProcess/Template/ProcessTemplate.h"
-#include "Protocols/Web/inc/RequestHandler.h"
-#include "Protocols/Protobuf/inc/titanium.pb.h"
 #include "esp_err.h"
 #include "esp_http_server.h"
 
@@ -49,13 +49,11 @@ class HTTPServerProcess : public ProcessTemplate {
     char read_buffer[Request::MAXIMUM_REQUEST_REPLY];     /**< Buffer for reading HTTP request data. */
 
    private:
-    httpd_config_t _config;                                      /**< Configuration for HTTP server. */
-    httpd_handle_t _server                      = nullptr;       /**< HTTP server handle. */
-    TaskHandle_t _process_handler               = nullptr;       /**< Handle for the HTTP server process task. */
-    SharedMemoryManager* _shared_memory_manager = nullptr;       /**< Pointer to shared memory manager instance. */
-    network_information _connection_status{};                    /**< Current connection status. */
-    network_information _last_connection_status{};               /**< Last recorded connection status. */
-    uint8_t _server_status = NETWORK_STATUS_DISCONNECTED;        /**< Status of the HTTP server connection. */
+    httpd_config_t _config;                                /**< Configuration for HTTP server. */
+    httpd_handle_t _server                      = nullptr; /**< HTTP server handle. */
+    TaskHandle_t _process_handler               = nullptr; /**< Handle for the HTTP server process task. */
+    SharedMemoryManager* _shared_memory_manager = nullptr; /**< Pointer to shared memory manager instance. */
+    access_point_status _ap_status;                        /**< Current Access Point status. */
 };
 
 #endif /* HTTP_SERVER_MANAGER_H */

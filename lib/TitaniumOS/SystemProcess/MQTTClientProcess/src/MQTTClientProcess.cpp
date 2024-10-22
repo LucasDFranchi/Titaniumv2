@@ -1,11 +1,12 @@
 #include "SystemProcess/MQTTClientProcess/inc/MQTTClientProcess.h"
 #include "Libraries/JSON/ArduinoJson/ArduinoJson.h"
+#include "SystemProcess/NetworkProcess/inc/NetworkUtils.hpp"
 
 #include "esp_log.h"
 #include "mbedtls/base64.h"
 #include "mqtt_client.h"
 
-static const char *TAG = "mqtt_example";
+static const char *TAG = "MQTT Client Process";
 
 static void mqtt_event_handler(void *arg, esp_event_base_t base, int32_t event_id, void *event_data) {
     auto event = reinterpret_cast<esp_mqtt_event_handle_t>(event_data);
@@ -50,10 +51,7 @@ titan_err_t MQTTClientProcess::Initialize(void) {
     result += esp_mqtt_client_set_uri(this->_client, "mqtt://mqtt.eclipseprojects.io");
     result += esp_mqtt_set_config(this->_client, &mqtt_cfg);
 
-    this->_connection_status.ap_connected       = NETWORK_STATUS_DISCONNECTED;
-    this->_connection_status.sta_connected      = NETWORK_STATUS_DISCONNECTED;
-    this->_last_connection_status.ap_connected  = NETWORK_STATUS_DISCONNECTED;
-    this->_last_connection_status.sta_connected = NETWORK_STATUS_DISCONNECTED;
+    this->_sta_status.status = NETWORK_STATUS_DISCONNECTED;
 
     return result;
 }
@@ -69,51 +67,20 @@ void MQTTClientProcess::Execute(void) {
     }
 
     while (1) {
-        do {
-            this->_shared_memory_manager.get()->Read(MEMORY_AREAS_NETWORK_INFORMATION,
-                                                     this->_connection_status,
-                                                     network_information_t_msg,
-                                                     true);
+        this->_shared_memory_manager.get()->Read(MEMORY_AREAS_STATION_STATUS,
+                                                 this->_sta_status,
+                                                 station_status_t_msg,
+                                                 true);
 
-            auto ap_changed =
-                this->_last_connection_status.ap_connected !=
-                this->_connection_status.ap_connected;
-            auto sta_changed =
-                this->_last_connection_status.sta_connected !=
-                this->_connection_status.sta_connected;
-
-            if (this->_client_status == NETWORK_STATUS_CONNECTED) {
-                for (uint8_t i = 1; i < this->_shared_memory_manager->GetNumAreas(); i++) {
-                    this->PublishMemoryArea(i);
-                }
+        if (this->_sta_status.status == NETWORK_STATUS_CONNECTED) {
+            this->StartMQTTClient();
+            this->SubscribeMemoryArea();
+            for (uint8_t i = 1; i < this->_shared_memory_manager->GetNumAreas(); i++) {
+                this->PublishMemoryArea(i);
             }
-
-            if (!ap_changed && !sta_changed) {
-                break;
-            }
-
-            this->_last_connection_status.ap_connected  = this->_connection_status.ap_connected;
-            this->_last_connection_status.sta_connected = this->_connection_status.sta_connected;
-
-            auto ap_status  = this->_connection_status.ap_connected;
-            auto sta_status = this->_connection_status.sta_connected;
-
-            if ((ap_status == NETWORK_STATUS_CONNECTED) || (sta_status == NETWORK_STATUS_CONNECTED)) {
-                if (this->_client_status != NETWORK_STATUS_CONNECTED) {
-                    this->StartMQTTClient();
-                    this->_client_status = NETWORK_STATUS_CONNECTED;
-                    ESP_LOGI(TAG, "MQTT CLIENT STARTED");
-
-                    this->SubscribeMemoryArea();
-                }
-            } else if ((ap_status == NETWORK_STATUS_DISCONNECTED) && (sta_status == NETWORK_STATUS_DISCONNECTED)) {
-                if (this->_client_status == NETWORK_STATUS_CONNECTED) {
-                    this->StopMQTTClient();
-                    this->_client_status = NETWORK_STATUS_DISCONNECTED;
-                    ESP_LOGI(TAG, "MQTT CLIENT STOPED");
-                }
-            }
-        } while (0);
+        } else if (this->_sta_status.status == NETWORK_STATUS_DISCONNECTED) {
+            this->StopMQTTClient();
+        }
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -125,8 +92,8 @@ void MQTTClientProcess::Execute(void) {
  */
 titan_err_t MQTTClientProcess::StartMQTTClient(void) {
     auto result = Error::NO_ERROR;
-    ESP_LOGI(TAG, "StartMQTTClient");
     if (this->_is_mqtt_started == false) {
+        ESP_LOGI(TAG, "MQTT CLIENT STARTED");
         result                 = esp_mqtt_client_start(this->_client);
         this->_is_mqtt_started = true;
     }
@@ -142,6 +109,7 @@ titan_err_t MQTTClientProcess::StartMQTTClient(void) {
 titan_err_t MQTTClientProcess::StopMQTTClient(void) {
     auto result = Error::NO_ERROR;
     if (this->_is_mqtt_started == true) {
+        ESP_LOGI(TAG, "MQTT CLIENT STOPED");
         result                 = esp_mqtt_client_stop(this->_client);
         this->_is_mqtt_started = false;
     }
@@ -215,7 +183,6 @@ titan_err_t MQTTClientProcess::PublishMemoryArea(uint8_t area_index) {
 
     return result;
 }
-
 titan_err_t MQTTClientProcess::SubscribeMemoryArea(void) {
     char topic_area[64] = {0};
     titan_err_t result  = Error::UNKNOW_FAIL;
@@ -229,12 +196,17 @@ titan_err_t MQTTClientProcess::SubscribeMemoryArea(void) {
             break;
         }
 
+        if (!this->_should_subscribe) {
+            break;
+        }
+
         for (uint8_t i = 0; i < this->_shared_memory_manager->GetNumAreas(); i++) {
             if (snprintf(topic_area, sizeof(topic_area), "titanium_area/%d", i) < 0) {
                 esp_mqtt_client_subscribe(this->_client, topic_area, 0);
             }
         }
-        result = ESP_OK;
+        result                  = ESP_OK;
+        this->_should_subscribe = true;
 
     } while (0);
 
@@ -261,7 +233,7 @@ titan_err_t MQTTClientProcess::PublishPackage(const char *topic, const char *raw
     StaticJsonDocument<512> json_document;
     char response_buffer_json[512] = {0};
 
-    json_document["id"] = 1;
+    json_document["id"]       = 1;
     json_document["raw_data"] = raw_data;
 
     size_t bytes_written = serializeJson(json_document, response_buffer_json, sizeof(response_buffer_json));

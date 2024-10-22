@@ -40,9 +40,10 @@ class NetworkProcess : public ProcessTemplate {
     TaskHandle_t _process_handler               = nullptr;  ///< Task handle for the NetworkProcess process.
     wifi_config_t _ap_config;                               ///< Wi-Fi configuration structure for AP mode.
     wifi_config_t _sta_config;                              ///< Wi-Fi configuration structure for STA mode.
-    network_information _connection_proto;                  ///< Structure for credentials storage.
-    network_credentials _cred_proto;                        ///< Structure for connection status storage.
-    uint8_t _need_update_network_data;                      ///< Flag indicating if network data needs updating.
+    network_credentials _cred_proto;                        ///< Structure for credentials storage.
+    access_point_status_t _ap_status;                       ///< Flag indicating the access point status (CONNECTED or DISCONNECTED).
+    station_status_t _sta_status;                           ///< Flag indicating the station status (CONNECTED or DISCONNECTED).
+    bool _need_update_network_data;                         ///< Flag indicating if network data needs updating.
 };
 
 #endif /* NETWORK_MANAGER_GUARD */

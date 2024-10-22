@@ -11,13 +11,15 @@ enum NetworkStatus {
 enum MemoryAreas {
   INVALID_MEMORY_AREA = 0;                 // Represents an invalid or uninitialized memory area.
   NETWORK_CREDENTIALS = 1;                 // Memory area allocated for storing network credentials.
-  NETWORK_INFORMATION = 2;                 // Memory area for storing the status of network connections.
-  BROKER_CONFIG = 3;                       // Memory area dedicated to broker configuration settings.
-  UART_SINGLE_PACKET = 4;                  // Memory area for configurations of single UART packets.
-  UART_CONTINUOS_PACKET = 5;               // Memory area used for communication configuration UART settings.
-  LORA_SINGLE_PACKET = 6;                  // Memory area for configurations of single LoRa packets.
-  LORA_CONTINUOS_PACKET = 7;               // Memory area used for communication configuration LORA settings.
-  TIME_PROCESS = 8;                        // Memory Area used for time process stores the time since boot.
+  NETWORK_INFORMATION = 2;                 // Memory area for storing the information of network connections.
+  ACCESS_POINT_STATUS = 3;                 // Memory area for storing the status of ap connection.
+  STATION_STATUS = 4;                      // Memory area for storing the status of sta connection.
+  BROKER_CONFIG = 5;                       // Memory area dedicated to broker configuration settings.
+  UART_SINGLE_PACKET = 6;                  // Memory area for configurations of single UART packets.
+  UART_CONTINUOS_PACKET = 7;               // Memory area used for communication configuration UART settings.
+  LORA_SINGLE_PACKET = 8;                  // Memory area for configurations of single LoRa packets.
+  LORA_CONTINUOS_PACKET = 9;               // Memory area used for communication configuration LORA settings.
+  TIME_PROCESS = 10;                       // Memory Area used for time process stores the time since boot.
 }
 
 // Message representing network credentials required to connect to a Wi-Fi network.
@@ -29,13 +31,56 @@ message NetworkCredentials {
     required string password = 2 [(nanopb).max_size = 64];
 }
 
-// Message representing the current status of network connections.
-message NetworkInformation {
-    // Status of the access point (AP) connection.
-    required NetworkStatus ap_connected = 1;
+// Message containing information about the Access Point (AP) mode of the ESP32.
+message AccessPointInformation {
+    // IP address of the ESP32 in AP mode (IPv4). Max length is 15 characters (e.g., "192.168.4.1").
+    required string ip_address = 1 [(nanopb).max_size = 15];
+    
+    // SSID (name) of the AP. Max length is 32 characters (common max SSID length).
+    required string ssid = 2 [(nanopb).max_size = 32];
+    
+    // Number of devices currently connected to the AP.
+    required uint32 connected_devices = 3;
+}
 
-    // Status of the station (STA) connection.
-    required NetworkStatus sta_connected = 2;
+// Message containing information about the Station (STA) mode of the ESP32.
+message StationInformation {
+    // IP address of the ESP32 in STA mode (IPv4). Max length is 15 characters.
+    required string ip_address = 1 [(nanopb).max_size = 15];
+    
+    // SSID of the Wi-Fi network the ESP32 is connected to in STA mode. Max length is 32 characters.
+    required string ssid = 2 [(nanopb).max_size = 32];
+    
+    // Signal strength (RSSI) of the connected network, measured in dBm.
+    required int32 signal_strength = 3;
+    
+    // Boolean flag indicating whether the ESP32 is currently connected to a Wi-Fi network in STA mode.
+    required bool is_connected = 4;
+}
+
+// Message representing the current status of both AP and STA network connections on the ESP32.
+message NetworkInformation {
+    // Access Point information (AP mode).
+    required AccessPointInformation ap = 1;
+    
+    // Station information (STA mode).
+    required StationInformation sta = 2;
+    
+    // MAC address of the ESP32. Max length is 17 characters (formatted as "XX:XX:XX:XX:XX:XX").
+    required string mac_address = 3 [(nanopb).max_size = 17];
+    
+    // Hostname of the ESP32 device. Max length is 64 characters.
+    required string hostname = 4 [(nanopb).max_size = 64];
+}
+
+// Message containing status about the Access Point (AP), indicating if it's connected or not.
+message AccessPointStatus {
+    required NetworkStatus status = 1;
+}
+
+// Message containing status about the Station (STA), indicating if it's connected to a network.
+message StationStatus {
+    required NetworkStatus status = 1;
 }
 
 // Message representing configuration details for the broker.
@@ -100,24 +145,30 @@ message MemoryAreasDefinitions {
     // Network credentials for connecting to a Wi-Fi network.
     required NetworkCredentials network_credentials = 1;
 
-    // Status information of network connections.
+    // Network information of the AP and STA connections.
     required NetworkInformation network_information = 2;
 
+    // Status information of Access Point connection.
+    required AccessPointStatus ap_status = 3;
+
+    // Status information of Status connection.
+    required StationStatus sta_status = 4;
+
     // Configuration settings for the broker.
-    required BrokerConfig broker_config = 3;
+    required BrokerConfig broker_config = 5;
 
     // Packet request for UART communication.
-    required PacketRequest uart_packet_request = 4;
+    required PacketRequest uart_packet_request = 6;
     
     // Continuous packet configurations for UART communication.
-    required ContinuosPacketList uart_continuos_packet = 5;
+    required ContinuosPacketList uart_continuos_packet = 7;
 
     // Packet request for LoRa communication.
-    required PacketRequest lora_packet_request = 6;
+    required PacketRequest lora_packet_request = 8;
 
     // Continuous packet configurations for LORA communication.
-    required ContinuosPacketList lora_continuos_packet = 7;
+    required ContinuosPacketList lora_continuos_packet = 9;
 
     // Struct that stores the time since device boot.
-    required TimeProcess time_process = 8;
+    required TimeProcess time_process = 10;
 }

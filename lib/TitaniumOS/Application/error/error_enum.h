@@ -32,8 +32,9 @@ namespace Error {
     constexpr titan_err_t TOPIC_MQTT_WRITE_FAIL    = -23;
     constexpr titan_err_t ENCODE_BASE64_FAIL       = -24;
     constexpr titan_err_t DECODE_BASE64_FAIL       = -25;
-    constexpr titan_err_t MQTT_PUBLISH_FAIL       = -26;
-    constexpr titan_err_t MQTT_SUBSCRIBE_FAIL       = -27;
+    constexpr titan_err_t MQTT_PUBLISH_FAIL        = -26;
+    constexpr titan_err_t MQTT_SUBSCRIBE_FAIL      = -27;
+    constexpr titan_err_t EMPTY_PROTOBUF           = -28;
 }  // namespace Error
 
 #endif /* ERROR_H */

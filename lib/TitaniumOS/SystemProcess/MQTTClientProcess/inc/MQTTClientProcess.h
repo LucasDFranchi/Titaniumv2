@@ -42,14 +42,14 @@ class MQTTClientProcess : public ProcessTemplate {
     titan_err_t PublishPackage(const char* topic, const char* raw_data);
 
    private:
-    esp_mqtt_client_handle_t _client{};
-    TaskHandle_t _process_handler                               = nullptr; /**< Handle for the HTTP server process task. */
-    std::unique_ptr<SharedMemoryManager> _shared_memory_manager = nullptr;
-    network_information _connection_status{};      /**< Current connection status. */
-    network_information _last_connection_status{}; /**< Last recorded connection status. */
-    broker_config _mqtt_client_proto{};
-    bool _is_mqtt_started  = false;
-    uint8_t _client_status = NETWORK_STATUS_DISCONNECTED; /**< Status of the HTTP server connection. */
+    esp_mqtt_client_handle_t _client{};                                                        /**< MQTT client handle used for managing the connection to the MQTT broker. */
+    broker_config _mqtt_client_proto{};                                                        /**< Configuration for the MQTT client, defining the broker address, port, and other settings. */
+    station_status _sta_status{};                                                              /**< Current Station status, representing the connection status of the ESP32 in Station mode. */
+    std::unique_ptr<SharedMemoryManager> _shared_memory_manager = nullptr;                     /**< Pointer to the Shared Memory Manager, responsible for managing shared data across processes. */
+    TaskHandle_t _process_handler                               = nullptr;                     /**< Handle for the HTTP server process task, used to manage task execution and synchronization. */
+    uint8_t _client_status                                      = NETWORK_STATUS_DISCONNECTED; /**< Status of the HTTP server connection, indicating whether the client is connected or disconnected. */
+    bool _is_mqtt_started                                       = false;                       /**< Flag indicating whether the MQTT client has been successfully started. */
+    bool _should_subscribe                                      = false;                       /**< Flag indicating whether the client should subscribe to MQTT topics upon connection. */
 };
 
 #endif /* MQTT_CLIENT_PROCESS_H */

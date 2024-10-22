@@ -55,6 +55,12 @@ titan_err_t Application::EnableNetworkProcess(uint32_t process_stack, uint8_t pr
     result += this->_shared_memory_manager->SignUpSharedArea(MEMORY_AREAS_NETWORK_INFORMATION,
                                                              NETWORK_INFORMATION_SIZE,
                                                              READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(MEMORY_AREAS_ACCESS_POINT_STATUS,
+                                                             ACCESS_POINT_STATUS_SIZE,
+                                                             READ_WRITE);
+    result += this->_shared_memory_manager->SignUpSharedArea(MEMORY_AREAS_STATION_STATUS,
+                                                             STATION_STATUS_SIZE,
+                                                             READ_WRITE);
     if (!can_fail) {
         ESP_ERROR_CHECK(result);
     }

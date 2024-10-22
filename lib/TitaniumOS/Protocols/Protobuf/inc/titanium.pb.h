@@ -20,13 +20,15 @@ typedef enum network_status {
 typedef enum memory_areas {
     MEMORY_AREAS_INVALID_MEMORY_AREA = 0, /* Represents an invalid or uninitialized memory area. */
     MEMORY_AREAS_NETWORK_CREDENTIALS = 1, /* Memory area allocated for storing network credentials. */
-    MEMORY_AREAS_NETWORK_INFORMATION = 2, /* Memory area for storing the status of network connections. */
-    MEMORY_AREAS_BROKER_CONFIG = 3, /* Memory area dedicated to broker configuration settings. */
-    MEMORY_AREAS_UART_SINGLE_PACKET = 4, /* Memory area for configurations of single UART packets. */
-    MEMORY_AREAS_UART_CONTINUOS_PACKET = 5, /* Memory area used for communication configuration UART settings. */
-    MEMORY_AREAS_LORA_SINGLE_PACKET = 6, /* Memory area for configurations of single LoRa packets. */
-    MEMORY_AREAS_LORA_CONTINUOS_PACKET = 7, /* Memory area used for communication configuration LORA settings. */
-    MEMORY_AREAS_TIME_PROCESS = 8 /* Memory Area used for time process stores the time since boot. */
+    MEMORY_AREAS_NETWORK_INFORMATION = 2, /* Memory area for storing the information of network connections. */
+    MEMORY_AREAS_ACCESS_POINT_STATUS = 3, /* Memory area for storing the status of ap connection. */
+    MEMORY_AREAS_STATION_STATUS = 4, /* Memory area for storing the status of sta connection. */
+    MEMORY_AREAS_BROKER_CONFIG = 5, /* Memory area dedicated to broker configuration settings. */
+    MEMORY_AREAS_UART_SINGLE_PACKET = 6, /* Memory area for configurations of single UART packets. */
+    MEMORY_AREAS_UART_CONTINUOS_PACKET = 7, /* Memory area used for communication configuration UART settings. */
+    MEMORY_AREAS_LORA_SINGLE_PACKET = 8, /* Memory area for configurations of single LoRa packets. */
+    MEMORY_AREAS_LORA_CONTINUOS_PACKET = 9, /* Memory area used for communication configuration LORA settings. */
+    MEMORY_AREAS_TIME_PROCESS = 10 /* Memory Area used for time process stores the time since boot. */
 } memory_areas_t;
 
 /* Struct definitions */
@@ -38,13 +40,49 @@ typedef struct network_credentials {
     char password[64];
 } network_credentials_t;
 
-/* Message representing the current status of network connections. */
+/* Message containing information about the Access Point (AP) mode of the ESP32. */
+typedef struct access_point_information {
+    /* IP address of the ESP32 in AP mode (IPv4). Max length is 15 characters (e.g., "192.168.4.1"). */
+    char ip_address[15];
+    /* SSID (name) of the AP. Max length is 32 characters (common max SSID length). */
+    char ssid[32];
+    /* Number of devices currently connected to the AP. */
+    uint32_t connected_devices;
+} access_point_information_t;
+
+/* Message containing information about the Station (STA) mode of the ESP32. */
+typedef struct station_information {
+    /* IP address of the ESP32 in STA mode (IPv4). Max length is 15 characters. */
+    char ip_address[15];
+    /* SSID of the Wi-Fi network the ESP32 is connected to in STA mode. Max length is 32 characters. */
+    char ssid[32];
+    /* Signal strength (RSSI) of the connected network, measured in dBm. */
+    int32_t signal_strength;
+    /* Boolean flag indicating whether the ESP32 is currently connected to a Wi-Fi network in STA mode. */
+    bool is_connected;
+} station_information_t;
+
+/* Message representing the current status of both AP and STA network connections on the ESP32. */
 typedef struct network_information {
-    /* Status of the access point (AP) connection. */
-    network_status_t ap_connected;
-    /* Status of the station (STA) connection. */
-    network_status_t sta_connected;
+    /* Access Point information (AP mode). */
+    access_point_information_t ap;
+    /* Station information (STA mode). */
+    station_information_t sta;
+    /* MAC address of the ESP32. Max length is 17 characters (formatted as "XX:XX:XX:XX:XX:XX"). */
+    char mac_address[17];
+    /* Hostname of the ESP32 device. Max length is 64 characters. */
+    char hostname[64];
 } network_information_t;
+
+/* Message containing status about the Access Point (AP), indicating if it's connected or not. */
+typedef struct access_point_status {
+    network_status_t status;
+} access_point_status_t;
+
+/* Message containing status about the Station (STA), indicating if it's connected to a network. */
+typedef struct station_status {
+    network_status_t status;
+} station_status_t;
 
 /* Message representing configuration details for the broker. */
 typedef struct broker_config {
@@ -97,8 +135,12 @@ typedef struct time_process {
 typedef struct memory_areas_definitions {
     /* Network credentials for connecting to a Wi-Fi network. */
     network_credentials_t network_credentials;
-    /* Status information of network connections. */
+    /* Network information of the AP and STA connections. */
     network_information_t network_information;
+    /* Status information of Access Point connection. */
+    access_point_status_t ap_status;
+    /* Status information of Status connection. */
+    station_status_t sta_status;
     /* Configuration settings for the broker. */
     broker_config_t broker_config;
     /* Packet request for UART communication. */
@@ -128,8 +170,12 @@ extern "C" {
 #define _MEMORY_AREAS_ARRAYSIZE ((memory_areas_t)(MEMORY_AREAS_TIME_PROCESS+1))
 
 
-#define network_information_t_ap_connected_ENUMTYPE network_status_t
-#define network_information_t_sta_connected_ENUMTYPE network_status_t
+
+
+
+#define access_point_status_t_status_ENUMTYPE network_status_t
+
+#define station_status_t_status_ENUMTYPE network_status_t
 
 
 #define packet_request_t_destination_area_ENUMTYPE memory_areas_t
@@ -141,25 +187,44 @@ extern "C" {
 
 /* Initializer values for message structs */
 #define NETWORK_CREDENTIALS_INIT_DEFAULT         {"", ""}
-#define NETWORK_INFORMATION_INIT_DEFAULT         {_NETWORK_STATUS_MIN, _NETWORK_STATUS_MIN}
+#define ACCESS_POINT_INFORMATION_INIT_DEFAULT    {"", "", 0}
+#define STATION_INFORMATION_INIT_DEFAULT         {"", "", 0, 0}
+#define NETWORK_INFORMATION_INIT_DEFAULT         {ACCESS_POINT_INFORMATION_INIT_DEFAULT, STATION_INFORMATION_INIT_DEFAULT, "", ""}
+#define ACCESS_POINT_STATUS_INIT_DEFAULT         {_NETWORK_STATUS_MIN}
+#define STATION_STATUS_INIT_DEFAULT              {_NETWORK_STATUS_MIN}
 #define BROKER_CONFIG_INIT_DEFAULT               {""}
 #define PACKET_REQUEST_INIT_DEFAULT              {0, _MEMORY_AREAS_MIN, _MEMORY_AREAS_MIN, 0, 0}
 #define CONTINUOS_PACKET_LIST_INIT_DEFAULT       {0, {PACKET_REQUEST_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT}}
 #define TIME_PROCESS_INIT_DEFAULT                {0, 0, 0, 0}
-#define MEMORY_AREAS_DEFINITIONS_INIT_DEFAULT    {NETWORK_CREDENTIALS_INIT_DEFAULT, NETWORK_INFORMATION_INIT_DEFAULT, BROKER_CONFIG_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT, CONTINUOS_PACKET_LIST_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT, CONTINUOS_PACKET_LIST_INIT_DEFAULT, TIME_PROCESS_INIT_DEFAULT}
+#define MEMORY_AREAS_DEFINITIONS_INIT_DEFAULT    {NETWORK_CREDENTIALS_INIT_DEFAULT, NETWORK_INFORMATION_INIT_DEFAULT, ACCESS_POINT_STATUS_INIT_DEFAULT, STATION_STATUS_INIT_DEFAULT, BROKER_CONFIG_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT, CONTINUOS_PACKET_LIST_INIT_DEFAULT, PACKET_REQUEST_INIT_DEFAULT, CONTINUOS_PACKET_LIST_INIT_DEFAULT, TIME_PROCESS_INIT_DEFAULT}
 #define NETWORK_CREDENTIALS_INIT_ZERO            {"", ""}
-#define NETWORK_INFORMATION_INIT_ZERO            {_NETWORK_STATUS_MIN, _NETWORK_STATUS_MIN}
+#define ACCESS_POINT_INFORMATION_INIT_ZERO       {"", "", 0}
+#define STATION_INFORMATION_INIT_ZERO            {"", "", 0, 0}
+#define NETWORK_INFORMATION_INIT_ZERO            {ACCESS_POINT_INFORMATION_INIT_ZERO, STATION_INFORMATION_INIT_ZERO, "", ""}
+#define ACCESS_POINT_STATUS_INIT_ZERO            {_NETWORK_STATUS_MIN}
+#define STATION_STATUS_INIT_ZERO                 {_NETWORK_STATUS_MIN}
 #define BROKER_CONFIG_INIT_ZERO                  {""}
 #define PACKET_REQUEST_INIT_ZERO                 {0, _MEMORY_AREAS_MIN, _MEMORY_AREAS_MIN, 0, 0}
 #define CONTINUOS_PACKET_LIST_INIT_ZERO          {0, {PACKET_REQUEST_INIT_ZERO, PACKET_REQUEST_INIT_ZERO, PACKET_REQUEST_INIT_ZERO, PACKET_REQUEST_INIT_ZERO, PACKET_REQUEST_INIT_ZERO, PACKET_REQUEST_INIT_ZERO, PACKET_REQUEST_INIT_ZERO, PACKET_REQUEST_INIT_ZERO}}
 #define TIME_PROCESS_INIT_ZERO                   {0, 0, 0, 0}
-#define MEMORY_AREAS_DEFINITIONS_INIT_ZERO       {NETWORK_CREDENTIALS_INIT_ZERO, NETWORK_INFORMATION_INIT_ZERO, BROKER_CONFIG_INIT_ZERO, PACKET_REQUEST_INIT_ZERO, CONTINUOS_PACKET_LIST_INIT_ZERO, PACKET_REQUEST_INIT_ZERO, CONTINUOS_PACKET_LIST_INIT_ZERO, TIME_PROCESS_INIT_ZERO}
+#define MEMORY_AREAS_DEFINITIONS_INIT_ZERO       {NETWORK_CREDENTIALS_INIT_ZERO, NETWORK_INFORMATION_INIT_ZERO, ACCESS_POINT_STATUS_INIT_ZERO, STATION_STATUS_INIT_ZERO, BROKER_CONFIG_INIT_ZERO, PACKET_REQUEST_INIT_ZERO, CONTINUOS_PACKET_LIST_INIT_ZERO, PACKET_REQUEST_INIT_ZERO, CONTINUOS_PACKET_LIST_INIT_ZERO, TIME_PROCESS_INIT_ZERO}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define NETWORK_CREDENTIALS_SSID_TAG             1
 #define NETWORK_CREDENTIALS_PASSWORD_TAG         2
-#define NETWORK_INFORMATION_AP_CONNECTED_TAG     1
-#define NETWORK_INFORMATION_STA_CONNECTED_TAG    2
+#define ACCESS_POINT_INFORMATION_IP_ADDRESS_TAG  1
+#define ACCESS_POINT_INFORMATION_SSID_TAG        2
+#define ACCESS_POINT_INFORMATION_CONNECTED_DEVICES_TAG 3
+#define STATION_INFORMATION_IP_ADDRESS_TAG       1
+#define STATION_INFORMATION_SSID_TAG             2
+#define STATION_INFORMATION_SIGNAL_STRENGTH_TAG  3
+#define STATION_INFORMATION_IS_CONNECTED_TAG     4
+#define NETWORK_INFORMATION_AP_TAG               1
+#define NETWORK_INFORMATION_STA_TAG              2
+#define NETWORK_INFORMATION_MAC_ADDRESS_TAG      3
+#define NETWORK_INFORMATION_HOSTNAME_TAG         4
+#define ACCESS_POINT_STATUS_STATUS_TAG           1
+#define STATION_STATUS_STATUS_TAG                1
 #define BROKER_CONFIG_BROKER_URI_TAG             1
 #define PACKET_REQUEST_DESTINATION_ADDRESS_TAG   1
 #define PACKET_REQUEST_DESTINATION_AREA_TAG      2
@@ -173,12 +238,14 @@ extern "C" {
 #define TIME_PROCESS_HOURS_TAG                   4
 #define MEMORY_AREAS_DEFINITIONS_NETWORK_CREDENTIALS_TAG 1
 #define MEMORY_AREAS_DEFINITIONS_NETWORK_INFORMATION_TAG 2
-#define MEMORY_AREAS_DEFINITIONS_BROKER_CONFIG_TAG 3
-#define MEMORY_AREAS_DEFINITIONS_UART_PACKET_REQUEST_TAG 4
-#define MEMORY_AREAS_DEFINITIONS_UART_CONTINUOS_PACKET_TAG 5
-#define MEMORY_AREAS_DEFINITIONS_LORA_PACKET_REQUEST_TAG 6
-#define MEMORY_AREAS_DEFINITIONS_LORA_CONTINUOS_PACKET_TAG 7
-#define MEMORY_AREAS_DEFINITIONS_TIME_PROCESS_TAG 8
+#define MEMORY_AREAS_DEFINITIONS_AP_STATUS_TAG   3
+#define MEMORY_AREAS_DEFINITIONS_STA_STATUS_TAG  4
+#define MEMORY_AREAS_DEFINITIONS_BROKER_CONFIG_TAG 5
+#define MEMORY_AREAS_DEFINITIONS_UART_PACKET_REQUEST_TAG 6
+#define MEMORY_AREAS_DEFINITIONS_UART_CONTINUOS_PACKET_TAG 7
+#define MEMORY_AREAS_DEFINITIONS_LORA_PACKET_REQUEST_TAG 8
+#define MEMORY_AREAS_DEFINITIONS_LORA_CONTINUOS_PACKET_TAG 9
+#define MEMORY_AREAS_DEFINITIONS_TIME_PROCESS_TAG 10
 
 /* Struct field encoding specification for nanopb */
 #define NETWORK_CREDENTIALS_FIELDLIST(X, a) \
@@ -187,11 +254,40 @@ X(a, STATIC,   REQUIRED, STRING,   password,          2)
 #define NETWORK_CREDENTIALS_CALLBACK NULL
 #define NETWORK_CREDENTIALS_DEFAULT NULL
 
+#define ACCESS_POINT_INFORMATION_FIELDLIST(X, a) \
+X(a, STATIC,   REQUIRED, STRING,   ip_address,        1) \
+X(a, STATIC,   REQUIRED, STRING,   ssid,              2) \
+X(a, STATIC,   REQUIRED, UINT32,   connected_devices,   3)
+#define ACCESS_POINT_INFORMATION_CALLBACK NULL
+#define ACCESS_POINT_INFORMATION_DEFAULT NULL
+
+#define STATION_INFORMATION_FIELDLIST(X, a) \
+X(a, STATIC,   REQUIRED, STRING,   ip_address,        1) \
+X(a, STATIC,   REQUIRED, STRING,   ssid,              2) \
+X(a, STATIC,   REQUIRED, INT32,    signal_strength,   3) \
+X(a, STATIC,   REQUIRED, BOOL,     is_connected,      4)
+#define STATION_INFORMATION_CALLBACK NULL
+#define STATION_INFORMATION_DEFAULT NULL
+
 #define NETWORK_INFORMATION_FIELDLIST(X, a) \
-X(a, STATIC,   REQUIRED, UENUM,    ap_connected,      1) \
-X(a, STATIC,   REQUIRED, UENUM,    sta_connected,     2)
+X(a, STATIC,   REQUIRED, MESSAGE,  ap,                1) \
+X(a, STATIC,   REQUIRED, MESSAGE,  sta,               2) \
+X(a, STATIC,   REQUIRED, STRING,   mac_address,       3) \
+X(a, STATIC,   REQUIRED, STRING,   hostname,          4)
 #define NETWORK_INFORMATION_CALLBACK NULL
 #define NETWORK_INFORMATION_DEFAULT NULL
+#define network_information_t_ap_MSGTYPE access_point_information_t
+#define network_information_t_sta_MSGTYPE station_information_t
+
+#define ACCESS_POINT_STATUS_FIELDLIST(X, a) \
+X(a, STATIC,   REQUIRED, UENUM,    status,            1)
+#define ACCESS_POINT_STATUS_CALLBACK NULL
+#define ACCESS_POINT_STATUS_DEFAULT NULL
+
+#define STATION_STATUS_FIELDLIST(X, a) \
+X(a, STATIC,   REQUIRED, UENUM,    status,            1)
+#define STATION_STATUS_CALLBACK NULL
+#define STATION_STATUS_DEFAULT NULL
 
 #define BROKER_CONFIG_FIELDLIST(X, a) \
 X(a, STATIC,   REQUIRED, STRING,   broker_uri,        1)
@@ -224,16 +320,20 @@ X(a, STATIC,   REQUIRED, UINT32,   hours,             4)
 #define MEMORY_AREAS_DEFINITIONS_FIELDLIST(X, a) \
 X(a, STATIC,   REQUIRED, MESSAGE,  network_credentials,   1) \
 X(a, STATIC,   REQUIRED, MESSAGE,  network_information,   2) \
-X(a, STATIC,   REQUIRED, MESSAGE,  broker_config,     3) \
-X(a, STATIC,   REQUIRED, MESSAGE,  uart_packet_request,   4) \
-X(a, STATIC,   REQUIRED, MESSAGE,  uart_continuos_packet,   5) \
-X(a, STATIC,   REQUIRED, MESSAGE,  lora_packet_request,   6) \
-X(a, STATIC,   REQUIRED, MESSAGE,  lora_continuos_packet,   7) \
-X(a, STATIC,   REQUIRED, MESSAGE,  time_process,      8)
+X(a, STATIC,   REQUIRED, MESSAGE,  ap_status,         3) \
+X(a, STATIC,   REQUIRED, MESSAGE,  sta_status,        4) \
+X(a, STATIC,   REQUIRED, MESSAGE,  broker_config,     5) \
+X(a, STATIC,   REQUIRED, MESSAGE,  uart_packet_request,   6) \
+X(a, STATIC,   REQUIRED, MESSAGE,  uart_continuos_packet,   7) \
+X(a, STATIC,   REQUIRED, MESSAGE,  lora_packet_request,   8) \
+X(a, STATIC,   REQUIRED, MESSAGE,  lora_continuos_packet,   9) \
+X(a, STATIC,   REQUIRED, MESSAGE,  time_process,     10)
 #define MEMORY_AREAS_DEFINITIONS_CALLBACK NULL
 #define MEMORY_AREAS_DEFINITIONS_DEFAULT NULL
 #define memory_areas_definitions_t_network_credentials_MSGTYPE network_credentials_t
 #define memory_areas_definitions_t_network_information_MSGTYPE network_information_t
+#define memory_areas_definitions_t_ap_status_MSGTYPE access_point_status_t
+#define memory_areas_definitions_t_sta_status_MSGTYPE station_status_t
 #define memory_areas_definitions_t_broker_config_MSGTYPE broker_config_t
 #define memory_areas_definitions_t_uart_packet_request_MSGTYPE packet_request_t
 #define memory_areas_definitions_t_uart_continuos_packet_MSGTYPE continuos_packet_list_t
@@ -242,7 +342,11 @@ X(a, STATIC,   REQUIRED, MESSAGE,  time_process,      8)
 #define memory_areas_definitions_t_time_process_MSGTYPE time_process_t
 
 extern const pb_msgdesc_t network_credentials_t_msg;
+extern const pb_msgdesc_t access_point_information_t_msg;
+extern const pb_msgdesc_t station_information_t_msg;
 extern const pb_msgdesc_t network_information_t_msg;
+extern const pb_msgdesc_t access_point_status_t_msg;
+extern const pb_msgdesc_t station_status_t_msg;
 extern const pb_msgdesc_t broker_config_t_msg;
 extern const pb_msgdesc_t packet_request_t_msg;
 extern const pb_msgdesc_t continuos_packet_list_t_msg;
@@ -251,7 +355,11 @@ extern const pb_msgdesc_t memory_areas_definitions_t_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define NETWORK_CREDENTIALS_FIELDS &network_credentials_t_msg
+#define ACCESS_POINT_INFORMATION_FIELDS &access_point_information_t_msg
+#define STATION_INFORMATION_FIELDS &station_information_t_msg
 #define NETWORK_INFORMATION_FIELDS &network_information_t_msg
+#define ACCESS_POINT_STATUS_FIELDS &access_point_status_t_msg
+#define STATION_STATUS_FIELDS &station_status_t_msg
 #define BROKER_CONFIG_FIELDS &broker_config_t_msg
 #define PACKET_REQUEST_FIELDS &packet_request_t_msg
 #define CONTINUOS_PACKET_LIST_FIELDS &continuos_packet_list_t_msg
@@ -259,12 +367,16 @@ extern const pb_msgdesc_t memory_areas_definitions_t_msg;
 #define MEMORY_AREAS_DEFINITIONS_FIELDS &memory_areas_definitions_t_msg
 
 /* Maximum encoded size of messages (where known) */
+#define ACCESS_POINT_INFORMATION_SIZE            55
+#define ACCESS_POINT_STATUS_SIZE                 2
 #define BROKER_CONFIG_SIZE                       258
 #define CONTINUOS_PACKET_LIST_SIZE               272
-#define MEMORY_AREAS_DEFINITIONS_SIZE            1016
+#define MEMORY_AREAS_DEFINITIONS_SIZE            1225
 #define NETWORK_CREDENTIALS_SIZE                 98
-#define NETWORK_INFORMATION_SIZE                 4
+#define NETWORK_INFORMATION_SIZE                 204
 #define PACKET_REQUEST_SIZE                      32
+#define STATION_INFORMATION_SIZE                 62
+#define STATION_STATUS_SIZE                      2
 #define TIME_PROCESS_SIZE                        29
 #define TITANIUM_PB_H_MAX_SIZE                   MEMORY_AREAS_DEFINITIONS_SIZE
 

@@ -113,8 +113,13 @@ class SharedMemory {
                 pb_ostream_t ostream = pb_ostream_from_buffer(this->_data, this->_size);
                 auto ret             = pb_encode(&ostream, ((pb_msgdesc_t*)&msg_desc), &protobuf);
 
-                this->_has_update    = true;
-                this->_written_bytes = ret ? ostream.bytes_written : 0;
+                if (ret) {
+                    this->_has_update    = true;
+                    this->_written_bytes = ostream.bytes_written;
+                } else {
+                    ESP_LOGE("Shared Memory", "Error encoding message %d: %s!", this->_index, ostream.errmsg);
+                    this->_written_bytes = 0;
+                }
 
                 xSemaphoreGive(this->_mutex);
             }
@@ -149,19 +154,28 @@ class SharedMemory {
             return result;
         }
 
+        if (this->_written_bytes == 0) {
+            return Error::EMPTY_PROTOBUF;
+        }
+
         if (this->_mutex != NULL) {
             if (xSemaphoreTake(this->_mutex, portMAX_DELAY) == pdTRUE) {
                 pb_istream_t istream = pb_istream_from_buffer(this->_data, this->_written_bytes);
-                result               = pb_decode(&istream, ((pb_msgdesc_t*)&msg_desc), &protobuf);
+                auto ret             = pb_decode(&istream, ((pb_msgdesc_t*)&msg_desc), &protobuf);
 
-                if (!silent) {
-                    this->_has_update = false;
+                if (ret) {
+                    this->_has_update = !silent ? false : this->_has_update;
+                    result            = Error::NO_ERROR;
+                } else {
+                    ESP_LOGE("Shared Memory", "Failed to decode message %d: %s!", this->_index, istream.errmsg);
+                    result = Error::DESERIALIZE_ERROR;
                 }
+
                 xSemaphoreGive(this->_mutex);
             }
         }
 
-        return result ? Error::NO_ERROR : Error::DESERIALIZE_ERROR;
+        return result;
     }
 
     titan_err_t Read(char* buffer, bool silent) {
@@ -169,6 +183,10 @@ class SharedMemory {
 
         if ((this->_access_type == WRITE_ONLY) || (buffer == nullptr)) {
             return result;
+        }
+
+        if (this->_written_bytes == 0) {
+            return Error::EMPTY_PROTOBUF;
         }
 
         if (this->_mutex != nullptr) {

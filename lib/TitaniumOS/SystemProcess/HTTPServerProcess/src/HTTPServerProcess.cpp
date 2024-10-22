@@ -5,6 +5,7 @@
 
 #include "SystemProcess/HTTPServerProcess/inc/HTTPServerProcess.h"
 #include "HAL/memory/MemoryHandlers.h"
+#include "SystemProcess/NetworkProcess/inc/NetworkUtils.hpp"
 
 #include "esp_log.h"
 
@@ -109,12 +110,12 @@ static titan_err_t get_uri_favicon_icon(httpd_req_t* req) {
 static titan_err_t get_uri_proto_file(httpd_req_t* req) {
     // Set the response content type to text/protobuf
     httpd_resp_set_type(req, "text/protobuf");
-    
+
     // Send the .proto file content
     httpd_resp_send(
         req, reinterpret_cast<const char*>(BinaryData::titanium_proto_start),
         BinaryData::titanium_proto_end - BinaryData::titanium_proto_start);
-    
+
     return ESP_OK;
 }
 
@@ -126,9 +127,9 @@ static titan_err_t get_uri_proto_file(httpd_req_t* req) {
  */
 static titan_err_t post_uri_wifi_credentials(httpd_req_t* req) {
     network_credentials credentials_proto;
-    char ssid[32]     = {0};
-    char password[64] = {0};
-    titan_err_t result  = Error::UNKNOW_FAIL;
+    char ssid[32]      = {0};
+    char password[64]  = {0};
+    titan_err_t result = Error::UNKNOW_FAIL;
 
     HTTPServerProcess* http_server_manager =
         reinterpret_cast<HTTPServerProcess*>(req->user_ctx);
@@ -185,39 +186,23 @@ void HTTPServerProcess::Execute(void) {
     }
 
     while (1) {
-        do {
-            this->_shared_memory_manager->Read(MEMORY_AREAS_NETWORK_INFORMATION,
-                                               this->_connection_status,
-                                               network_information_t_msg);
-            auto ap_changed =
-                this->_last_connection_status.ap_connected !=
-                this->_connection_status.ap_connected;
-            auto sta_changed =
-                this->_last_connection_status.sta_connected !=
-                this->_connection_status.sta_connected;
+        access_point_status actual_ap_status;
+        this->_shared_memory_manager->Read(MEMORY_AREAS_ACCESS_POINT_STATUS,
+                                           actual_ap_status,
+                                           access_point_status_t_msg);
 
-            if (!ap_changed && !sta_changed) {
-                break;
-            }
+        if (!ShouldUpdateConnectionStatus(&actual_ap_status, &this->_ap_status)) {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            continue;
+        }
 
-            auto ap_status  = this->_connection_status.ap_connected;
-            auto sta_status = this->_connection_status.sta_connected;
-
-            if ((ap_status == NETWORK_STATUS_CONNECTED) || (sta_status == NETWORK_STATUS_CONNECTED)) {
-                if (this->_server_status != NETWORK_STATUS_CONNECTED) {
-                    this->StartHTTPServer();
-                    this->_server_status = NETWORK_STATUS_CONNECTED;
-                    ESP_LOGI(TAG, "HTTP SERVER STARTED");
-                }
-            } else if ((ap_status == NETWORK_STATUS_DISCONNECTED) && (sta_status == NETWORK_STATUS_DISCONNECTED)) {
-                if (this->_server_status != NETWORK_STATUS_CONNECTED) {
-                    this->StopHTTPServer();
-                    this->_server_status = NETWORK_STATUS_DISCONNECTED;
-                    ESP_LOGI(TAG, "HTTP SERVER STOPED");
-                }
-            }
-        } while (0);
-
+        if (this->_ap_status.status == NETWORK_STATUS_CONNECTED) {
+            this->StartHTTPServer();
+            ESP_LOGI(TAG, "HTTP SERVER STARTED");
+        } else if (this->_ap_status.status == NETWORK_STATUS_DISCONNECTED) {
+            this->StopHTTPServer();
+            ESP_LOGI(TAG, "HTTP SERVER STOPED");
+        }
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -235,6 +220,8 @@ titan_err_t HTTPServerProcess::Initialize(void) {
     this->_config.recv_wait_timeout = 10;
     this->_config.max_uri_handlers  = 20;
     this->_shared_memory_manager    = SharedMemoryManager::GetInstance();
+
+    this->_ap_status.status = NETWORK_STATUS_DISCONNECTED;
 
     result = this->InitializeRequestList();
 

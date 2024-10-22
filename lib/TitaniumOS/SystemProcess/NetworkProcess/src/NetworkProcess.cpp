@@ -107,10 +107,9 @@ static void WiFiAppEventHandler(void* arg, esp_event_base_t event_base,
 titan_err_t NetworkProcess::Initialize(void) {
     titan_err_t result              = ESP_OK;
     this->_shared_memory_manager    = SharedMemoryManager::GetInstance();
-    this->_need_update_network_data = 0;
     auto wifi_mode                  = WIFI_MODE_APSTA;
-    this->_connection_proto.ap_connected = NETWORK_STATUS_DISCONNECTED;
-    this->_connection_proto.sta_connected = NETWORK_STATUS_DISCONNECTED;
+    this->_ap_status.status         = NETWORK_STATUS_DISCONNECTED;
+    this->_sta_status.status        = NETWORK_STATUS_DISCONNECTED;
 
     result += this->RegisterWiFiEvents();
     result += esp_netif_init();
@@ -147,18 +146,11 @@ void NetworkProcess::Execute(void) {
     if (this->Initialize() != ESP_OK) {
         vTaskDelete(this->_process_handler);
     }
-    this->SetStationMode(&this->_sta_config);
-    esp_wifi_connect();
 
     while (1) {
         if (shared_memory_manager->IsAreaDataUpdated(MEMORY_AREAS_NETWORK_CREDENTIALS)) {
             this->SetStationMode(&this->_sta_config);
             esp_wifi_connect();
-        }
-
-        if (this->_need_update_network_data) {
-            shared_memory_manager->Write(MEMORY_AREAS_NETWORK_INFORMATION, this->_connection_proto, network_information_t_msg);
-            this->_need_update_network_data = 0;
         }
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
@@ -225,7 +217,7 @@ titan_err_t NetworkProcess::SetAccessPointMode(wifi_config_t* ap_config) {
     ap_config->ap.beacon_interval = AP::beacon_interval;
 
     esp_netif_ip_info_t ap_ip_info;
-    memset_s(&ap_ip_info, 0,sizeof(esp_netif_ip_info_t));
+    memset_s(&ap_ip_info, 0, sizeof(esp_netif_ip_info_t));
 
     esp_netif_dhcps_stop(this->_esp_netif_ap);
     inet_pton(AF_INET, AP::ip, &ap_ip_info.ip);
@@ -257,8 +249,11 @@ void NetworkProcess::SetCredentials(wifi_config_t* wifi_config) {
  * @param[in] status The connection status to set.
  */
 void NetworkProcess::SetAPConnection(network_status_t status) {
-    this->_connection_proto.ap_connected = status;
-    this->_need_update_network_data = 1;
+    this->_ap_status.status         = status;
+    this->_need_update_network_data = true;
+    this->_shared_memory_manager->Write(MEMORY_AREAS_ACCESS_POINT_STATUS,
+                                        this->_ap_status,
+                                        access_point_status_t_msg);
 }
 
 /**
@@ -266,6 +261,8 @@ void NetworkProcess::SetAPConnection(network_status_t status) {
  * @param[in] status The connection status to set.
  */
 void NetworkProcess::SetSTAConnection(network_status_t status) {
-    this->_connection_proto.sta_connected = status;
-    this->_need_update_network_data = 1;
+    this->_sta_status.status = status;
+    this->_shared_memory_manager->Write(MEMORY_AREAS_STATION_STATUS,
+                                        this->_sta_status,
+                                        station_status_t_msg);
 }

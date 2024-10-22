@@ -9,7 +9,19 @@
 PB_BIND(NETWORK_CREDENTIALS, network_credentials_t, AUTO)
 
 
+PB_BIND(ACCESS_POINT_INFORMATION, access_point_information_t, AUTO)
+
+
+PB_BIND(STATION_INFORMATION, station_information_t, AUTO)
+
+
 PB_BIND(NETWORK_INFORMATION, network_information_t, AUTO)
+
+
+PB_BIND(ACCESS_POINT_STATUS, access_point_status_t, AUTO)
+
+
+PB_BIND(STATION_STATUS, station_status_t, AUTO)
 
 
 PB_BIND(BROKER_CONFIG, broker_config_t, 2)
@@ -25,3 +37,6 @@ PB_BIND(TIME_PROCESS, time_process_t, AUTO)
 
 
 PB_BIND(MEMORY_AREAS_DEFINITIONS, memory_areas_definitions_t, 2)
+
+
+
